@@ -1,0 +1,133 @@
+{
+  "name": "eh-universe-vscode",
+  "displayName": "EH Universe Code Studio",
+  "description": "Native VS Code Extension for EH Universe",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:eh-universe-sidebar",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "eh-universe-container",
+          "title": "EH Universe",
+          "icon": "media/rocket.svg"
+        }
+      ]
+    },
+    "views": {
+      "eh-universe-container": [
+        {
+          "type": "webview",
+          "id": "eh-universe-sidebar",
+          "name": "Code Studio",
+          "icon": "media/rocket.svg"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "eh-universe.openSettings",
+        "title": "EH Universe: Open Settings"
+      },
+      {
+        "command": "cs-quill.analyzeFile",
+        "title": "CS Quill: 현재 파일 분석"
+      },
+      {
+        "command": "cs-quill.fixAll",
+        "title": "CS Quill: 전체 수리 일괄 승인"
+      },
+      {
+        "command": "cs-quill.reconnect",
+        "title": "CS Quill: 데몬 재연결"
+      },
+      {
+        "command": "cs-quill.showStatus",
+        "title": "CS Quill: 상태 확인"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "cs-quill.analyzeFile",
+        "key": "ctrl+shift+q",
+        "mac": "cmd+shift+q",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "CS Quill",
+      "properties": {
+        "csQuill.daemonPort": {
+          "type": "number",
+          "default": 8443,
+          "description": "CS Quill 데몬 포트 번호"
+        },
+        "csQuill.autoAnalyze": {
+          "type": "boolean",
+          "default": true,
+          "description": "파일 변경 시 자동 분석"
+        },
+        "csQuill.debounceMs": {
+          "type": "number",
+          "default": 800,
+          "description": "자동 분석 디바운스 시간 (ms)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run build-css && node build.js",
+    "watch": "npm-run-all --parallel watch-*",
+    "watch-css": "npx @tailwindcss/cli -i ./src/webview/styles/globals.css -o ./dist/style.css --watch",
+    "watch-js": "node build.js --watch",
+    "build-css": "npx @tailwindcss/cli -i ./src/webview/styles/globals.css -o ./dist/style.css --minify",
+    "package": "npm run build-css && node build.js --minify"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.66",
+    "@ai-sdk/google": "^3.0.58",
+    "@ai-sdk/openai": "^3.0.50",
+    "@google/genai": "^1.48.0",
+    "@monaco-editor/react": "^4.7.0",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "ai": "^6.0.146",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "firebase": "^12.11.0",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^1.7.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwind-merge": "^3.5.0",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2",
+    "@types/node": "18.x",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/vscode": "^1.85.0",
+    "autoprefixer": "^10.4.27",
+    "esbuild": "^0.19.0",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.5.8",
+    "postcss-import": "^16.1.1",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5.3.0"
+  }
+}
