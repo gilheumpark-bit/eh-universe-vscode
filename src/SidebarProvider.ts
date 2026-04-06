@@ -85,6 +85,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script nonce="${nonce}">if(navigator.serviceWorker){navigator.serviceWorker.register=function(){return Promise.resolve()};navigator.serviceWorker.getRegistration=function(){return Promise.resolve(void 0)};navigator.serviceWorker.getRegistrations=function(){return Promise.resolve([])}}</script>
 <style>
 body{font-family:var(--vscode-font-family);color:var(--vscode-foreground);padding:12px;margin:0}
 .health{text-align:center;padding:16px;border-radius:8px;background:var(--vscode-editor-background);margin-bottom:12px}
