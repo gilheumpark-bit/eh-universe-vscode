@@ -8,7 +8,10 @@ import * as vscode from "vscode";
 export class SidebarProvider implements vscode.WebviewViewProvider {
   _view?: vscode.WebviewView;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(
+    private readonly _extensionUri: vscode.Uri,
+    private readonly _resendSidebarHealth: () => void,
+  ) {}
 
   public resolveWebviewView(webviewView: vscode.WebviewView) {
     this._view = webviewView;
@@ -19,6 +22,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     };
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+
+    webviewView.onDidChangeVisibility(() => {
+      if (webviewView.visible) {
+        this._resendSidebarHealth();
+      }
+    });
 
     // Step 45~48: 메시지 핸들러
     webviewView.webview.onDidReceiveMessage(async (data) => {
@@ -37,6 +46,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           break;
         case "reconnect":
           vscode.commands.executeCommand("cs-quill.reconnect");
+          break;
+        case "request-status":
+          this._resendSidebarHealth();
           break;
       }
     });
@@ -102,14 +114,18 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     <div class="health-label" id="error-count"></div>
   </div>
 
-  <button onclick="send('analyze-current')">🔍 현재 파일 분석</button>
-  <button onclick="send('fix-all')">✨ 전체 수리 일괄 승인</button>
+  <button id="btn-analyze">🔍 현재 파일 분석</button>
+  <button id="btn-fix-all">✨ 전체 수리 일괄 승인</button>
   <div class="divider"></div>
-  <button class="btn-secondary" onclick="send('reconnect')">🔌 데몬 재연결</button>
+  <button class="btn-secondary" id="btn-reconnect">🔌 데몬 재연결</button>
 
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
     function send(type) { vscode.postMessage({ type }); }
+
+    document.getElementById('btn-analyze').addEventListener('click', () => send('analyze-current'));
+    document.getElementById('btn-fix-all').addEventListener('click', () => send('fix-all'));
+    document.getElementById('btn-reconnect').addEventListener('click', () => send('reconnect'));
 
     window.addEventListener('message', (event) => {
       const { type, payload } = event.data;
@@ -127,8 +143,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         }
       }
     });
+
+    // Notify extension that webview is ready to receive the current state
+    send('request-status');
   </script>
-  <script nonce="${nonce}" src="${scriptUri}"></script>
+  <!-- webview.js는 React 사이드바 UI 전환 시 활성화 (현재 인라인 UI 사용) -->
+  <!-- <script nonce="${nonce}" src="${scriptUri}"></script> -->
 </body>
 </html>`;
   }
