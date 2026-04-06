@@ -97,6 +97,7 @@ describe("useStudioWritingMode", () => {
   it("restores editDraft from localStorage on mount", () => {
     localStorage.setItem("noa_editdraft_sess-B", "Restored text");
     const { get, cleanup } = createHarness("sess-B");
+    act(() => { jest.runAllTimers(); });
     expect(get().editDraft).toBe("Restored text");
     cleanup();
   });

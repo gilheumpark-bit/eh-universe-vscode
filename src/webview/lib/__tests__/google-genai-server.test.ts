@@ -53,7 +53,7 @@ describe("google-genai-server helpers", () => {
     expect(modes).toEqual(["hosted"]);
   });
 
-  it("falls back to the user key after a hosted quota exhaustion error", async () => {
+  it("uses BYOK directly when a user key is provided", async () => {
     process.env.GEMINI_API_KEY = "server-key";
     const { executeGeminiHostedFirst } = loadModule();
 
@@ -62,17 +62,13 @@ describe("google-genai-server helpers", () => {
       "user-key",
       async (apiKey, mode) => {
         calls.push({ apiKey, mode });
-        if (mode === "hosted") {
-          throw new Error("Gemini API 429: RESOURCE_EXHAUSTED quota exceeded");
-        }
-        return "fallback-ok";
+        return "byok-ok";
       },
     );
 
     expect(execution.mode).toBe("byok");
-    expect(execution.result).toBe("fallback-ok");
+    expect(execution.result).toBe("byok-ok");
     expect(calls).toEqual([
-      { apiKey: "", mode: "hosted" },
       { apiKey: "user-key", mode: "byok" },
     ]);
   });
