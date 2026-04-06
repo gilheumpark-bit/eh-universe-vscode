@@ -214,7 +214,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("eh-universe.openSettings", () => {
-      vscode.window.showInformationMessage("EH Universe Settings Opened");
+      vscode.commands.executeCommand("workbench.action.openSettings", "eh-universe");
     }),
   );
 }
