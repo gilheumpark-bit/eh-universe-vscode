@@ -141,7 +141,14 @@ const languages = {
   registerCodeActionsProvider: jest.fn(),
   registerHoverProvider: jest.fn(),
   registerCompletionItemProvider: jest.fn(),
+  registerDocumentSymbolProvider: jest.fn(),
+  registerCodeLensProvider: jest.fn(),
   getDiagnostics: jest.fn(() => []),
+};
+
+const Disposable = class {
+  constructor(private _callOnDispose: () => void) {}
+  dispose() { this._callOnDispose(); }
 };
 
 const ExtensionContext = class {
@@ -287,5 +294,6 @@ module.exports = {
   TextEdit,
   WorkspaceEdit,
   Diagnostic,
+  Disposable,
   version: "1.85.0",
 };
