@@ -80,7 +80,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src ${webview.cspSource}; style-src 'unsafe-inline';">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{font-family:var(--vscode-font-family);color:var(--vscode-foreground);padding:12px;margin:0}
