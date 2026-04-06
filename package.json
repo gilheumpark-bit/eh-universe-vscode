@@ -97,7 +97,8 @@
     "build-css": "npx @tailwindcss/cli -i ./src/webview/styles/globals.css -o ./dist/style.css --minify",
     "package": "npm run build-css && node build.js --minify",
     "test": "jest --config jest.config.ts",
-    "test:verbose": "jest --config jest.config.ts --verbose"
+    "test:verbose": "jest --config jest.config.ts --verbose",
+    "deploy:cursor": "npm run compile && node -e \"const fs=require('fs');const p=require('path');const src=p.join(__dirname,'dist');const dest=p.join(process.env.USERPROFILE||process.env.HOME,'.cursor','extensions','undefined_publisher.eh-universe-vscode-1.0.0','dist');fs.cpSync(src,dest,{recursive:true});console.log('Deployed to',dest)\""
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.66",
