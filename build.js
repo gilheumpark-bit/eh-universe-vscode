@@ -32,7 +32,15 @@ const webviewCtx = esbuild.context({
 async function main() {
   const ext = await extensionCtx;
   const web = await webviewCtx;
-  
+
+  // 3. Copy sidebar webview script
+  const fs = require('fs');
+  const path = require('path');
+  fs.copyFileSync(
+    path.join(__dirname, 'src', 'sidebar-webview.js'),
+    path.join(__dirname, 'dist', 'sidebar.js')
+  );
+
   if (watch) {
     await ext.watch();
     await web.watch();

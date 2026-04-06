@@ -71,22 +71,17 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
-    const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "dist", "webview.js"),
+    const sidebarScriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, "dist", "sidebar.js"),
     );
-    const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "dist", "style.css"),
-    );
-    const nonce = getNonce();
 
     // 인라인 사이드바 UI — CSP 최소화, 외부 리소스 없음
     return /* html */`<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src ${webview.cspSource}; style-src 'unsafe-inline';">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script>if(navigator.serviceWorker){navigator.serviceWorker.register=function(){return Promise.resolve()};navigator.serviceWorker.getRegistration=function(){return Promise.resolve(void 0)};navigator.serviceWorker.getRegistrations=function(){return Promise.resolve([])}}</script>
 <style>
 body{font-family:var(--vscode-font-family);color:var(--vscode-foreground);padding:12px;margin:0}
 .health{text-align:center;padding:16px;border-radius:8px;background:var(--vscode-editor-background);margin-bottom:12px}
@@ -111,28 +106,7 @@ button:hover{background:var(--vscode-button-hoverBackground)}
 <button id="f">✨ 전체 수리 일괄 승인</button>
 <div class="div"></div>
 <button class="sec" id="r">🔌 데몬 재연결</button>
-<script>
-try{
-var v=acquireVsCodeApi();
-function p(t){v.postMessage({type:t})}
-document.getElementById('a').onclick=function(){p('analyze-current');document.getElementById('e').textContent='분석 요청됨'};
-document.getElementById('f').onclick=function(){p('fix-all');document.getElementById('e').textContent='수리 요청됨'};
-document.getElementById('r').onclick=function(){p('reconnect');document.getElementById('e').textContent='재연결 요청됨'};
-window.addEventListener('message',function(e){
-var m=e.data;if(m.type==='health-update'){
-var pl=m.payload;
-document.getElementById('s').textContent=pl.score!=null?pl.score:'--';
-document.getElementById('e').textContent=pl.errorCount>0?pl.errorCount+'건 에러':'';
-var d=document.getElementById('d'),t=document.getElementById('t');
-d.className=pl.connected?'dot on':'dot';
-t.textContent=pl.connected?'데몬 연결됨':'데몬 미연결';
-}});
-p('request-status');
-document.getElementById('e').textContent='스크립트 로드 OK';
-}catch(err){
-document.body.innerHTML='<pre style="color:red">'+err.message+'\\n'+err.stack+'</pre>';
-}
-</script>
+<script src="${sidebarScriptUri}"></script>
 </body>
 </html>`;
   }
