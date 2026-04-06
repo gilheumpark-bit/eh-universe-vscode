@@ -7,6 +7,7 @@
 // last scan timestamp, VS Code theme variable consistency.
 
 import * as vscode from "vscode";
+import type { ARIStatus } from "./ari-engine";
 
 // ============================================================
 // PART 1 — Provider class
@@ -17,6 +18,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   private _healthScore: number | null = null;
   private _errorCount: number = 0;
   private _connected: boolean = false;
+  private _ariStatus: ARIStatus[] = [];
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
@@ -109,10 +111,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     score: number,
     errorCount: number,
     connected: boolean,
+    ariStatus?: ARIStatus[],
   ): void {
     this._healthScore = score;
     this._errorCount = errorCount;
     this._connected = connected;
+    if (ariStatus) this._ariStatus = ariStatus;
     this._postHealthUpdate();
   }
 
@@ -141,6 +145,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         score: this._healthScore,
         errorCount: this._errorCount,
         connected: this._connected,
+        ariStatus: this._ariStatus,
       },
     });
   }
@@ -368,6 +373,26 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
     .domain-name { text-transform: capitalize; }
     .domain-counts { color: var(--vscode-descriptionForeground); }
+
+    /* --- ARI section --- */
+    .ari-section {
+      display: none;
+      margin: 8px 0;
+    }
+    .ari-section.active { display: block; }
+    .ari-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      font-size: 11px;
+      color: var(--vscode-foreground);
+      border-bottom: 1px solid var(--vscode-panel-border);
+    }
+    .ari-row:last-child { border-bottom: none; }
+    .ari-provider { font-weight: 600; }
+    .ari-score { font-weight: bold; }
+    .ari-circuit { margin-left: 6px; }
   </style>
 </head>
 <body>
@@ -406,6 +431,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   <div class="divider"></div>
   <button id="btn-reconnect" class="btn-secondary">🔌 데몬 재연결</button>
 
+  <!-- ARI Status -->
+  <div id="ari-section" class="ari-section">
+    <div class="divider"></div>
+    <div class="findings-header">ARI Provider Health</div>
+    <div id="ari-list"></div>
+  </div>
+
   <!-- Findings list -->
   <div id="findings-section" class="findings-section">
     <div class="divider"></div>
@@ -442,6 +474,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       const findingsList = document.getElementById("findings-list");
       const domainsSection = document.getElementById("domains-section");
       const domainsList = document.getElementById("domains-list");
+      const ariSection = document.getElementById("ari-section");
+      const ariList = document.getElementById("ari-list");
       const btnAnalyze = document.getElementById("btn-analyze");
       const btnPick = document.getElementById("btn-pick");
       const btnFixAll = document.getElementById("btn-fix-all");
@@ -516,6 +550,33 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             if (statusTextNode) {
               statusTextNode.textContent = p.connected ? "데몬 연결됨" : "데몬 미연결";
             }
+
+            // ARI status rendering
+            var ariData = p.ariStatus || [];
+            if (ariList) {
+              ariList.innerHTML = "";
+              for (var ai = 0; ai < ariData.length; ai++) {
+                var a = ariData[ai];
+                var aRow = document.createElement("div");
+                aRow.className = "ari-row";
+
+                var aName = document.createElement("span");
+                aName.className = "ari-provider";
+                aName.textContent = a.provider;
+                aRow.appendChild(aName);
+
+                var aRight = document.createElement("span");
+                var circuitIcon = a.circuit === "closed" ? "\\uD83D\\uDFE2"
+                  : a.circuit === "half-open" ? "\\uD83D\\uDFE1"
+                  : "\\uD83D\\uDD34";
+                aRight.innerHTML = "<span class='ari-score'>" + String(a.score) + "</span>"
+                  + "<span class='ari-circuit'>" + circuitIcon + " " + a.circuit + "</span>";
+                aRow.appendChild(aRight);
+
+                ariList.appendChild(aRow);
+              }
+            }
+            showEl(ariSection, ariData.length > 0);
             break;
           }
 

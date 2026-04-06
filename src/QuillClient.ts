@@ -8,6 +8,8 @@ import * as http from "http";
 import * as crypto from "crypto";
 import type { Duplex } from "stream";
 import * as net from "net";
+import { ARIEngine } from "./ari-engine";
+import type { ARIStatus } from "./ari-engine";
 
 // ============================================================
 // PART 1 — Types
@@ -83,10 +85,15 @@ export class QuillClient {
   private buffer = "";
   private statusBarItem: vscode.StatusBarItem;
   private sessionId: string | null = null;
+  private ariEngine: ARIEngine;
+  private static readonly DAEMON_PROVIDER = "cs-quill-daemon";
+  private ariWarningShown = false;
+  private static readonly ARI_LOW_THRESHOLD = 40;
 
-  constructor(port: number = 8443, host: string = "127.0.0.1") {
+  constructor(port: number = 8443, host: string = "127.0.0.1", ariEngine?: ARIEngine) {
     this.port = port;
     this.host = host;
+    this.ariEngine = ariEngine ?? new ARIEngine();
     this.statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left,
       100,
@@ -325,13 +332,22 @@ export class QuillClient {
     language?: string,
   ): Promise<AnalysisResult | null> {
     if (!this.connected) return null;
+    if (!this.ariEngine.isHealthy(QuillClient.DAEMON_PROVIDER)) {
+      this.showAriWarning();
+      return null;
+    }
     try {
-      return await this.request("analyze_file", {
+      const result = await this.request("analyze_file", {
         filePath,
         content,
         language,
       });
-    } catch {
+      this.ariEngine.recordSuccess(QuillClient.DAEMON_PROVIDER);
+      this.clearAriWarning();
+      return result;
+    } catch (err) {
+      this.ariEngine.recordFailure(QuillClient.DAEMON_PROVIDER, String(err));
+      this.checkAriHealth();
       return null;
     }
   }
@@ -342,8 +358,12 @@ export class QuillClient {
   public async getSymbols(filePath: string, content: string): Promise<SymbolInfo[]> {
     if (!this.connected) return [];
     try {
-      return await this.request('get_symbols', { filePath, content });
-    } catch {
+      const result = await this.request('get_symbols', { filePath, content });
+      this.ariEngine.recordSuccess(QuillClient.DAEMON_PROVIDER);
+      return result;
+    } catch (err) {
+      this.ariEngine.recordFailure(QuillClient.DAEMON_PROVIDER, String(err));
+      this.checkAriHealth();
       return [];
     }
   }
@@ -352,8 +372,12 @@ export class QuillClient {
   public async getFunctionFindings(filePath: string, functionName: string): Promise<QuillFinding[]> {
     if (!this.connected) return [];
     try {
-      return await this.request('get_function_findings', { filePath, functionName });
-    } catch {
+      const result = await this.request('get_function_findings', { filePath, functionName });
+      this.ariEngine.recordSuccess(QuillClient.DAEMON_PROVIDER);
+      return result;
+    } catch (err) {
+      this.ariEngine.recordFailure(QuillClient.DAEMON_PROVIDER, String(err));
+      this.checkAriHealth();
       return [];
     }
   }
@@ -362,8 +386,12 @@ export class QuillClient {
   public async getCoverage(filePath: string): Promise<CoverageInfo | null> {
     if (!this.connected) return null;
     try {
-      return await this.request('get_coverage', { filePath });
-    } catch {
+      const result = await this.request('get_coverage', { filePath });
+      this.ariEngine.recordSuccess(QuillClient.DAEMON_PROVIDER);
+      return result;
+    } catch (err) {
+      this.ariEngine.recordFailure(QuillClient.DAEMON_PROVIDER, String(err));
+      this.checkAriHealth();
       return null;
     }
   }
@@ -376,9 +404,53 @@ export class QuillClient {
   ): Promise<RenameResult | null> {
     if (!this.connected) return null;
     try {
-      return await this.request('rename_symbol', { filePath, position, newName });
-    } catch {
+      const result = await this.request('rename_symbol', { filePath, position, newName });
+      this.ariEngine.recordSuccess(QuillClient.DAEMON_PROVIDER);
+      return result;
+    } catch (err) {
+      this.ariEngine.recordFailure(QuillClient.DAEMON_PROVIDER, String(err));
+      this.checkAriHealth();
       return null;
+    }
+  }
+
+  // ── ARI Health Report ──
+
+  public getHealthReport(): ARIStatus[] {
+    return this.ariEngine.getStatus();
+  }
+
+  public getARIEngine(): ARIEngine {
+    return this.ariEngine;
+  }
+
+  // ── ARI Warning Helpers ──
+
+  private checkAriHealth(): void {
+    const score = this.ariEngine.getScore(QuillClient.DAEMON_PROVIDER);
+    if (score <= QuillClient.ARI_LOW_THRESHOLD) {
+      this.showAriWarning();
+    }
+  }
+
+  private showAriWarning(): void {
+    if (this.ariWarningShown) return;
+    this.ariWarningShown = true;
+    const score = this.ariEngine.getScore(QuillClient.DAEMON_PROVIDER);
+    const circuit = this.ariEngine.getCircuitState(QuillClient.DAEMON_PROVIDER);
+    this.statusBarItem.text = `$(shield) CS Quill: $(warning) ARI ${score}`;
+    this.statusBarItem.tooltip = `Daemon reliability low (ARI: ${score}, Circuit: ${circuit}). Requests may be blocked.`;
+    this.statusBarItem.backgroundColor = new vscode.ThemeColor(
+      "statusBarItem.warningBackground",
+    );
+  }
+
+  private clearAriWarning(): void {
+    if (!this.ariWarningShown) return;
+    const score = this.ariEngine.getScore(QuillClient.DAEMON_PROVIDER);
+    if (score > QuillClient.ARI_LOW_THRESHOLD) {
+      this.ariWarningShown = false;
+      this.updateStatusBar(this.connected);
     }
   }
 

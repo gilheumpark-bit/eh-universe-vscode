@@ -5,21 +5,33 @@
 
 import * as vscode from "vscode";
 import type { QuillFinding } from "../QuillClient";
+import type { ScopePolicy } from "../scope-policy";
 
 // Step 25~26: DiagnosticCollection 생성
 export class DiagnosticProvider {
   private collection: vscode.DiagnosticCollection;
   private findingsCache: Map<string, QuillFinding[]> = new Map();
+  private scopePolicy: ScopePolicy | null = null;
 
   constructor() {
     this.collection = vscode.languages.createDiagnosticCollection("cs-quill");
   }
 
+  /** Scope policy 주입 (extension.ts에서 호출) */
+  public setScopePolicy(policy: ScopePolicy): void {
+    this.scopePolicy = policy;
+  }
+
   // Step 28~32: 분석 결과 → 물결선 변환 + 푸시
   public updateDiagnostics(uri: vscode.Uri, findings: QuillFinding[]): void {
-    this.findingsCache.set(uri.toString(), findings);
+    // ── Scope Policy 필터링 (진단 생성 전) ──
+    const filtered = this.scopePolicy
+      ? this.scopePolicy.applyToFindings(findings, uri.fsPath)
+      : findings;
 
-    const diagnostics: vscode.Diagnostic[] = findings.map((f) => {
+    this.findingsCache.set(uri.toString(), filtered);
+
+    const diagnostics: vscode.Diagnostic[] = filtered.map((f) => {
       // Step 30: Range 변환 (줄 번호 → VS Code Range)
       const startLine = Math.max(0, (f.line ?? 1) - 1);
       const endLine = Math.max(startLine, (f.endLine ?? f.line ?? 1) - 1);

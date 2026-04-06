@@ -7,6 +7,7 @@
 import * as vscode from "vscode";
 import { SidebarProvider } from "./SidebarProvider";
 import { QuillClient } from "./QuillClient";
+import { ARIEngine } from "./ari-engine";
 import { DiagnosticProvider } from "./providers/DiagnosticProvider";
 import { QuillCodeActionProvider } from "./providers/CodeActionProvider";
 import { QuillDocumentSymbolProvider } from "./providers/DocumentSymbolProvider";
@@ -18,6 +19,7 @@ import {
   clearSpawnedDaemon,
 } from "./daemon";
 import { registerCommands } from "./commands";
+import { ScopePolicy } from "./scope-policy";
 
 // ============================================================
 // PART 1 — Extension State
@@ -25,6 +27,7 @@ import { registerCommands } from "./commands";
 
 let quillClient: QuillClient | null = null;
 let diagnosticProvider: DiagnosticProvider;
+let scopePolicy: ScopePolicy;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let outputChannel: vscode.OutputChannel | null = null;
 
@@ -83,11 +86,28 @@ export function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel("CS Quill");
   context.subscriptions.push(outputChannel);
 
+  // ── Scope Policy ──
+  scopePolicy = new ScopePolicy();
+  scopePolicy.loadFromConfig();
+  diagnosticProvider.setScopePolicy(scopePolicy);
+
+  // config 변경 시 scope policy 재로드
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("csQuill.scopePolicy")) {
+        scopePolicy.loadFromConfig();
+      }
+    }),
+  );
+
+  // ── ARIEngine ──
+  const ariEngine = new ARIEngine();
+
   // ── QuillClient ──
   const port =
     vscode.workspace.getConfiguration("csQuill").get<number>("daemonPort") ??
     8443;
-  const client = new QuillClient(port);
+  const client = new QuillClient(port, "127.0.0.1", ariEngine);
   quillClient = client;
   context.subscriptions.push(client.getStatusBarItem());
 
@@ -109,6 +129,7 @@ export function activate(context: vscode.ExtensionContext) {
       sidebarHealthState.score,
       sidebarHealthState.errorCount,
       connected,
+      client.getHealthReport(),
     );
   });
 
@@ -118,7 +139,7 @@ export function activate(context: vscode.ExtensionContext) {
     connected: boolean,
   ) {
     sidebarHealthState = { score, errorCount, connected };
-    sidebarProvider.updateHealthScore(score, errorCount, connected);
+    sidebarProvider.updateHealthScore(score, errorCount, connected, client.getHealthReport());
   }
 
   // ── Connection Helper (with startup timeout) ──
@@ -211,6 +232,7 @@ export function activate(context: vscode.ExtensionContext) {
       result.score ?? 100,
       result.findings.length,
       client.isConnected(),
+      client.getHealthReport(),
     );
   });
 
@@ -222,6 +244,7 @@ export function activate(context: vscode.ExtensionContext) {
       result.score ?? 100,
       result.findings?.length ?? 0,
       client.isConnected(),
+      client.getHealthReport(),
     );
   });
 
@@ -249,6 +272,7 @@ export function activate(context: vscode.ExtensionContext) {
               result.score ?? 100,
               result.findings.length,
               client.isConnected(),
+              client.getHealthReport(),
             );
           }
         });
