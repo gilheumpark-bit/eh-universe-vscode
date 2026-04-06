@@ -7,6 +7,9 @@ import * as vscode from "vscode";
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   _view?: vscode.WebviewView;
+  private _healthScore: number | null = null;
+  private _errorCount: number = 0;
+  private _connected: boolean = false;
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
@@ -18,6 +21,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.options = {
       enableScripts: true,
+      enableCommandUris: true,
       localResourceRoots: [this._extensionUri],
     };
 
@@ -28,59 +32,31 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         this._resendSidebarHealth();
       }
     });
-
-    // Step 45~48: 메시지 핸들러
-    webviewView.webview.onDidReceiveMessage(async (data) => {
-      switch (data.type) {
-        case "onInfo":
-          if (data.value) vscode.window.showInformationMessage(data.value);
-          break;
-        case "onError":
-          if (data.value) vscode.window.showErrorMessage(data.value);
-          break;
-        case "analyze-current":
-          vscode.commands.executeCommand("cs-quill.analyzeFile");
-          break;
-        case "fix-all":
-          vscode.commands.executeCommand("cs-quill.fixAll");
-          break;
-        case "reconnect":
-          vscode.commands.executeCommand("cs-quill.reconnect");
-          break;
-        case "request-status":
-          this._resendSidebarHealth();
-          break;
-      }
-    });
   }
 
-  // Step 46: Health Score 업데이트 (extension에서 호출)
+  // Health Score 업데이트 — JS 없이 HTML 리렌더
   public updateHealthScore(
     score: number,
     errorCount: number,
     connected: boolean,
   ): void {
-    this._view?.webview.postMessage({
-      type: "health-update",
-      payload: { score, errorCount, connected },
-    });
+    this._healthScore = score;
+    this._errorCount = errorCount;
+    this._connected = connected;
+    if (this._view) {
+      this._view.webview.html = this._getHtmlForWebview(this._view.webview);
+    }
   }
 
   public revive(panel: vscode.WebviewView) {
     this._view = panel;
   }
 
-  private _getHtmlForWebview(webview: vscode.Webview) {
-    const nonce = getNonce();
-    const sidebarScriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "dist", "sidebar.js"),
-    );
-
+  private _getHtmlForWebview(_webview: vscode.Webview) {
     return `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}' ${webview.cspSource}; style-src 'unsafe-inline';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: var(--vscode-font-family); color: var(--vscode-foreground); padding: 12px; margin: 0; }
@@ -90,29 +66,27 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
     .status-dot.connected { background: #4ade80; }
     .status-dot.disconnected { background: #f87171; }
-    button { width: 100%; padding: 8px; margin: 4px 0; border: 1px solid var(--vscode-button-border, transparent); border-radius: 4px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); cursor: pointer; font-size: 12px; }
-    button:hover { background: var(--vscode-button-hoverBackground); }
-    .btn-secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
+    a.btn { display: block; text-align: center; padding: 8px; margin: 4px 0; border: 1px solid var(--vscode-button-border, transparent); border-radius: 4px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); cursor: pointer; font-size: 12px; text-decoration: none; }
+    a.btn:hover { background: var(--vscode-button-hoverBackground); }
+    a.btn-secondary { display: block; text-align: center; padding: 8px; margin: 4px 0; border-radius: 4px; background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); text-decoration: none; font-size: 12px; }
     .divider { border-top: 1px solid var(--vscode-panel-border); margin: 12px 0; }
   </style>
 </head>
 <body>
-  <div class="health" id="health-panel">
-    <div class="health-score" id="score">--</div>
+  <div class="health">
+    <div class="health-score">${this._healthScore ?? '--'}</div>
     <div class="health-label">Health Score</div>
     <div style="margin-top: 8px;">
-      <span class="status-dot disconnected" id="status-dot"></span>
-      <span id="status-text">데몬 미연결</span>
+      <span class="status-dot ${this._connected ? 'connected' : 'disconnected'}"></span>
+      <span>${this._connected ? '데몬 연결됨' : '데몬 미연결'}</span>
     </div>
-    <div class="health-label" id="error-count"></div>
+    <div class="health-label">${this._errorCount > 0 ? this._errorCount + '건 에러' : ''}</div>
   </div>
 
-  <button id="btn-analyze">🔍 현재 파일 분석</button>
-  <button id="btn-fix-all">✨ 전체 수리 일괄 승인</button>
+  <a class="btn" href="command:cs-quill.analyzeFile">🔍 현재 파일 분석</a>
+  <a class="btn" href="command:cs-quill.fixAll">✨ 전체 수리 일괄 승인</a>
   <div class="divider"></div>
-  <button class="btn-secondary" id="btn-reconnect">🔌 데몬 재연결</button>
-
-  <script nonce="${nonce}" src="${sidebarScriptUri}"></script>
+  <a class="btn-secondary" href="command:cs-quill.reconnect">🔌 데몬 재연결</a>
 </body>
 </html>`;
   }
