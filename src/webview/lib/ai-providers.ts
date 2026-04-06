@@ -430,7 +430,7 @@ function _obfuscateKeySync(plain: string): string {
 // ── Unified encrypt/decrypt (async, with sync fallback) ──
 
 /** Encrypt: AES-GCM preferred, v3 XOR fallback */
-async function encryptKey(plain: string): Promise<string> {
+export async function encryptKey(plain: string): Promise<string> {
   if (!plain) return "";
   if (_isSubtleCryptoAvailable()) {
     try {
@@ -448,7 +448,7 @@ function obfuscateKey(plain: string): string {
 }
 
 /** Decrypt: detects version prefix and dispatches accordingly */
-async function decryptKey(stored: string): Promise<string> {
+export async function decryptKey(stored: string): Promise<string> {
   if (!stored) return "";
   // v4: AES-GCM
   if (stored.startsWith(_ENCRYPTION_PREFIX_V4)) {

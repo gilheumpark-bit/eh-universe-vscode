@@ -157,19 +157,66 @@ export interface RemoteCollabConnection {
  * 현재는 로컬 채널만으로 동작, 원격 서버 구현 시 활성화.
  */
 /**
- * 원격 협업 연결 — 현재 미구현 (로컬 BroadcastChannel만 지원).
- * /api/collab/:roomId SSE 엔드포인트 구현 시 활성화 예정.
- * @returns 항상 null (원격 서버 미구현)
+ * 원격 협업 연결 (SSE + fetch).
+ * /api/collab/:roomId SSE 엔드포인트에 연결하여 원격 유저와 실시간 편집.
+ * SSE로 수신, fetch POST로 송신.
  */
 export function connectRemote(
-  _roomId: string,
-  _user: CollabUser,
-  _handlers: {
+  roomId: string,
+  user: CollabUser,
+  handlers: {
     onEdit?: (edit: CollabEdit) => void;
     onCursor?: (user: CollabUser) => void;
     onJoin?: (user: CollabUser) => void;
     onLeave?: (userId: string) => void;
   },
 ): RemoteCollabConnection | null {
-  return null; // [미구현] 원격 SSE 서버 필요
+  try {
+    const serverUrl = `${window.location.origin}/api/collab/${roomId}`;
+    const es = new EventSource(`${serverUrl}?userId=${user.id}`);
+
+    es.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        switch (data.type) {
+          case "edit":
+            handlers.onEdit?.(data.payload as CollabEdit);
+            break;
+          case "cursor":
+            handlers.onCursor?.(data.payload as CollabUser);
+            break;
+          case "join":
+            handlers.onJoin?.(data.payload as CollabUser);
+            break;
+          case "leave":
+            handlers.onLeave?.(data.payload as string);
+            break;
+        }
+      } catch {
+        /* malformed message — ignore */
+      }
+    };
+
+    es.onerror = () => {
+      es.close();
+    };
+
+    const send = (data: CollabEdit | CollabUser) => {
+      fetch(serverUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, payload: data }),
+      }).catch(() => {
+        /* silent send failure */
+      });
+    };
+
+    const close = () => {
+      es.close();
+    };
+
+    return { send, close };
+  } catch {
+    return null;
+  }
 }

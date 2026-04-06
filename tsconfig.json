@@ -16,5 +16,6 @@
       "@/*": ["./src/webview/*", "./src/*"]
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["src/__mocks__"]
 }

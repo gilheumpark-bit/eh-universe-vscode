@@ -1,6 +1,6 @@
-import type { AppLanguage } from "./studio-types";
-import { TRANSLATIONS } from "./studio-translations";
-import type { Lang } from "./LangContext";
+import type { AppLanguage } from "@/lib/studio-types";
+import { TRANSLATIONS } from "@/lib/studio-translations";
+import type { Lang } from "@/lib/LangContext";
 
 /** 4개 언어 인라인 번역 헬퍼 — JP/CN 없으면 KO로 fallback */
 export function L4(
