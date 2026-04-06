@@ -5,7 +5,15 @@
 // ============================================================
 
 import { useState, useMemo } from "react";
-import { GitMerge, Check, ChevronLeft, ChevronRight, ArrowLeftRight, CheckCircle, AlertTriangle } from "lucide-react";
+import {
+  GitMerge,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ArrowLeftRight,
+  CheckCircle,
+  AlertTriangle,
+} from "lucide-react";
 
 export interface ConflictBlock {
   id: string;
@@ -21,7 +29,11 @@ export interface ConflictBlock {
 interface MergeConflictEditorProps {
   fileName: string;
   conflicts: ConflictBlock[];
-  onResolve: (conflictId: string, resolution: ConflictBlock["resolution"], content?: string) => void;
+  onResolve: (
+    conflictId: string,
+    resolution: ConflictBlock["resolution"],
+    content?: string,
+  ) => void;
   onResolveAll?: (resolution: "ours" | "theirs") => void;
 }
 
@@ -36,18 +48,31 @@ function ConflictView({
   onResolve,
 }: {
   conflict: ConflictBlock;
-  onResolve: (resolution: ConflictBlock["resolution"], content?: string) => void;
+  onResolve: (
+    resolution: ConflictBlock["resolution"],
+    content?: string,
+  ) => void;
 }) {
   const [showManual, setShowManual] = useState(false);
-  const [manualContent, setManualContent] = useState(conflict.manualContent ?? "");
+  const [manualContent, setManualContent] = useState(
+    conflict.manualContent ?? "",
+  );
 
   if (conflict.resolved) {
     let resolvedContent = "";
     switch (conflict.resolution) {
-      case "ours": resolvedContent = conflict.ours; break;
-      case "theirs": resolvedContent = conflict.theirs; break;
-      case "both": resolvedContent = `${conflict.ours}\n${conflict.theirs}`; break;
-      case "manual": resolvedContent = conflict.manualContent ?? ""; break;
+      case "ours":
+        resolvedContent = conflict.ours;
+        break;
+      case "theirs":
+        resolvedContent = conflict.theirs;
+        break;
+      case "both":
+        resolvedContent = `${conflict.ours}\n${conflict.theirs}`;
+        break;
+      case "manual":
+        resolvedContent = conflict.manualContent ?? "";
+        break;
     }
     return (
       <div className="rounded-lg border border-green-500/20 bg-green-500/5 p-3">
@@ -173,7 +198,9 @@ export default function MergeConflictEditor({
         <div className="flex items-center gap-2">
           <GitMerge size={16} className="text-accent-amber" />
           <span className="text-sm font-medium text-white">{fileName}</span>
-          <span className={`text-xs ${allResolved ? "text-green-400" : "text-accent-amber"}`}>
+          <span
+            className={`text-xs ${allResolved ? "text-green-400" : "text-accent-amber"}`}
+          >
             {resolvedCount}/{totalCount} resolved
           </span>
         </div>
@@ -207,7 +234,9 @@ export default function MergeConflictEditor({
           <ConflictView
             key={c.id}
             conflict={c}
-            onResolve={(resolution, content) => onResolve(c.id, resolution, content)}
+            onResolve={(resolution, content) =>
+              onResolve(c.id, resolution, content)
+            }
           />
         ))}
       </div>
@@ -217,7 +246,9 @@ export default function MergeConflictEditor({
         <div className="h-1 w-full rounded-full bg-white/10">
           <div
             className={`h-full rounded-full transition-all duration-300 ${allResolved ? "bg-green-500" : "bg-accent-amber"}`}
-            style={{ width: `${totalCount > 0 ? (resolvedCount / totalCount) * 100 : 0}%` }}
+            style={{
+              width: `${totalCount > 0 ? (resolvedCount / totalCount) * 100 : 0}%`,
+            }}
           />
         </div>
       </div>

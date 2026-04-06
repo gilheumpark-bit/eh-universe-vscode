@@ -33,7 +33,7 @@ export interface Commit {
 
 export interface FileDiff {
   path: string;
-  status: 'added' | 'modified' | 'deleted';
+  status: "added" | "modified" | "deleted";
   oldContent: string | null;
   newContent: string | null;
   additions: number;
@@ -42,7 +42,7 @@ export interface FileDiff {
 
 export interface FileStatus {
   path: string;
-  status: 'added' | 'modified' | 'deleted' | 'untracked';
+  status: "added" | "modified" | "deleted" | "untracked";
 }
 
 // IDENTITY_SEAL: PART-1 | role=Types | inputs=none | outputs=GitRepo,Commit,FileDiff,FileStatus
@@ -57,11 +57,13 @@ export interface FileStatus {
  * 불가능한 환경에서는 간이 해시로 폴백.
  */
 async function sha1(input: string): Promise<string> {
-  if (typeof crypto !== 'undefined' && crypto.subtle) {
+  if (typeof crypto !== "undefined" && crypto.subtle) {
     const data = new TextEncoder().encode(input);
-    const buffer = await crypto.subtle.digest('SHA-1', data);
+    const buffer = await crypto.subtle.digest("SHA-1", data);
     const bytes = new Uint8Array(buffer);
-    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    return Array.from(bytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
   }
 
   // 폴백: 간이 해시 (crypto.subtle 미지원 환경)
@@ -82,8 +84,8 @@ function fallbackHash(input: string): string {
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
   h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
 
-  const part1 = (h1 >>> 0).toString(16).padStart(8, '0');
-  const part2 = (h2 >>> 0).toString(16).padStart(8, '0');
+  const part1 = (h1 >>> 0).toString(16).padStart(8, "0");
+  const part2 = (h2 >>> 0).toString(16).padStart(8, "0");
   // 40자 SHA-1 길이에 맞추기 위해 반복
   return (part1 + part2 + part1 + part2 + part1).slice(0, 40);
 }
@@ -102,10 +104,10 @@ export function initRepo(): GitRepo {
   const repo: GitRepo = {
     commits: new Map(),
     branches: new Map(),
-    currentBranch: 'main',
+    currentBranch: "main",
     head: null,
   };
-  repo.branches.set('main', '');
+  repo.branches.set("main", "");
   return repo;
 }
 
@@ -122,19 +124,21 @@ export async function commitFiles(
   repo: GitRepo,
   files: Map<string, string>,
   message: string,
-  author = 'Code Studio',
+  author = "Code Studio",
 ): Promise<Commit> {
   if (!message.trim()) {
-    throw new Error('Commit message cannot be empty');
+    throw new Error("Commit message cannot be empty");
   }
 
   // 이전 커밋의 파일 스냅샷을 복사하고 새 파일로 덮어쓴다
   const parentHash = repo.head;
-  const parentCommit = parentHash ? repo.commits.get(parentHash) ?? null : null;
+  const parentCommit = parentHash
+    ? (repo.commits.get(parentHash) ?? null)
+    : null;
   const snapshot = new Map<string, string>(parentCommit?.files ?? []);
 
   for (const [path, content] of files) {
-    if (content === '') {
+    if (content === "") {
       // 빈 문자열은 삭제로 처리하지 않음 — 명시적 삭제는 별도 API 필요
       snapshot.set(path, content);
     } else {
@@ -144,14 +148,16 @@ export async function commitFiles(
 
   // 커밋 해시 = SHA-1(parent + message + timestamp + 파일 내용 정렬)
   const timestamp = Date.now();
-  const sortedEntries = [...snapshot.entries()].sort(([a], [b]) => a.localeCompare(b));
+  const sortedEntries = [...snapshot.entries()].sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
   const hashInput = [
-    parentHash ?? 'null',
+    parentHash ?? "null",
     message,
     String(timestamp),
     author,
     ...sortedEntries.map(([p, c]) => `${p}:${c.length}`),
-  ].join('\n');
+  ].join("\n");
 
   const hash = await sha1(hashInput);
 
@@ -182,12 +188,13 @@ export async function commitFiles(
  * 자동으로 전환하지 않는다.
  */
 export function createBranch(repo: GitRepo, name: string): void {
-  if (!name.trim()) throw new Error('Branch name cannot be empty');
-  if (repo.branches.has(name)) throw new Error(`Branch "${name}" already exists`);
+  if (!name.trim()) throw new Error("Branch name cannot be empty");
+  if (repo.branches.has(name))
+    throw new Error(`Branch "${name}" already exists`);
   if (!/^[a-zA-Z0-9/_-]+$/.test(name)) {
     throw new Error(`Invalid branch name: "${name}"`);
   }
-  repo.branches.set(name, repo.head ?? '');
+  repo.branches.set(name, repo.head ?? "");
 }
 
 /**
@@ -241,8 +248,12 @@ export function getLog(repo: GitRepo, limit = 50): Commit[] {
  * 두 커밋 간의 파일 diff를 계산한다.
  * commitA → commitB 방향 (A가 이전, B가 이후).
  */
-export function diffCommits(repo: GitRepo, commitHashA: string | null, commitHashB: string): FileDiff[] {
-  const commitA = commitHashA ? repo.commits.get(commitHashA) ?? null : null;
+export function diffCommits(
+  repo: GitRepo,
+  commitHashA: string | null,
+  commitHashB: string,
+): FileDiff[] {
+  const commitA = commitHashA ? (repo.commits.get(commitHashA) ?? null) : null;
   const commitB = repo.commits.get(commitHashB);
   if (!commitB) return [];
 
@@ -256,14 +267,39 @@ export function diffCommits(repo: GitRepo, commitHashA: string | null, commitHas
     const newContent = filesB.get(path) ?? null;
 
     if (oldContent === null && newContent !== null) {
-      const additions = newContent.split('\n').length;
-      diffs.push({ path, status: 'added', oldContent: null, newContent, additions, deletions: 0 });
+      const additions = newContent.split("\n").length;
+      diffs.push({
+        path,
+        status: "added",
+        oldContent: null,
+        newContent,
+        additions,
+        deletions: 0,
+      });
     } else if (oldContent !== null && newContent === null) {
-      const deletions = oldContent.split('\n').length;
-      diffs.push({ path, status: 'deleted', oldContent, newContent: null, additions: 0, deletions });
-    } else if (oldContent !== null && newContent !== null && oldContent !== newContent) {
+      const deletions = oldContent.split("\n").length;
+      diffs.push({
+        path,
+        status: "deleted",
+        oldContent,
+        newContent: null,
+        additions: 0,
+        deletions,
+      });
+    } else if (
+      oldContent !== null &&
+      newContent !== null &&
+      oldContent !== newContent
+    ) {
       const { additions, deletions } = countDiffLines(oldContent, newContent);
-      diffs.push({ path, status: 'modified', oldContent, newContent, additions, deletions });
+      diffs.push({
+        path,
+        status: "modified",
+        oldContent,
+        newContent,
+        additions,
+        deletions,
+      });
     }
     // oldContent === newContent → 변경 없음, 스킵
   }
@@ -275,9 +311,12 @@ export function diffCommits(repo: GitRepo, commitHashA: string | null, commitHas
  * 간단한 줄 단위 diff 통계를 계산한다.
  * Myers diff 대신 LCS 기반 간이 계산.
  */
-function countDiffLines(oldText: string, newText: string): { additions: number; deletions: number } {
-  const oldLines = oldText.split('\n');
-  const newLines = newText.split('\n');
+function countDiffLines(
+  oldText: string,
+  newText: string,
+): { additions: number; deletions: number } {
+  const oldLines = oldText.split("\n");
+  const newLines = newText.split("\n");
   const oldSet = new Map<string, number>();
 
   for (const line of oldLines) {
@@ -306,8 +345,11 @@ function countDiffLines(oldText: string, newText: string): { additions: number; 
  * @param currentFiles - 현재 워킹 트리 파일 (path → content)
  * @returns 각 파일의 변경 상태
  */
-export function getStatus(repo: GitRepo, currentFiles: Map<string, string>): FileStatus[] {
-  const headCommit = repo.head ? repo.commits.get(repo.head) ?? null : null;
+export function getStatus(
+  repo: GitRepo,
+  currentFiles: Map<string, string>,
+): FileStatus[] {
+  const headCommit = repo.head ? (repo.commits.get(repo.head) ?? null) : null;
   const headFiles = headCommit?.files ?? new Map<string, string>();
   const allPaths = new Set([...headFiles.keys(), ...currentFiles.keys()]);
   const statuses: FileStatus[] = [];
@@ -317,14 +359,14 @@ export function getStatus(repo: GitRepo, currentFiles: Map<string, string>): Fil
     const inWorking = currentFiles.has(path);
 
     if (!inHead && inWorking) {
-      statuses.push({ path, status: headCommit ? 'added' : 'untracked' });
+      statuses.push({ path, status: headCommit ? "added" : "untracked" });
     } else if (inHead && !inWorking) {
-      statuses.push({ path, status: 'deleted' });
+      statuses.push({ path, status: "deleted" });
     } else if (inHead && inWorking) {
-      const headContent = headFiles.get(path) ?? '';
-      const workingContent = currentFiles.get(path) ?? '';
+      const headContent = headFiles.get(path) ?? "";
+      const workingContent = currentFiles.get(path) ?? "";
       if (headContent !== workingContent) {
-        statuses.push({ path, status: 'modified' });
+        statuses.push({ path, status: "modified" });
       }
     }
   }

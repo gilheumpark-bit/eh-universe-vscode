@@ -5,7 +5,7 @@
 
 /** Badging API 지원 여부 */
 export function canBadge(): boolean {
-  return typeof navigator !== 'undefined' && 'setAppBadge' in navigator;
+  return typeof navigator !== "undefined" && "setAppBadge" in navigator;
 }
 
 /** 뱃지 설정 (숫자) */
@@ -13,19 +13,29 @@ export async function setBadge(count: number): Promise<void> {
   if (!canBadge()) return;
   try {
     if (count <= 0) {
-      await (navigator as unknown as { clearAppBadge: () => Promise<void> }).clearAppBadge();
+      await (
+        navigator as unknown as { clearAppBadge: () => Promise<void> }
+      ).clearAppBadge();
     } else {
-      await (navigator as unknown as { setAppBadge: (n: number) => Promise<void> }).setAppBadge(count);
+      await (
+        navigator as unknown as { setAppBadge: (n: number) => Promise<void> }
+      ).setAppBadge(count);
     }
-  } catch { /* */ }
+  } catch {
+    /* */
+  }
 }
 
 /** 뱃지 초기화 */
 export async function clearBadge(): Promise<void> {
   if (!canBadge()) return;
   try {
-    await (navigator as unknown as { clearAppBadge: () => Promise<void> }).clearAppBadge();
-  } catch { /* */ }
+    await (
+      navigator as unknown as { clearAppBadge: () => Promise<void> }
+    ).clearAppBadge();
+  } catch {
+    /* */
+  }
 }
 
 // ── 스튜디오별 편의 함수 ──

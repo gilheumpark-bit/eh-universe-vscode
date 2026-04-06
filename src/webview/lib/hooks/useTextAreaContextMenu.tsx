@@ -8,11 +8,31 @@ export type TextAreaContextAction = "cut" | "copy" | "paste" | "select-all";
 
 function buildTextAreaContextMenu(lang: string): ContextMenuItem[] {
   return [
-    { id: "cut", label: L4(lang, { ko: "잘라내기", en: "Cut" }), icon: <Scissors size={12} />, shortcut: "Ctrl+X" },
-    { id: "copy", label: L4(lang, { ko: "복사", en: "Copy" }), icon: <Copy size={12} />, shortcut: "Ctrl+C" },
-    { id: "paste", label: L4(lang, { ko: "붙여넣기", en: "Paste" }), icon: <ClipboardPaste size={12} />, shortcut: "Ctrl+V" },
+    {
+      id: "cut",
+      label: L4(lang, { ko: "잘라내기", en: "Cut" }),
+      icon: <Scissors size={12} />,
+      shortcut: "Ctrl+X",
+    },
+    {
+      id: "copy",
+      label: L4(lang, { ko: "복사", en: "Copy" }),
+      icon: <Copy size={12} />,
+      shortcut: "Ctrl+C",
+    },
+    {
+      id: "paste",
+      label: L4(lang, { ko: "붙여넣기", en: "Paste" }),
+      icon: <ClipboardPaste size={12} />,
+      shortcut: "Ctrl+V",
+    },
     { id: "sep-1", label: "", separator: true },
-    { id: "select-all", label: L4(lang, { ko: "모두 선택", en: "Select All" }), icon: <TextSelect size={12} />, shortcut: "Ctrl+A" },
+    {
+      id: "select-all",
+      label: L4(lang, { ko: "모두 선택", en: "Select All" }),
+      icon: <TextSelect size={12} />,
+      shortcut: "Ctrl+A",
+    },
   ];
 }
 
@@ -27,8 +47,13 @@ function replaceSelection(target: HTMLTextAreaElement, text: string): void {
   emitReactInput(target);
 }
 
-async function writeSelectedToClipboard(target: HTMLTextAreaElement): Promise<boolean> {
-  const selected = target.value.slice(target.selectionStart ?? 0, target.selectionEnd ?? 0);
+async function writeSelectedToClipboard(
+  target: HTMLTextAreaElement,
+): Promise<boolean> {
+  const selected = target.value.slice(
+    target.selectionStart ?? 0,
+    target.selectionEnd ?? 0,
+  );
   if (!selected) return true;
   try {
     if (!navigator.clipboard?.writeText) return false;
@@ -84,7 +109,9 @@ export async function runTextAreaContextAction(
 
 export function useTextAreaContextMenu(lang: string) {
   const targetRef = useRef<HTMLTextAreaElement | null>(null);
-  const [menuState, setMenuState] = useState<{ x: number; y: number } | null>(null);
+  const [menuState, setMenuState] = useState<{ x: number; y: number } | null>(
+    null,
+  );
   const items = useMemo(() => buildTextAreaContextMenu(lang), [lang]);
 
   const openMenu = useCallback((e: React.MouseEvent<HTMLTextAreaElement>) => {
@@ -102,7 +129,10 @@ export function useTextAreaContextMenu(lang: string) {
 
   const handleSelect = useCallback(
     (id: string) => {
-      void runTextAreaContextAction(targetRef.current, id as TextAreaContextAction);
+      void runTextAreaContextAction(
+        targetRef.current,
+        id as TextAreaContextAction,
+      );
       closeMenu();
     },
     [closeMenu],
@@ -110,4 +140,3 @@ export function useTextAreaContextMenu(lang: string) {
 
   return { items, menuState, openMenu, closeMenu, handleSelect };
 }
-

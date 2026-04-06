@@ -7,7 +7,7 @@ import type { SourceTier } from "../types";
 import { DEFAULT_SOURCE_TIERS } from "../config";
 
 const TIER_MAP = new Map(
-  DEFAULT_SOURCE_TIERS.map((t) => [t.tier, t.riskMultiplier])
+  DEFAULT_SOURCE_TIERS.map((t) => [t.tier, t.riskMultiplier]),
 );
 
 /**

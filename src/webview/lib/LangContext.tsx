@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
 
 export type Lang = "ko" | "en" | "ja" | "zh";
 
@@ -78,7 +85,10 @@ export function useLang() {
 }
 
 /** Safe lookup for i18n objects — ja/zh fall back to ko if missing, then en */
-export function L2(obj: { ko: string; en: string; ja?: string; zh?: string }, lang: Lang): string {
+export function L2(
+  obj: { ko: string; en: string; ja?: string; zh?: string },
+  lang: Lang,
+): string {
   if (lang === "ko") return obj.ko;
   if (lang === "ja") return obj.ja || obj.ko || obj.en;
   if (lang === "zh") return obj.zh || obj.ko || obj.en;

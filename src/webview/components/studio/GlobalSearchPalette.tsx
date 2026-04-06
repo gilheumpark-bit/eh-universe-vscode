@@ -4,12 +4,12 @@
 // PART 1 — Global Search Palette (Ctrl+K command palette)
 // ============================================================
 
-import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { Search, X, UserCircle, Globe, FileText } from 'lucide-react';
-import type { StoryConfig, ChatSession, AppLanguage } from '@/lib/studio-types';
-import { L4 } from '@/lib/i18n';
+import React, { useMemo, useRef, useEffect, useState } from "react";
+import { Search, X, UserCircle, Globe, FileText } from "lucide-react";
+import type { StoryConfig, ChatSession, AppLanguage } from "@/lib/studio-types";
+import { L4 } from "@/lib/i18n";
 
-type ResultType = 'character' | 'episode' | 'world';
+type ResultType = "character" | "episode" | "world";
 
 interface SearchResult {
   type: ResultType;
@@ -44,7 +44,13 @@ function useDebounce(value: string, delay: number): string {
 }
 
 const GlobalSearchPalette: React.FC<GlobalSearchPaletteProps> = ({
-  query, setQuery, sessions, config, language, onSelect, onClose,
+  query,
+  setQuery,
+  sessions,
+  config,
+  language,
+  onSelect,
+  onClose,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounce(query, 300);
@@ -53,17 +59,92 @@ const GlobalSearchPalette: React.FC<GlobalSearchPaletteProps> = ({
     inputRef.current?.focus();
   }, []);
 
-  const worldFieldLabels = useMemo(() => [
-    { key: 'setting', label: L4(language, { ko: '배경', en: 'Setting', ja: '背景', zh: '背景' }) },
-    { key: 'corePremise', label: L4(language, { ko: '핵심 전제', en: 'Core Premise', ja: 'コアプレミス', zh: '核心前提' }) },
-    { key: 'synopsis', label: L4(language, { ko: '시놉시스', en: 'Synopsis', ja: 'シノプシス', zh: '剧情简介' }) },
-    { key: 'worldHistory', label: L4(language, { ko: '역사', en: 'History', ja: '歴史', zh: '历史' }) },
-    { key: 'socialSystem', label: L4(language, { ko: '사회 시스템', en: 'Social System', ja: '社会システム', zh: '社会系统' }) },
-    { key: 'powerStructure', label: L4(language, { ko: '권력 구조', en: 'Power Structure', ja: '権力構造', zh: '权力结构' }) },
-    { key: 'currentConflict', label: L4(language, { ko: '현재 갈등', en: 'Current Conflict', ja: '現在の対立', zh: '当前冲突' }) },
-    { key: 'culture', label: L4(language, { ko: '문화', en: 'Culture', ja: '文化', zh: '文化' }) },
-    { key: 'magicTechSystem', label: L4(language, { ko: '마법/기술', en: 'Magic/Tech', ja: '魔法/技術', zh: '魔法/科技' }) },
-  ], [language]);
+  const worldFieldLabels = useMemo(
+    () => [
+      {
+        key: "setting",
+        label: L4(language, {
+          ko: "배경",
+          en: "Setting",
+          ja: "背景",
+          zh: "背景",
+        }),
+      },
+      {
+        key: "corePremise",
+        label: L4(language, {
+          ko: "핵심 전제",
+          en: "Core Premise",
+          ja: "コアプレミス",
+          zh: "核心前提",
+        }),
+      },
+      {
+        key: "synopsis",
+        label: L4(language, {
+          ko: "시놉시스",
+          en: "Synopsis",
+          ja: "シノプシス",
+          zh: "剧情简介",
+        }),
+      },
+      {
+        key: "worldHistory",
+        label: L4(language, {
+          ko: "역사",
+          en: "History",
+          ja: "歴史",
+          zh: "历史",
+        }),
+      },
+      {
+        key: "socialSystem",
+        label: L4(language, {
+          ko: "사회 시스템",
+          en: "Social System",
+          ja: "社会システム",
+          zh: "社会系统",
+        }),
+      },
+      {
+        key: "powerStructure",
+        label: L4(language, {
+          ko: "권력 구조",
+          en: "Power Structure",
+          ja: "権力構造",
+          zh: "权力结构",
+        }),
+      },
+      {
+        key: "currentConflict",
+        label: L4(language, {
+          ko: "현재 갈등",
+          en: "Current Conflict",
+          ja: "現在の対立",
+          zh: "当前冲突",
+        }),
+      },
+      {
+        key: "culture",
+        label: L4(language, {
+          ko: "문화",
+          en: "Culture",
+          ja: "文化",
+          zh: "文化",
+        }),
+      },
+      {
+        key: "magicTechSystem",
+        label: L4(language, {
+          ko: "마법/기술",
+          en: "Magic/Tech",
+          ja: "魔法/技術",
+          zh: "魔法/科技",
+        }),
+      },
+    ],
+    [language],
+  );
 
   const results = useMemo<SearchResult[]>(() => {
     const q = debouncedQuery.toLowerCase().trim();
@@ -79,9 +160,9 @@ const GlobalSearchPalette: React.FC<GlobalSearchPaletteProps> = ({
           char.role?.toLowerCase().includes(q)
         ) {
           out.push({
-            type: 'character',
+            type: "character",
             label: char.name,
-            detail: `${char.role} — ${char.traits?.slice(0, 50) ?? ''}`,
+            detail: `${char.role} — ${char.traits?.slice(0, 50) ?? ""}`,
           });
         }
       }
@@ -94,9 +175,9 @@ const GlobalSearchPalette: React.FC<GlobalSearchPaletteProps> = ({
         session.config?.title?.toLowerCase().includes(q)
       ) {
         out.push({
-          type: 'episode',
+          type: "episode",
           label: session.config?.title || session.title,
-          detail: `EP.${session.config?.episode ?? '?'}`,
+          detail: `EP.${session.config?.episode ?? "?"}`,
           id: session.id,
         });
       }
@@ -106,11 +187,11 @@ const GlobalSearchPalette: React.FC<GlobalSearchPaletteProps> = ({
     if (config) {
       for (const wf of worldFieldLabels) {
         const val = (config as unknown as Record<string, unknown>)[wf.key];
-        if (typeof val === 'string' && val.toLowerCase().includes(q)) {
+        if (typeof val === "string" && val.toLowerCase().includes(q)) {
           out.push({
-            type: 'world',
+            type: "world",
             label: wf.label,
-            detail: val.slice(0, 60) + (val.length > 60 ? '...' : ''),
+            detail: val.slice(0, 60) + (val.length > 60 ? "..." : ""),
           });
           break; // Only show one world match
         }
@@ -127,16 +208,36 @@ const GlobalSearchPalette: React.FC<GlobalSearchPaletteProps> = ({
   };
 
   const categoryLabel = (type: ResultType): string => {
-    if (type === 'character') return L4(language, { ko: '캐릭터', en: 'CHAR', ja: 'キャラ', zh: '角色' });
-    if (type === 'episode') return L4(language, { ko: '에피소드', en: 'EP', ja: 'エピソード', zh: '章节' });
-    return L4(language, { ko: '세계관', en: 'WORLD', ja: '世界観', zh: '世界观' });
+    if (type === "character")
+      return L4(language, {
+        ko: "캐릭터",
+        en: "CHAR",
+        ja: "キャラ",
+        zh: "角色",
+      });
+    if (type === "episode")
+      return L4(language, {
+        ko: "에피소드",
+        en: "EP",
+        ja: "エピソード",
+        zh: "章节",
+      });
+    return L4(language, {
+      ko: "세계관",
+      en: "WORLD",
+      ja: "世界観",
+      zh: "世界观",
+    });
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[15vh]" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[200] flex items-start justify-center pt-[15vh]"
+      onClick={onClose}
+    >
       <div
         className="w-full max-w-lg bg-bg-secondary border border-border rounded-2xl shadow-2xl overflow-hidden"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         data-modal
@@ -147,16 +248,19 @@ const GlobalSearchPalette: React.FC<GlobalSearchPaletteProps> = ({
           <input
             ref={inputRef}
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder={L4(language, {
-              ko: '캐릭터, 에피소드, 세계관 검색... (Ctrl+K)',
-              en: 'Search characters, episodes, world... (Ctrl+K)',
-              ja: 'キャラクター、エピソード、世界観を検索... (Ctrl+K)',
-              zh: '搜索角色、章节、世界观... (Ctrl+K)',
+              ko: "캐릭터, 에피소드, 세계관 검색... (Ctrl+K)",
+              en: "Search characters, episodes, world... (Ctrl+K)",
+              ja: "キャラクター、エピソード、世界観を検索... (Ctrl+K)",
+              zh: "搜索角色、章节、世界观... (Ctrl+K)",
             })}
             className="flex-1 bg-transparent text-sm outline-none text-text-primary placeholder-text-tertiary"
           />
-          <button onClick={onClose} className="text-text-tertiary hover:text-text-primary">
+          <button
+            onClick={onClose}
+            className="text-text-tertiary hover:text-text-primary"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -166,10 +270,10 @@ const GlobalSearchPalette: React.FC<GlobalSearchPaletteProps> = ({
           {debouncedQuery && results.length === 0 && (
             <div className="px-4 py-6 text-center text-text-tertiary text-sm">
               {L4(language, {
-                ko: '검색 결과가 없습니다',
-                en: 'No results found',
-                ja: '検索結果がありません',
-                zh: '没有找到结果',
+                ko: "검색 결과가 없습니다",
+                en: "No results found",
+                ja: "検索結果がありません",
+                zh: "没有找到结果",
               })}
             </div>
           )}
@@ -181,8 +285,12 @@ const GlobalSearchPalette: React.FC<GlobalSearchPaletteProps> = ({
             >
               {iconMap[r.type]}
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-text-primary truncate">{r.label}</div>
-                <div className="text-[11px] text-text-tertiary truncate">{r.detail}</div>
+                <div className="text-sm font-semibold text-text-primary truncate">
+                  {r.label}
+                </div>
+                <div className="text-[11px] text-text-tertiary truncate">
+                  {r.detail}
+                </div>
               </div>
               <span className="text-[9px] font-mono uppercase text-text-tertiary tracking-widest shrink-0">
                 {categoryLabel(r.type)}

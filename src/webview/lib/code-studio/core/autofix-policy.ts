@@ -6,12 +6,12 @@
 
 /** Categories safe for automatic application without human review */
 export type SafeFixCategory =
-  | 'unused-import'
-  | 'console-remove'
-  | 'missing-semicolon'
-  | 'formatting'
-  | 'null-guard'
-  | 'type-import';
+  | "unused-import"
+  | "console-remove"
+  | "missing-semicolon"
+  | "formatting"
+  | "null-guard"
+  | "type-import";
 
 /** Regexes on fix *descriptions* — never auto-apply if any match */
 export const UNSAFE_AUTOFIX_DESCRIPTION_PATTERNS: readonly RegExp[] = [
@@ -31,18 +31,36 @@ export const SAFE_FIX_PATTERN_DEFINITIONS: ReadonlyArray<{
   pattern: RegExp;
   category: SafeFixCategory;
 }> = [
-  { pattern: /unused\s+import|remove\s+import|unreferenced\s+import/i, category: 'unused-import' },
-  { pattern: /console\.\w+|remove\s+console/i, category: 'console-remove' },
-  { pattern: /missing\s+semicolon|add\s+semicolon/i, category: 'missing-semicolon' },
-  { pattern: /whitespace|indentation|formatting|trailing\s+space/i, category: 'formatting' },
-  { pattern: /null\s+(check|guard)|undefined\s+(check|guard)|optional\s+chain|nullish/i, category: 'null-guard' },
-  { pattern: /type\s+import|import\s+type|missing\s+type/i, category: 'type-import' },
+  {
+    pattern: /unused\s+import|remove\s+import|unreferenced\s+import/i,
+    category: "unused-import",
+  },
+  { pattern: /console\.\w+|remove\s+console/i, category: "console-remove" },
+  {
+    pattern: /missing\s+semicolon|add\s+semicolon/i,
+    category: "missing-semicolon",
+  },
+  {
+    pattern: /whitespace|indentation|formatting|trailing\s+space/i,
+    category: "formatting",
+  },
+  {
+    pattern:
+      /null\s+(check|guard)|undefined\s+(check|guard)|optional\s+chain|nullish/i,
+    category: "null-guard",
+  },
+  {
+    pattern: /type\s+import|import\s+type|missing\s+type/i,
+    category: "type-import",
+  },
 ];
 
 /**
  * Classify a fix description. Returns null if unsafe or unknown.
  */
-export function classifyFixDescription(description: string): SafeFixCategory | null {
+export function classifyFixDescription(
+  description: string,
+): SafeFixCategory | null {
   for (const unsafe of UNSAFE_AUTOFIX_DESCRIPTION_PATTERNS) {
     if (unsafe.test(description)) return null;
   }

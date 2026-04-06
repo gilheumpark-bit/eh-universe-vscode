@@ -13,7 +13,7 @@ export interface ADR {
   id: string;
   title: string;
   date: string;
-  status: 'proposed' | 'accepted' | 'deprecated' | 'superseded';
+  status: "proposed" | "accepted" | "deprecated" | "superseded";
   context: string;
   decision: string;
   consequences: string;
@@ -28,17 +28,17 @@ export interface ADRViolation {
   adrTitle: string;
   file: string;
   reason: string;
-  severity: 'info' | 'warn' | 'error';
+  severity: "info" | "warn" | "error";
 }
 
-const STORAGE_KEY = 'eh-cs-adr';
+const STORAGE_KEY = "eh-cs-adr";
 
 // ============================================================
 // PART 2 — Storage Helpers
 // ============================================================
 
 function readStore(): ADR[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
@@ -50,7 +50,7 @@ function readStore(): ADR[] {
 }
 
 function writeStore(adrs: ADR[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(adrs));
 }
 
@@ -67,13 +67,13 @@ export function getADR(id: string): ADR | null {
 }
 
 export function createADR(
-  data: Omit<ADR, 'id' | 'createdAt' | 'updatedAt'>,
+  data: Omit<ADR, "id" | "createdAt" | "updatedAt">,
 ): ADR {
   const adrs = readStore();
   const now = Date.now();
   const adr: ADR = {
     ...data,
-    id: `adr-${String(adrs.length + 1).padStart(4, '0')}-${now}`,
+    id: `adr-${String(adrs.length + 1).padStart(4, "0")}-${now}`,
     createdAt: now,
     updatedAt: now,
   };
@@ -84,7 +84,7 @@ export function createADR(
 
 export function updateADR(
   id: string,
-  patch: Partial<Omit<ADR, 'id' | 'createdAt'>>,
+  patch: Partial<Omit<ADR, "id" | "createdAt">>,
 ): ADR | null {
   const adrs = readStore();
   const idx = adrs.findIndex((a) => a.id === id);
@@ -116,34 +116,34 @@ export function checkADRCompliance(
   adrs: ADR[],
 ): ADRViolation[] {
   const violations: ADRViolation[] = [];
-  const fileSet = new Set(files.map((f) => f.replace(/\\/g, '/')));
+  const fileSet = new Set(files.map((f) => f.replace(/\\/g, "/")));
 
   for (const adr of adrs) {
-    if (adr.status === 'deprecated' || adr.status === 'superseded') {
+    if (adr.status === "deprecated" || adr.status === "superseded") {
       for (const relFile of adr.relatedFiles) {
-        const normalized = relFile.replace(/\\/g, '/');
+        const normalized = relFile.replace(/\\/g, "/");
         if (fileSet.has(normalized)) {
           violations.push({
             adrId: adr.id,
             adrTitle: adr.title,
             file: relFile,
             reason: `File still exists but ADR "${adr.title}" is ${adr.status}. Review needed.`,
-            severity: 'warn',
+            severity: "warn",
           });
         }
       }
     }
 
-    if (adr.status === 'accepted') {
+    if (adr.status === "accepted") {
       for (const relFile of adr.relatedFiles) {
-        const normalized = relFile.replace(/\\/g, '/');
+        const normalized = relFile.replace(/\\/g, "/");
         if (!fileSet.has(normalized)) {
           violations.push({
             adrId: adr.id,
             adrTitle: adr.title,
             file: relFile,
             reason: `Related file not found in project. ADR may be stale.`,
-            severity: 'info',
+            severity: "info",
           });
         }
       }
@@ -161,8 +161,10 @@ export function checkADRCompliance(
  * ADR 목록 → AI 프롬프트 컨텍스트 문자열 생성
  */
 export function buildADRContext(adrs: ADR[]): string {
-  const active = adrs.filter((a) => a.status === 'accepted' || a.status === 'proposed');
-  if (active.length === 0) return '';
+  const active = adrs.filter(
+    (a) => a.status === "accepted" || a.status === "proposed",
+  );
+  if (active.length === 0) return "";
 
   const sections = active.map((adr) =>
     [
@@ -171,14 +173,14 @@ export function buildADRContext(adrs: ADR[]): string {
       `**Decision:** ${adr.decision}`,
       `**Consequences:** ${adr.consequences}`,
       adr.relatedFiles.length > 0
-        ? `**Files:** ${adr.relatedFiles.join(', ')}`
-        : '',
+        ? `**Files:** ${adr.relatedFiles.join(", ")}`
+        : "",
     ]
       .filter(Boolean)
-      .join('\n'),
+      .join("\n"),
   );
 
-  return `## Architecture Decision Records\n\n${sections.join('\n\n---\n\n')}`;
+  return `## Architecture Decision Records\n\n${sections.join("\n\n---\n\n")}`;
 }
 
 // IDENTITY_SEAL: adr | role=ADR-CRUD+Compliance | inputs=localStorage | outputs=ADR,ADRViolation,buildADRContext

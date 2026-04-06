@@ -37,14 +37,12 @@ export function ResizeHandle({
       e.preventDefault();
       draggingRef.current = true;
       accumulatedRef.current = 0;
-      lastPosRef.current =
-        direction === "horizontal" ? e.clientX : e.clientY;
+      lastPosRef.current = direction === "horizontal" ? e.clientX : e.clientY;
       setIsDragging(true);
 
       const handleMouseMove = (ev: MouseEvent) => {
         if (!draggingRef.current) return;
-        const current =
-          direction === "horizontal" ? ev.clientX : ev.clientY;
+        const current = direction === "horizontal" ? ev.clientX : ev.clientY;
         let delta = current - lastPosRef.current;
         lastPosRef.current = current;
 

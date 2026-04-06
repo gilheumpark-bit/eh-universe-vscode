@@ -27,7 +27,10 @@ export const articles: Record<string, ArticleData> = {
   ...reportsData,
 };
 
-export function getArticleTitle(slug: string, lang: "ko" | "en" | "ja" | "zh"): string {
+export function getArticleTitle(
+  slug: string,
+  lang: "ko" | "en" | "ja" | "zh",
+): string {
   const article = articles[slug];
   if (!article) return slug;
   return article.title[lang] || article.title.en || article.title.ko;

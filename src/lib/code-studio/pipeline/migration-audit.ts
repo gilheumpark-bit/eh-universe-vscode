@@ -20,7 +20,7 @@ export interface FunctionSignature {
 export interface FunctionMatch {
   original: FunctionSignature;
   migrated: FunctionSignature;
-  confidence: number;  // 0-100
+  confidence: number; // 0-100
   nameMatch: boolean;
   paramMatch: boolean;
 }
@@ -29,7 +29,7 @@ export interface MigrationAuditResult {
   matched: FunctionMatch[];
   lostFunctions: FunctionSignature[];
   newFunctions: FunctionSignature[];
-  matchRate: number;       // 0-100
+  matchRate: number; // 0-100
   summary: string;
 }
 
@@ -47,7 +47,7 @@ const FUNC_PATTERNS = [
 ];
 
 export function extractSignatures(code: string): FunctionSignature[] {
-  const lines = code.split('\n');
+  const lines = code.split("\n");
   const signatures: FunctionSignature[] = [];
   const seen = new Set<string>();
 
@@ -64,8 +64,8 @@ export function extractSignatures(code: string): FunctionSignature[] {
         seen.add(name);
         signatures.push({
           name,
-          params: (funcMatch[5] ?? '').trim(),
-          returnType: (funcMatch[6] ?? 'void').trim(),
+          params: (funcMatch[5] ?? "").trim(),
+          returnType: (funcMatch[6] ?? "void").trim(),
           lineNumber: i + 1,
           isExported: !!funcMatch[2],
           isAsync: !!funcMatch[3],
@@ -84,8 +84,8 @@ export function extractSignatures(code: string): FunctionSignature[] {
         seen.add(name);
         signatures.push({
           name,
-          params: (arrowMatch[5] ?? '').trim(),
-          returnType: (arrowMatch[6] ?? 'void').trim(),
+          params: (arrowMatch[5] ?? "").trim(),
+          returnType: (arrowMatch[6] ?? "void").trim(),
           lineNumber: i + 1,
           isExported: !!arrowMatch[2],
           isAsync: !!arrowMatch[4],
@@ -98,14 +98,20 @@ export function extractSignatures(code: string): FunctionSignature[] {
     const methodMatch = line.match(
       /^\s+(?:public\s+|private\s+|protected\s+|static\s+)*(async\s+)?(\w+)\s*\(([^)]*)\)(?:\s*:\s*([^\s{]+))?\s*\{/,
     );
-    if (methodMatch && methodMatch[2] !== 'constructor' && methodMatch[2] !== 'if' && methodMatch[2] !== 'for' && methodMatch[2] !== 'while') {
+    if (
+      methodMatch &&
+      methodMatch[2] !== "constructor" &&
+      methodMatch[2] !== "if" &&
+      methodMatch[2] !== "for" &&
+      methodMatch[2] !== "while"
+    ) {
       const name = methodMatch[2];
       if (!seen.has(name)) {
         seen.add(name);
         signatures.push({
           name,
-          params: (methodMatch[3] ?? '').trim(),
-          returnType: (methodMatch[4] ?? 'void').trim(),
+          params: (methodMatch[3] ?? "").trim(),
+          returnType: (methodMatch[4] ?? "void").trim(),
           lineNumber: i + 1,
           isExported: false,
           isAsync: !!methodMatch[1],
@@ -123,8 +129,8 @@ export function extractSignatures(code: string): FunctionSignature[] {
 
 function normalizeParams(params: string): string {
   return params
-    .replace(/\s+/g, ' ')
-    .replace(/:\s*[^,)]+/g, '')  // strip type annotations
+    .replace(/\s+/g, " ")
+    .replace(/:\s*[^,)]+/g, "") // strip type annotations
     .trim();
 }
 
@@ -143,7 +149,10 @@ function computeSimilarity(a: string, b: string): number {
   for (let i = 0; i <= a.length; i++) {
     matrix[i] = [i];
     for (let j = 1; j <= b.length; j++) {
-      if (i === 0) { matrix[i][j] = j; continue; }
+      if (i === 0) {
+        matrix[i][j] = j;
+        continue;
+      }
       matrix[i][j] = Math.min(
         matrix[i - 1][j] + 1,
         matrix[i][j - 1] + 1,
@@ -159,7 +168,11 @@ function computeSimilarity(a: string, b: string): number {
 function matchFunctions(
   origSigs: FunctionSignature[],
   migratedSigs: FunctionSignature[],
-): { matches: FunctionMatch[]; unmatchedOrig: FunctionSignature[]; unmatchedMig: FunctionSignature[] } {
+): {
+  matches: FunctionMatch[];
+  unmatchedOrig: FunctionSignature[];
+  unmatchedMig: FunctionSignature[];
+} {
   const matches: FunctionMatch[] = [];
   const usedMigrated = new Set<number>();
   const matchedOriginal = new Set<number>();
@@ -170,7 +183,8 @@ function matchFunctions(
       if (usedMigrated.has(j)) continue;
       if (origSigs[i].name === migratedSigs[j].name) {
         const paramMatch =
-          normalizeParams(origSigs[i].params) === normalizeParams(migratedSigs[j].params);
+          normalizeParams(origSigs[i].params) ===
+          normalizeParams(migratedSigs[j].params);
         matches.push({
           original: origSigs[i],
           migrated: migratedSigs[j],
@@ -202,7 +216,8 @@ function matchFunctions(
 
     if (bestJ >= 0) {
       const paramMatch =
-        normalizeParams(origSigs[i].params) === normalizeParams(migratedSigs[bestJ].params);
+        normalizeParams(origSigs[i].params) ===
+        normalizeParams(migratedSigs[bestJ].params);
       matches.push({
         original: origSigs[i],
         migrated: migratedSigs[bestJ],
@@ -238,25 +253,29 @@ export function auditMigration(
       lostFunctions: [],
       newFunctions: [],
       matchRate: 100,
-      summary: 'No functions found in either file.',
+      summary: "No functions found in either file.",
     };
   }
 
-  const { matches, unmatchedOrig, unmatchedMig } = matchFunctions(origSigs, migratedSigs);
+  const { matches, unmatchedOrig, unmatchedMig } = matchFunctions(
+    origSigs,
+    migratedSigs,
+  );
 
-  const matchRate = origSigs.length > 0
-    ? Math.round((matches.length / origSigs.length) * 100)
-    : 100;
+  const matchRate =
+    origSigs.length > 0
+      ? Math.round((matches.length / origSigs.length) * 100)
+      : 100;
 
   const parts: string[] = [
     `Original: ${origSigs.length} functions, Migrated: ${migratedSigs.length} functions.`,
     `Matched: ${matches.length} (${matchRate}%)`,
   ];
   if (unmatchedOrig.length > 0) {
-    parts.push(`Lost: ${unmatchedOrig.map((f) => f.name).join(', ')}`);
+    parts.push(`Lost: ${unmatchedOrig.map((f) => f.name).join(", ")}`);
   }
   if (unmatchedMig.length > 0) {
-    parts.push(`New: ${unmatchedMig.map((f) => f.name).join(', ')}`);
+    parts.push(`New: ${unmatchedMig.map((f) => f.name).join(", ")}`);
   }
 
   return {
@@ -264,7 +283,7 @@ export function auditMigration(
     lostFunctions: unmatchedOrig,
     newFunctions: unmatchedMig,
     matchRate,
-    summary: parts.join(' | '),
+    summary: parts.join(" | "),
   };
 }
 

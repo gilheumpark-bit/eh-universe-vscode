@@ -7,7 +7,7 @@
 
 // ── Types ──
 
-export type TaintDomain = 'novel' | 'code' | 'translation' | 'world' | 'public';
+export type TaintDomain = "novel" | "code" | "translation" | "world" | "public";
 
 export interface TaintedData {
   /** 원본 데이터 */
@@ -37,11 +37,11 @@ export interface DecontaminatedData {
 
 /** 도메인 간 데이터 이동 허용 매트릭스 */
 const ISOLATION_MATRIX: Record<TaintDomain, Set<TaintDomain>> = {
-  novel:       new Set(['novel', 'public']),        // 소설 → 소설, 공개만
-  code:        new Set(['code', 'public']),          // 코드 → 코드, 공개만
-  translation: new Set(['translation', 'novel', 'public']), // 번역 → 번역, 소설, 공개
-  world:       new Set(['world', 'novel', 'public']), // 세계관 → 세계관, 소설, 공개
-  public:      new Set(['novel', 'code', 'translation', 'world', 'public']), // 공개 → 어디든
+  novel: new Set(["novel", "public"]), // 소설 → 소설, 공개만
+  code: new Set(["code", "public"]), // 코드 → 코드, 공개만
+  translation: new Set(["translation", "novel", "public"]), // 번역 → 번역, 소설, 공개
+  world: new Set(["world", "novel", "public"]), // 세계관 → 세계관, 소설, 공개
+  public: new Set(["novel", "code", "translation", "world", "public"]), // 공개 → 어디든
 };
 
 // IDENTITY_SEAL: PART-1 | role=types-and-rules | inputs=none | outputs=types
@@ -56,7 +56,11 @@ export class TaintTracker {
   private registry = new Map<string, TaintedData>();
 
   /** 데이터에 오염 태그 부착 */
-  taint(content: string, domain: TaintDomain, sensitiveEntities: string[] = []): TaintedData {
+  taint(
+    content: string,
+    domain: TaintDomain,
+    sensitiveEntities: string[] = [],
+  ): TaintedData {
     const taintId = `taint-${domain}-${++_taintCounter}`;
     const data: TaintedData = {
       content,
@@ -75,7 +79,10 @@ export class TaintTracker {
   }
 
   /** 데이터를 다른 도메인으로 이동 (정화 프록시 적용) */
-  transfer(taintId: string, targetDomain: TaintDomain): DecontaminatedData | null {
+  transfer(
+    taintId: string,
+    targetDomain: TaintDomain,
+  ): DecontaminatedData | null {
     const data = this.registry.get(taintId);
     if (!data) return null;
 
@@ -94,24 +101,33 @@ export class TaintTracker {
   }
 
   /** 기밀 엔티티 비식별화 (Soft-Fail) */
-  private decontaminate(data: TaintedData, targetDomain: TaintDomain): DecontaminatedData {
+  private decontaminate(
+    data: TaintedData,
+    targetDomain: TaintDomain,
+  ): DecontaminatedData {
     let masked = data.content;
     let maskedCount = 0;
 
     // 등록된 기밀 엔티티 마스킹
     for (const entity of data.sensitiveEntities) {
       if (masked.includes(entity)) {
-        masked = masked.replaceAll(entity, '<MASKED_DATA>');
+        masked = masked.replaceAll(entity, "<MASKED_DATA>");
         maskedCount++;
       }
     }
 
     // 자동 패턴 마스킹 (API 키, 이메일, 전화번호 등)
     const autoPatterns = [
-      { pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, label: 'EMAIL' },
-      { pattern: /\b(?:sk-|AIza|ghp_|xoxb-)[A-Za-z0-9_-]{20,}\b/g, label: 'API_KEY' },
-      { pattern: /\b\d{3}[-.]?\d{3,4}[-.]?\d{4}\b/g, label: 'PHONE' },
-      { pattern: /\b\d{6}[-]?\d{7}\b/g, label: 'ID_NUMBER' },
+      {
+        pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+        label: "EMAIL",
+      },
+      {
+        pattern: /\b(?:sk-|AIza|ghp_|xoxb-)[A-Za-z0-9_-]{20,}\b/g,
+        label: "API_KEY",
+      },
+      { pattern: /\b\d{3}[-.]?\d{3,4}[-.]?\d{4}\b/g, label: "PHONE" },
+      { pattern: /\b\d{6}[-]?\d{7}\b/g, label: "ID_NUMBER" },
     ];
 
     for (const { pattern, label } of autoPatterns) {

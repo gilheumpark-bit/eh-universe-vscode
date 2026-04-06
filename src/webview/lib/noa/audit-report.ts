@@ -35,7 +35,7 @@ export interface AuditReport {
 /* ── Storage helpers ── */
 
 function loadEntries(): AuditEntry[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? (JSON.parse(raw) as AuditEntry[]) : [];
@@ -45,7 +45,7 @@ function loadEntries(): AuditEntry[] {
 }
 
 function saveEntries(entries: AuditEntry[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
@@ -107,7 +107,8 @@ export function generateAuditReport(periodHours = 24): AuditReport {
     .slice(0, 10);
 
   // Hourly timeline
-  const timeline: Array<{ hour: number; allowed: number; blocked: number }> = [];
+  const timeline: Array<{ hour: number; allowed: number; blocked: number }> =
+    [];
   for (let h = 0; h < 24; h++) {
     const hourStart = from + h * 60 * 60 * 1000;
     const hourEnd = hourStart + 60 * 60 * 1000;
@@ -214,7 +215,9 @@ export function formatAuditMarkdown(report: AuditReport): string {
   lines.push("|------|------|------|");
   for (const t of report.timeline) {
     if (t.allowed + t.blocked > 0) {
-      lines.push(`| ${String(t.hour).padStart(2, "0")}:00 | ${t.allowed} | ${t.blocked} |`);
+      lines.push(
+        `| ${String(t.hour).padStart(2, "0")}:00 | ${t.allowed} | ${t.blocked} |`,
+      );
     }
   }
 
@@ -225,7 +228,7 @@ export function formatAuditMarkdown(report: AuditReport): string {
  * Clear all stored audit entries.
  */
 export function clearAuditLog(): void {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     localStorage.removeItem(STORAGE_KEY);
   }
 }

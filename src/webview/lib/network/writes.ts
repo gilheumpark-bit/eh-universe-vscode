@@ -1,18 +1,39 @@
 // Firebase Firestore — static import for data-layer modules.
 // Dynamic alternative: import('firebase/firestore') via lazyFirestore() in firebase.ts
 import {
-  collection, doc, getDoc, increment,
-  setDoc, writeBatch,
+  collection,
+  doc,
+  getDoc,
+  increment,
+  setDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { auth } from "@/lib/firebase";
 import {
-  type CreatePlanetWithFirstLogInput, type CreateBoardPostInput,
-  type CreatePostInput, type CreateSettlementInput, type UpdatePostInput,
-  type PlanetRecord, type PostRecord,
+  type CreatePlanetWithFirstLogInput,
+  type CreateBoardPostInput,
+  type CreatePostInput,
+  type CreateSettlementInput,
+  type UpdatePostInput,
+  type PlanetRecord,
+  type PostRecord,
   type SettlementRecord,
   REPORT_TYPE_TO_BOARD_TYPE,
 } from "@/lib/network-types";
-import { requireDb, normalizeText, COLLECTIONS, nowIso, clampNullable, normalizeOptionalText, normalizeStringArray, summarizeContent, buildDefaultUserRecord, sanitizePlanetStatus, sanitizeTitle, sanitizeContent } from "./helpers";
+import {
+  requireDb,
+  normalizeText,
+  COLLECTIONS,
+  nowIso,
+  clampNullable,
+  normalizeOptionalText,
+  normalizeStringArray,
+  summarizeContent,
+  buildDefaultUserRecord,
+  sanitizePlanetStatus,
+  sanitizeTitle,
+  sanitizeContent,
+} from "./helpers";
 
 // ============================================================
 // PART 2.5 — WRITE AUTH GUARD
@@ -25,10 +46,10 @@ import { requireDb, normalizeText, COLLECTIONS, nowIso, clampNullable, normalize
 function assertOwnership(claimedUid: string): void {
   const currentUser = auth?.currentUser;
   if (!currentUser) {
-    throw new Error('Unauthorized: not signed in');
+    throw new Error("Unauthorized: not signed in");
   }
   if (currentUser.uid !== claimedUid) {
-    throw new Error('Unauthorized: owner mismatch');
+    throw new Error("Unauthorized: owner mismatch");
   }
 }
 
@@ -38,7 +59,9 @@ function assertOwnership(claimedUid: string): void {
 // PART 3 - PLANET AND POST WRITES
 // ============================================================
 
-export async function createPlanetWithFirstLog(input: CreatePlanetWithFirstLogInput) {
+export async function createPlanetWithFirstLog(
+  input: CreatePlanetWithFirstLogInput,
+) {
   assertOwnership(input.ownerId);
   const database = requireDb();
   const timestamp = nowIso();
@@ -61,13 +84,19 @@ export async function createPlanetWithFirstLog(input: CreatePlanetWithFirstLogIn
     systemExposure: clampNullable(input.planet.systemExposure, 0, 100),
     summary: normalizeText(input.planet.summary),
     visibility: input.visibility ?? "public",
-    representativeTags: normalizeStringArray(input.planet.representativeTags, 6),
+    representativeTags: normalizeStringArray(
+      input.planet.representativeTags,
+      6,
+    ),
     tags: normalizeStringArray(input.planet.tags, 10),
     coreRules: normalizeStringArray(input.planet.coreRules, 3),
     featuredFaction: normalizeOptionalText(input.planet.featuredFaction),
     featuredCharacter: normalizeOptionalText(input.planet.featuredCharacter),
     transcendenceCost: normalizeOptionalText(input.planet.transcendenceCost),
-    transcendenceCosts: normalizeStringArray(input.planet.transcendenceCosts, 5),
+    transcendenceCosts: normalizeStringArray(
+      input.planet.transcendenceCosts,
+      5,
+    ),
     stats: {
       logCount: 1,
       settlementCount: 0,
@@ -144,7 +173,7 @@ export async function createPost(input: CreatePostInput) {
   // [C] 행성 존재 확인 — 존재하지 않는 행성에 포스트 쓰기 방지
   const planetSnap = await getDoc(planetRef);
   if (!planetSnap.exists()) {
-    throw new Error('Planet not found');
+    throw new Error("Planet not found");
   }
 
   const boardType = REPORT_TYPE_TO_BOARD_TYPE[input.reportType];
@@ -164,7 +193,11 @@ export async function createPost(input: CreatePostInput) {
     ehImpact: clampNullable(input.ehImpact, -100, 100),
     followupStatus: input.followupStatus ?? undefined,
     tags: normalizeStringArray(
-      [input.reportType, input.followupStatus ?? undefined, ...(input.tags ?? [])].filter(Boolean) as string[],
+      [
+        input.reportType,
+        input.followupStatus ?? undefined,
+        ...(input.tags ?? []),
+      ].filter(Boolean) as string[],
       8,
     ),
     officiality: "pending",
@@ -208,14 +241,18 @@ export async function updatePost(input: UpdatePostInput) {
 
   const postSnap = await getDoc(postRef);
   if (!postSnap.exists()) {
-    throw new Error('Post not found');
+    throw new Error("Post not found");
   }
   const postData = postSnap.data() as PostRecord;
 
   const currentUser = auth?.currentUser;
   // 게시물 작성자만 수정 가능 (향후 관리자 확대 가능)
-  if (!currentUser || currentUser.uid !== input.updaterId || postData.authorId !== input.updaterId) {
-    throw new Error('Unauthorized: only author can edit');
+  if (
+    !currentUser ||
+    currentUser.uid !== input.updaterId ||
+    postData.authorId !== input.updaterId
+  ) {
+    throw new Error("Unauthorized: only author can edit");
   }
 
   const updates: Partial<PostRecord> = {
@@ -231,17 +268,24 @@ export async function updatePost(input: UpdatePostInput) {
     updates.reportType = input.reportType;
     updates.boardType = REPORT_TYPE_TO_BOARD_TYPE[input.reportType];
   }
-  if (input.eventCategory !== undefined) updates.eventCategory = normalizeOptionalText(input.eventCategory);
-  if (input.region !== undefined) updates.region = normalizeOptionalText(input.region);
-  if (input.intervention !== undefined) updates.intervention = input.intervention;
-  if (input.ehImpact !== undefined) updates.ehImpact = clampNullable(input.ehImpact, -100, 100);
-  if (input.followupStatus !== undefined) updates.followupStatus = input.followupStatus ?? undefined;
+  if (input.eventCategory !== undefined)
+    updates.eventCategory = normalizeOptionalText(input.eventCategory);
+  if (input.region !== undefined)
+    updates.region = normalizeOptionalText(input.region);
+  if (input.intervention !== undefined)
+    updates.intervention = input.intervention;
+  if (input.ehImpact !== undefined)
+    updates.ehImpact = clampNullable(input.ehImpact, -100, 100);
+  if (input.followupStatus !== undefined)
+    updates.followupStatus = input.followupStatus ?? undefined;
   if (input.visibility !== undefined) updates.visibility = input.visibility;
 
   const baseReportType = updates.reportType ?? postData.reportType;
   const baseFollowupStatus = updates.followupStatus ?? postData.followupStatus;
   const baseTags = input.tags ?? postData.tags ?? [];
-  const tagsSource = [baseReportType, baseFollowupStatus, ...baseTags].filter(Boolean) as string[];
+  const tagsSource = [baseReportType, baseFollowupStatus, ...baseTags].filter(
+    Boolean,
+  ) as string[];
   updates.tags = normalizeStringArray(tagsSource, 8);
 
   await setDoc(postRef, updates, { merge: true });
@@ -308,13 +352,13 @@ export async function createBoardPost(input: CreateBoardPostInput) {
 
   // [C] 필수 필드 유효성 검사
   if (!input.title?.trim()) {
-    throw new Error('Board post title is required');
+    throw new Error("Board post title is required");
   }
   if (!input.content?.trim()) {
-    throw new Error('Board post content is required');
+    throw new Error("Board post content is required");
   }
   if (!input.boardType) {
-    throw new Error('Board post boardType is required');
+    throw new Error("Board post boardType is required");
   }
 
   const database = requireDb();

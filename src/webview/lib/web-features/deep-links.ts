@@ -9,12 +9,14 @@
  * 예: #L42 (42번째 줄), #S15 (15번째 세그먼트), #P3-L7 (3번째 단락 7번째 줄)
  */
 export function createDeepLinkHash(opts: {
-  type: 'line' | 'segment' | 'paragraph' | 'chapter';
+  type: "line" | "segment" | "paragraph" | "chapter";
   index: number;
   subIndex?: number;
 }): string {
-  const prefix = { line: 'L', segment: 'S', paragraph: 'P', chapter: 'C' }[opts.type];
-  const sub = opts.subIndex !== undefined ? `-L${opts.subIndex}` : '';
+  const prefix = { line: "L", segment: "S", paragraph: "P", chapter: "C" }[
+    opts.type
+  ];
+  const sub = opts.subIndex !== undefined ? `-L${opts.subIndex}` : "";
   return `#${prefix}${opts.index}${sub}`;
 }
 
@@ -25,20 +27,24 @@ export function createDeepLinkHash(opts: {
  * #P3-L7 → { type: 'paragraph', index: 3, subIndex: 7 }
  */
 export function parseDeepLinkHash(hash: string): {
-  type: 'line' | 'segment' | 'paragraph' | 'chapter';
+  type: "line" | "segment" | "paragraph" | "chapter";
   index: number;
   subIndex?: number;
 } | null {
-  const clean = hash.replace(/^#/, '');
+  const clean = hash.replace(/^#/, "");
   const match = clean.match(/^([LSPC])(\d+)(?:-L(\d+))?$/);
   if (!match) return null;
 
-  const typeMap: Record<string, 'line' | 'segment' | 'paragraph' | 'chapter'> = {
-    L: 'line', S: 'segment', P: 'paragraph', C: 'chapter',
-  };
+  const typeMap: Record<string, "line" | "segment" | "paragraph" | "chapter"> =
+    {
+      L: "line",
+      S: "segment",
+      P: "paragraph",
+      C: "chapter",
+    };
 
   return {
-    type: typeMap[match[1]] || 'line',
+    type: typeMap[match[1]] || "line",
     index: parseInt(match[2], 10),
     subIndex: match[3] ? parseInt(match[3], 10) : undefined,
   };
@@ -61,11 +67,11 @@ export function scrollToDeepLink(): boolean {
   if (!el) return false;
 
   // 스크롤
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
 
   // 하이라이트 (2초 후 해제)
-  el.classList.add('eh-deep-link-highlight');
-  setTimeout(() => el.classList.remove('eh-deep-link-highlight'), 3000);
+  el.classList.add("eh-deep-link-highlight");
+  setTimeout(() => el.classList.remove("eh-deep-link-highlight"), 3000);
 
   return true;
 }
@@ -74,13 +80,17 @@ export function scrollToDeepLink(): boolean {
  * 현재 페이지 URL + 딥링크 해시 조합.
  * 예: https://eh-universe.com/studio#L42
  */
-export function getDeepLinkUrl(opts: Parameters<typeof createDeepLinkHash>[0]): string {
+export function getDeepLinkUrl(
+  opts: Parameters<typeof createDeepLinkHash>[0],
+): string {
   const hash = createDeepLinkHash(opts);
   return `${window.location.origin}${window.location.pathname}${hash}`;
 }
 
 /** 딥링크 URL을 클립보드에 복사 */
-export async function copyDeepLink(opts: Parameters<typeof createDeepLinkHash>[0]): Promise<boolean> {
+export async function copyDeepLink(
+  opts: Parameters<typeof createDeepLinkHash>[0],
+): Promise<boolean> {
   try {
     const url = getDeepLinkUrl(opts);
     await navigator.clipboard.writeText(url);

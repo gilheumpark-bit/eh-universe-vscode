@@ -3,8 +3,8 @@
 // ============================================================
 // 데몬이 잡아낸 에러를 코드 바닥에 물결선으로 그리는 작업.
 
-import * as vscode from 'vscode';
-import type { QuillFinding } from '../QuillClient';
+import * as vscode from "vscode";
+import type { QuillFinding } from "../QuillClient";
 
 // Step 25~26: DiagnosticCollection 생성
 export class DiagnosticProvider {
@@ -12,14 +12,14 @@ export class DiagnosticProvider {
   private findingsCache: Map<string, QuillFinding[]> = new Map();
 
   constructor() {
-    this.collection = vscode.languages.createDiagnosticCollection('cs-quill');
+    this.collection = vscode.languages.createDiagnosticCollection("cs-quill");
   }
 
   // Step 28~32: 분석 결과 → 물결선 변환 + 푸시
   public updateDiagnostics(uri: vscode.Uri, findings: QuillFinding[]): void {
     this.findingsCache.set(uri.toString(), findings);
 
-    const diagnostics: vscode.Diagnostic[] = findings.map(f => {
+    const diagnostics: vscode.Diagnostic[] = findings.map((f) => {
       // Step 30: Range 변환 (줄 번호 → VS Code Range)
       const startLine = Math.max(0, (f.line ?? 1) - 1);
       const endLine = Math.max(startLine, (f.endLine ?? f.line ?? 1) - 1);
@@ -30,15 +30,20 @@ export class DiagnosticProvider {
       // Step 29: severity 매핑 (P0/P1→Error, P2→Warning)
       let severity: vscode.DiagnosticSeverity;
       switch (f.severity) {
-        case 'error': severity = vscode.DiagnosticSeverity.Error; break;
-        case 'warning': severity = vscode.DiagnosticSeverity.Warning; break;
-        default: severity = vscode.DiagnosticSeverity.Information;
+        case "error":
+          severity = vscode.DiagnosticSeverity.Error;
+          break;
+        case "warning":
+          severity = vscode.DiagnosticSeverity.Warning;
+          break;
+        default:
+          severity = vscode.DiagnosticSeverity.Information;
       }
 
       const diag = new vscode.Diagnostic(range, f.message, severity);
 
       // Step 31: 마우스 호버 시 툴팁에 소스 표시
-      diag.source = f.source || 'CS Quill (AST)';
+      diag.source = f.source || "CS Quill (AST)";
       if (f.code) diag.code = f.code;
 
       // fix 정보를 diagnostic에 첨부 (CodeActionProvider가 사용)

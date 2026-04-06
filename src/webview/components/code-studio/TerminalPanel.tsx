@@ -76,9 +76,21 @@ const COMMAND_ALIASES: Record<string, string> = {
 };
 
 const LOCAL_ONLY_CMDS = new Set([
-  "clear", "help", "csl", "aliases", "ask",
-  "export", "unset", "alias", "unalias", "env", "set",
-  "history", "jobs", "fg", "bg",
+  "clear",
+  "help",
+  "csl",
+  "aliases",
+  "ask",
+  "export",
+  "unset",
+  "alias",
+  "unalias",
+  "env",
+  "set",
+  "history",
+  "jobs",
+  "fg",
+  "bg",
 ]);
 
 // IDENTITY_SEAL: PART-2 | role=shell state | inputs=none | outputs=shellHistory,shellEnv,shellJobs
@@ -91,7 +103,7 @@ async function analyzeErrorWithAI(
   command: string,
   stderr: string,
   exitCode: number,
-  lang: string
+  lang: string,
 ): Promise<{ summary: string; suggestion: string } | null> {
   try {
     const provider = getActiveProvider();
@@ -122,8 +134,15 @@ async function analyzeErrorWithAI(
 
     if (summaryMatch || suggestionMatch) {
       return {
-        summary: summaryMatch?.[1]?.trim() ?? L4(lang, { ko: "분석 완료", en: "Analysis complete" }),
-        suggestion: suggestionMatch?.[1]?.trim() ?? L4(lang, { ko: "stderr 로그를 확인하세요.", en: "Please check stderr logs." }),
+        summary:
+          summaryMatch?.[1]?.trim() ??
+          L4(lang, { ko: "분석 완료", en: "Analysis complete" }),
+        suggestion:
+          suggestionMatch?.[1]?.trim() ??
+          L4(lang, {
+            ko: "stderr 로그를 확인하세요.",
+            en: "Please check stderr logs.",
+          }),
       };
     }
     return null;
@@ -149,7 +168,9 @@ export function TerminalPanel({
   const [history, setHistory] = useState<string[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [_inputHighlight, setInputHighlight] = useState<HighlightedSpan[]>([]);
-  const [wcInstance, setWcInstance] = useState<WebContainerInstance | null>(null);
+  const [wcInstance, setWcInstance] = useState<WebContainerInstance | null>(
+    null,
+  );
   const [wcBooting, setWcBooting] = useState(false);
   const [scrollLock, setScrollLock] = useState(false);
   const [autocompleteOptions, setAutocompleteOptions] = useState<string[]>([]);
@@ -163,7 +184,13 @@ export function TerminalPanel({
     navigator.clipboard.writeText(text).then(() => {
       setLines((prev) => [
         ...prev,
-        { text: L4(lang, { ko: "[출력이 클립보드에 복사됨]", en: "[Output copied to clipboard]" }), color: "blue" },
+        {
+          text: L4(lang, {
+            ko: "[출력이 클립보드에 복사됨]",
+            en: "[Output copied to clipboard]",
+          }),
+          color: "blue",
+        },
       ]);
     });
   }, [lines, lang]);
@@ -172,7 +199,15 @@ export function TerminalPanel({
   useEffect(() => {
     let cancelled = false;
     setWcBooting(true);
-    setLines([{ text: L4(lang, { ko: "WebContainer 부팅 중\u2026", en: "Booting WebContainer\u2026" }), color: "blue" }]);
+    setLines([
+      {
+        text: L4(lang, {
+          ko: "WebContainer 부팅 중\u2026",
+          en: "Booting WebContainer\u2026",
+        }),
+        color: "blue",
+      },
+    ]);
 
     (async () => {
       try {
@@ -183,13 +218,22 @@ export function TerminalPanel({
           {
             text: instance.isAvailable
               ? "EH Code Studio Terminal v2.0 \u2014 WebContainer Ready"
-              : L4(lang, { ko: "EH Code Studio Terminal v2.0 \u2014 시뮬레이션 모드", en: "EH Code Studio Terminal v2.0 \u2014 Simulated Mode" }),
+              : L4(lang, {
+                  ko: "EH Code Studio Terminal v2.0 \u2014 시뮬레이션 모드",
+                  en: "EH Code Studio Terminal v2.0 \u2014 Simulated Mode",
+                }),
             color: "green",
           },
           {
             text: instance.isAvailable
-              ? L4(lang, { ko: "실제 명령 실행 가능: npm, node, git, ls, cat 등", en: "Actual commands available: npm, node, git, ls, cat, etc." })
-              : L4(lang, { ko: "시뮬레이션 모드 \u2014 내장 명령 사용 가능 (type 'help')", en: "Simulated mode \u2014 built-in commands available (type 'help')" }),
+              ? L4(lang, {
+                  ko: "실제 명령 실행 가능: npm, node, git, ls, cat 등",
+                  en: "Actual commands available: npm, node, git, ls, cat, etc.",
+                })
+              : L4(lang, {
+                  ko: "시뮬레이션 모드 \u2014 내장 명령 사용 가능 (type 'help')",
+                  en: "Simulated mode \u2014 built-in commands available (type 'help')",
+                }),
             color: instance.isAvailable ? "green" : "yellow",
           },
           { text: "" },
@@ -199,11 +243,17 @@ export function TerminalPanel({
         setLines([
           { text: "EH Code Studio Terminal v2.0", color: "green" },
           {
-            text: L4(lang, { ko: `WebContainer 부팅 실패: ${(err as Error).message}`, en: `WebContainer boot failed: ${(err as Error).message}` }),
+            text: L4(lang, {
+              ko: `WebContainer 부팅 실패: ${(err as Error).message}`,
+              en: `WebContainer boot failed: ${(err as Error).message}`,
+            }),
             color: "red",
           },
           {
-            text: L4(lang, { ko: "내장 명령으로 대체합니다 (type 'help')", en: "Fallback to built-in commands (type 'help')" }),
+            text: L4(lang, {
+              ko: "내장 명령으로 대체합니다 (type 'help')",
+              en: "Fallback to built-in commands (type 'help')",
+            }),
             color: "yellow",
           },
           { text: "" },
@@ -349,19 +399,28 @@ export function TerminalPanel({
           setLines((prev) => [...prev, ...newLines]);
           setLines((prev) => [
             ...prev,
-            { text: L4(lang, { ko: "[AI 분석 중\u2026]", en: "[AI analysis in progress\u2026]" }), color: "blue" },
+            {
+              text: L4(lang, {
+                ko: "[AI 분석 중\u2026]",
+                en: "[AI analysis in progress\u2026]",
+              }),
+              color: "blue",
+            },
           ]);
           const analysis = await analyzeErrorWithAI(
             cmd,
             result.stderr,
             result.exitCode,
-            lang
+            lang,
           );
           if (analysis) {
             setLines((prev) => [
               ...prev,
               { text: `[AI] ${analysis.summary}`, color: "blue" },
-              { text: `[AI] ${L4(lang, { ko: "제안", en: "Suggestion" })}: ${analysis.suggestion}`, color: "blue" },
+              {
+                text: `[AI] ${L4(lang, { ko: "제안", en: "Suggestion" })}: ${analysis.suggestion}`,
+                color: "blue",
+              },
               { text: "" },
             ]);
           } else {
@@ -407,7 +466,10 @@ export function TerminalPanel({
             isCommand: true,
             rawCommand: cmd,
           },
-          ...builtinResult.output.map((l) => ({ text: l.text, color: l.color })),
+          ...builtinResult.output.map((l) => ({
+            text: l.text,
+            color: l.color,
+          })),
           { text: "" },
         ]);
         setCwd(shellEnv.getCwd());
@@ -568,7 +630,8 @@ export function TerminalPanel({
       {/* Header bar */}
       <div className="flex items-center justify-between px-3 py-1 bg-bg-secondary border-b border-white/8">
         <span className="flex items-center gap-1 text-xs text-text-secondary">
-          <TerminalIcon size={12} /> {L4(lang, { ko: "터미널", en: "Terminal" })}
+          <TerminalIcon size={12} />{" "}
+          {L4(lang, { ko: "터미널", en: "Terminal" })}
           {wcInstance?.isAvailable && (
             <span className="text-[9px] px-1 py-0.5 bg-green-500/15 text-green-400 rounded">
               WebContainer
@@ -594,8 +657,14 @@ export function TerminalPanel({
                 ? "text-accent-amber"
                 : "text-text-secondary hover:text-white"
             }`}
-            title={L4(lang, { ko: scrollLock ? "자동 스크롤 켜기" : "스크롤 잠금", en: scrollLock ? "Enable auto-scroll" : "Lock scroll" })}
-            aria-label={L4(lang, { ko: scrollLock ? "자동 스크롤 켜기" : "스크롤 잠금", en: scrollLock ? "Enable auto-scroll" : "Lock scroll" })}
+            title={L4(lang, {
+              ko: scrollLock ? "자동 스크롤 켜기" : "스크롤 잠금",
+              en: scrollLock ? "Enable auto-scroll" : "Lock scroll",
+            })}
+            aria-label={L4(lang, {
+              ko: scrollLock ? "자동 스크롤 켜기" : "스크롤 잠금",
+              en: scrollLock ? "Enable auto-scroll" : "Lock scroll",
+            })}
           >
             {scrollLock ? <Lock size={11} /> : <Unlock size={11} />}
           </button>
@@ -603,7 +672,10 @@ export function TerminalPanel({
       </div>
 
       {/* Output area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-2 font-mono text-xs">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto p-2 font-mono text-xs"
+      >
         {lines.map((line, i) => (
           <div
             key={i}
@@ -630,7 +702,14 @@ export function TerminalPanel({
               borderRadius: line.isCommand ? 2 : undefined,
             }}
             className={line.isCommand ? "hover:bg-white/5" : ""}
-            title={line.isCommand ? L4(lang, { ko: "클릭하여 다시 실행", en: "Click to run again" }) : undefined}
+            title={
+              line.isCommand
+                ? L4(lang, {
+                    ko: "클릭하여 다시 실행",
+                    en: "Click to run again",
+                  })
+                : undefined
+            }
           >
             {parseAnsi(line.text).map((span, j) => (
               <span
@@ -693,11 +772,17 @@ export function TerminalPanel({
           placeholder={
             wcBooting
               ? L4(lang, { ko: "부팅 중\u2026", en: "Booting\u2026" })
-              : L4(lang, { ko: "명령어 입력... (Tab: 자동완성, Ctrl+L: 화면 지우기)", en: "command... (Tab: autocomplete, Ctrl+L: clear)" })
+              : L4(lang, {
+                  ko: "명령어 입력... (Tab: 자동완성, Ctrl+L: 화면 지우기)",
+                  en: "command... (Tab: autocomplete, Ctrl+L: clear)",
+                })
           }
           disabled={wcBooting}
           autoFocus
-          aria-label={L4(lang, { ko: "터미널 명령 입력", en: "Terminal command input" })}
+          aria-label={L4(lang, {
+            ko: "터미널 명령 입력",
+            en: "Terminal command input",
+          })}
         />
       </div>
     </div>

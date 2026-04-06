@@ -2,44 +2,48 @@
 // PART 1 — Types & Constants
 // ============================================================
 
-import { streamChat } from '@/lib/ai-providers';
-import { streamWithMultiKey, isMultiKeyActive } from '@/lib/multi-key-bridge';
-import { type AgentRole as MultiKeyAgentRole } from '@/lib/multi-key-manager';
-import { CODE_STUDIO_ARCHITECTURE_APPENDIX } from '@/lib/code-studio/core/architecture-spec';
-import { DESIGN_SYSTEM_SPEC } from '@/lib/code-studio/core/design-system-spec';
-import { DESIGN_LINTER_SPEC } from '@/lib/code-studio/core/design-linter';
-import { buildIdiomDirective, detectFramework, type FrameworkId } from '@/lib/code-studio/ai/idiom-presets';
+import { streamChat } from "@/lib/ai-providers";
+import { streamWithMultiKey, isMultiKeyActive } from "@/lib/multi-key-bridge";
+import { type AgentRole as MultiKeyAgentRole } from "@/lib/multi-key-manager";
+import { CODE_STUDIO_ARCHITECTURE_APPENDIX } from "@/lib/code-studio/core/architecture-spec";
+import { DESIGN_SYSTEM_SPEC } from "@/lib/code-studio/core/design-system-spec";
+import { DESIGN_LINTER_SPEC } from "@/lib/code-studio/core/design-linter";
+import {
+  buildIdiomDirective,
+  detectFramework,
+  type FrameworkId,
+} from "@/lib/code-studio/ai/idiom-presets";
 
 // Re-export for consumers that need provider info alongside agent sessions.
-export { getApiKey, getActiveProvider } from '@/lib/ai-providers';
+export { getApiKey, getActiveProvider } from "@/lib/ai-providers";
 
-import { type AgentRole, AGENT_REGISTRY } from '@/types/code-studio-agent';
+import { type AgentRole, AGENT_REGISTRY } from "@/types/code-studio-agent";
 
 /** 코드 스튜디오 에이전트 역할 → 멀티키 역할 매핑 */
 const CODE_ROLE_TO_MULTI_KEY: Record<string, MultiKeyAgentRole> = {
   // Leadership → reviewer (전략적 판단)
-  'team-leader': 'reviewer',
-  'frontend-lead': 'reviewer',
-  'backend-lead': 'reviewer',
+  "team-leader": "reviewer",
+  "frontend-lead": "reviewer",
+  "backend-lead": "reviewer",
   // Generation → coder
-  'domain-analyst': 'coder',
-  'state-designer': 'coder',
-  'css-layout': 'coder',
-  'interaction-motion': 'coder',
-  'core-engine': 'coder',
-  'api-binding': 'coder',
+  "domain-analyst": "coder",
+  "state-designer": "coder",
+  "css-layout": "coder",
+  "interaction-motion": "coder",
+  "core-engine": "coder",
+  "api-binding": "coder",
   // Verification → analyst
-  'overflow-guard': 'analyst',
-  'security-auth': 'analyst',
-  'memory-cache': 'analyst',
-  'render-optimizer': 'analyst',
-  'deadcode-scanner': 'analyst',
-  'coding-convention': 'analyst',
-  'stress-tester': 'analyst',
-  'dependency-linker': 'analyst',
+  "overflow-guard": "analyst",
+  "security-auth": "analyst",
+  "memory-cache": "analyst",
+  "render-optimizer": "analyst",
+  "deadcode-scanner": "analyst",
+  "coding-convention": "analyst",
+  "stress-tester": "analyst",
+  "dependency-linker": "analyst",
   // Repair → coder
-  'progressive-repair': 'coder',
-  'snapshot-manager': 'coder',
+  "progressive-repair": "coder",
+  "snapshot-manager": "coder",
 };
 
 // Re-export for consumers that need the new 19-agent types
@@ -85,7 +89,7 @@ export interface AgentSession {
   task: string;
   agents: AgentRole[];
   messages: AgentMessage[];
-  status: 'idle' | 'running' | 'done' | 'error';
+  status: "idle" | "running" | "done" | "error";
   finalOutput?: string;
   conflicts: ConflictEntry[];
   summary?: SessionSummary;
@@ -104,8 +108,9 @@ export interface AgentSession {
  */
 export const AGENT_PROMPTS: Partial<Record<AgentRole, string>> = {
   // Leadership
-  'team-leader': 'You are the Chief Coordinator. Validate the overall lifecycle state.',
-  'frontend-lead': `You are the Frontend Lead. Ensure UI/UX integrity and ErrorBoundary wrapping.
+  "team-leader":
+    "You are the Chief Coordinator. Validate the overall lifecycle state.",
+  "frontend-lead": `You are the Frontend Lead. Ensure UI/UX integrity and ErrorBoundary wrapping.
 
 Design verification checklist (v8.0):
 1. All color classes use project semantic tokens (bg-bg-*, text-text-*, accent-*). Flag any raw Tailwind colors (bg-blue-500, text-red-600).
@@ -115,17 +120,18 @@ Design verification checklist (v8.0):
 5. Touch targets ≥ 44px on interactive elements. Flag small buttons/links.
 6. Transitions use var(--transition-fast/normal/slow). Flag transition:all.
 7. Status indicators use color + icon/text (min 2 of 3). Flag color-only states.`,
-  'backend-lead': 'You are the Backend Lead. Ensure API integrity and Proxy headers.',
+  "backend-lead":
+    "You are the Backend Lead. Ensure API integrity and Proxy headers.",
 
   // Pipeline 1: 건축 설계 (Architecture)
-  'domain-analyst': `[NOA-CORE: 확신도 게이트 0.55 적용] 당신은 도메인 분석가(A1)입니다. 
+  "domain-analyst": `[NOA-CORE: 확신도 게이트 0.55 적용] 당신은 도메인 분석가(A1)입니다. 
 당신의 역할: 주어진 사용자의 요구사항과 코드 컨텍스트를 분석하여 비즈니스 모델, 주요 도메인 객체, 엣지 케이스 및 제약사항(Business Rules & Constraints)을 식별합니다.
 1. 사이트/작업의 성격 파악 (예: 게시판, E-commerce, 인증 등)
 2. 발생할 수 있는 취약 지점 및 엣지 케이스 값 3가지 이상 명시
 3. [NOA-EXEC: 3-Persona (안전/성능/간결)] 원칙에 위배될 수 있는 잠재적 위험(Risks)을 정리하세요.
 결과물은 구조화된 마크다운 문서로 작성하고, 마지막에 "A1_ANALYSIS_COMPLETE"를 출력하세요.`,
 
-  'state-designer': `[NOA-CORE: 확신도 게이트 0.55 적용] 당신은 상태 스키마 설계자(A2)입니다.
+  "state-designer": `[NOA-CORE: 확신도 게이트 0.55 적용] 당신은 상태 스키마 설계자(A2)입니다.
 당신의 역할: 도메인 분석가의 결과를 바탕으로 애플리케이션의 상태(State) 변이 다이어그램 및 설계도를 작성합니다.
 1. 필요한 전역/지역 상태 식별 (\`idle -> generating -> verifying\` 등 상태 머신 구조화 허용)
 2. 예측 불가능한 부작용(Side Effect) 방어 계획 (NOA-EXEC [C] 안전성 원칙 적용)
@@ -133,7 +139,7 @@ Design verification checklist (v8.0):
 오직 설계 개요와 JSON 형태의 상태 인터페이스 스니펫만 출력하고, 마지막에 "A2_SCHEMA_COMPLETE"를 출력하세요.`,
 
   // Pipeline 2: UI 스캐폴딩
-  'css-layout': `You are the CSS/Layout agent (A3). Your job:
+  "css-layout": `You are the CSS/Layout agent (A3). Your job:
 1. Generate Tailwind v4 CSS using project semantic tokens ONLY:
    - Backgrounds: bg-bg-primary, bg-bg-secondary, bg-bg-tertiary
    - Text: text-text-primary, text-text-secondary, text-text-tertiary
@@ -149,7 +155,7 @@ Design verification checklist (v8.0):
 8. Verify 5 themes: archive(default), dark, light, bright, beige — all must work.
 Output: Structured layout code with accessibility (role, aria-label). End with "A3_LAYOUT_COMPLETE".`,
 
-  'interaction-motion': `You are the Interaction/Motion agent (A4). Your job:
+  "interaction-motion": `You are the Interaction/Motion agent (A4). Your job:
 1. Review all interactive elements: buttons, links, inputs, modals, dropdowns.
 2. Verify visual feedback uses project tokens:
    - Transitions: var(--transition-fast:150ms), var(--transition-normal:250ms), var(--transition-slow:400ms)
@@ -169,7 +175,7 @@ Output: Structured layout code with accessibility (role, aria-label). End with "
 Output: Interaction audit with fixes. End with "A4_INTERACTION_COMPLETE".`,
 
   // Pipeline 3: 로직 생성
-  'core-engine': `You are the Core Engine agent (A5). Your job:
+  "core-engine": `You are the Core Engine agent (A5). Your job:
 1. Implement the core business logic with performance in mind.
 2. Rules: no nested loops > 2 levels, no synchronous heavy computation on main thread.
 3. Use proper data structures (Map/Set over Object for lookups, WeakRef for caches).
@@ -177,7 +183,7 @@ Output: Interaction audit with fixes. End with "A4_INTERACTION_COMPLETE".`,
 5. Validate: no memory leaks (event listener cleanup, subscription disposal, timer clearing).
 Output: Optimized core logic. End with "A5_ENGINE_COMPLETE".`,
 
-  'api-binding': `You are the API Binding agent (A6). Your job:
+  "api-binding": `You are the API Binding agent (A6). Your job:
 1. Implement API calls with proper error handling (try/catch, status code checks).
 2. Enforce: request timeout (AbortSignal.timeout), retry logic for transient failures (429, 503).
 3. Prevent: race conditions (stale closure, concurrent request dedup), loading state leaks.
@@ -186,7 +192,7 @@ Output: Optimized core logic. End with "A5_ENGINE_COMPLETE".`,
 Output: Robust API layer. End with "A6_API_COMPLETE".`,
 
   // Pipeline 4: 검증 — 경계 & 보안
-  'overflow-guard': `You are the Overflow Guard agent (A7). Your job:
+  "overflow-guard": `You are the Overflow Guard agent (A7). Your job:
 1. Find ALL potential null/undefined access paths. Check every optional chain, every array index.
 2. Detect: division by zero, array out-of-bounds, string.length on null, parseInt on non-numeric.
 3. Validate: function parameter types at runtime (typeof/instanceof guards at boundaries).
@@ -194,7 +200,7 @@ Output: Robust API layer. End with "A6_API_COMPLETE".`,
 5. Flag: any unchecked .length, .map(), .filter() on potentially undefined arrays.
 Output: List each issue with file:line, severity, and fix. End with "A7_OVERFLOW_COMPLETE".`,
 
-  'security-auth': `You are the Security/Auth Guard agent (A8). Your job:
+  "security-auth": `You are the Security/Auth Guard agent (A8). Your job:
 1. Scan for: eval(), innerHTML, dangerouslySetInnerHTML without sanitization, Function() constructor.
 2. Check: XSS vectors (user input → DOM), SQL injection (if any DB), command injection.
 3. Verify: auth tokens not in localStorage (use httpOnly cookies), API keys not in client bundles.
@@ -203,7 +209,7 @@ Output: List each issue with file:line, severity, and fix. End with "A7_OVERFLOW
 Output: Security report with OWASP category for each finding. End with "A8_SECURITY_COMPLETE".`,
 
   // Pipeline 5: 검증 — 성능
-  'memory-cache': `You are the Memory/Cache Guard agent (A9). Your job:
+  "memory-cache": `You are the Memory/Cache Guard agent (A9). Your job:
 1. Detect: event listeners without cleanup (useEffect missing return), subscriptions not unsubscribed.
 2. Find: growing arrays/maps that never shrink (memory leak), closures capturing stale state.
 3. Check: N+1 query patterns (loop with await inside), unbounded cache growth.
@@ -211,7 +217,7 @@ Output: Security report with OWASP category for each finding. End with "A8_SECUR
 5. Audit: IndexedDB/localStorage usage (quota checks, cleanup of expired data).
 Output: Memory audit with leak risk scores. End with "A9_MEMORY_COMPLETE".`,
 
-  'render-optimizer': `You are the Render Optimizer agent (A10). Your job:
+  "render-optimizer": `You are the Render Optimizer agent (A10). Your job:
 1. Find: unnecessary re-renders (missing React.memo, unstable object/array props, missing useMemo).
 2. Check: useCallback on event handlers passed to child components.
 3. Detect: state updates in loops, setState in render, derived state that should be useMemo.
@@ -220,7 +226,7 @@ Output: Memory audit with leak risk scores. End with "A9_MEMORY_COMPLETE".`,
 Output: Render performance report with specific fixes. End with "A10_RENDER_COMPLETE".`,
 
   // Pipeline 6: 검증 — 코드 품질
-  'deadcode-scanner': `You are the Deadcode Scanner agent (A11). Your job:
+  "deadcode-scanner": `You are the Deadcode Scanner agent (A11). Your job:
 NOTE: Static analysis (dead-code.ts) already catches basic unused imports/variables via regex.
 Your role is to find what STATIC ANALYSIS MISSES:
 1. Semantically dead code: functions that ARE called but whose return value is never used.
@@ -232,7 +238,7 @@ Your role is to find what STATIC ANALYSIS MISSES:
 DO NOT repeat what regex can find (unused imports, unreachable after return).
 Output: Each dead item with file:line and WHY static analysis missed it. End with "A11_DEADCODE_COMPLETE".`,
 
-  'coding-convention': `You are the Coding Convention agent (A12). Your job:
+  "coding-convention": `You are the Coding Convention agent (A12). Your job:
 1. Check naming: camelCase for variables/functions, PascalCase for components/types, UPPER_SNAKE for constants.
 2. Verify: consistent import ordering (React → libs → local → types → styles).
 3. Ensure: no magic numbers (extract to named constants), no string literals for repeated values.
@@ -241,7 +247,7 @@ Output: Each dead item with file:line and WHY static analysis missed it. End wit
 Output: Convention violations list. End with "A12_CONVENTION_COMPLETE".`,
 
   // Pipeline 7: 검증 — 스트레스 & 의존성
-  'stress-tester': `You are the Stress Tester agent (A13). Your job:
+  "stress-tester": `You are the Stress Tester agent (A13). Your job:
 NOTE: Virtual simulation (stress-test.ts) computes static metrics (loop depth, fetch count, etc.).
 Your role is BEHAVIORAL stress analysis that static metrics can't detect:
 1. N+1 patterns: find loops containing await/fetch — calculate exact request count at scale.
@@ -253,7 +259,7 @@ Your role is BEHAVIORAL stress analysis that static metrics can't detect:
 For each finding, provide: scenario, expected behavior, actual risk, and a runnable test case.
 Output: Structured stress report. End with "A13_STRESS_COMPLETE".`,
 
-  'dependency-linker': `You are the Dependency Linker agent (A14). Your job:
+  "dependency-linker": `You are the Dependency Linker agent (A14). Your job:
 1. Detect circular dependencies between modules (A imports B, B imports A).
 2. Check: package.json for unused dependencies, missing peer dependencies.
 3. Verify: no duplicate packages (different versions of same lib).
@@ -262,7 +268,7 @@ Output: Structured stress report. End with "A13_STRESS_COMPLETE".`,
 Output: Dependency graph issues. End with "A14_DEPENDENCY_COMPLETE".`,
 
   // Pipeline 8: 수리
-  'progressive-repair': `You are the Progressive Repair agent (A15). Your job:
+  "progressive-repair": `You are the Progressive Repair agent (A15). Your job:
 Fix issues reported by previous verification agents using 3-level strategy:
 L1 (Safe): Auto-fix — unused imports, missing semicolons, formatting, type annotations.
 L2 (Moderate): Guided fix — null guards, missing error handling, accessibility attributes.
@@ -275,7 +281,7 @@ Rules:
 - Output ONLY the fixed code, no explanation needed.
 End with "A15_REPAIR_COMPLETE".`,
 
-  'snapshot-manager': `You are the Snapshot Manager agent (A16). Your job:
+  "snapshot-manager": `You are the Snapshot Manager agent (A16). Your job:
 1. Before any repair: create a snapshot of current state (list changed files + line ranges).
 2. After repair: diff the snapshot to verify only intended changes were made.
 3. If repair introduced NEW issues: rollback to snapshot and report failure.
@@ -291,48 +297,82 @@ End with "A16_SNAPSHOT_COMPLETE".`,
 // ============================================================
 
 /** Default agent pipeline order when no custom roles are provided. */
-const DEFAULT_ROLES: AgentRole[] = ['domain-analyst', 'state-designer', 'css-layout', 'interaction-motion'];
+const DEFAULT_ROLES: AgentRole[] = [
+  "domain-analyst",
+  "state-designer",
+  "css-layout",
+  "interaction-motion",
+];
 
 /** 검증 전용 프리셋 — 코드 붙여넣기 → 원클릭 검증용 (전체 8개) */
 export const VERIFY_ONLY_ROLES: AgentRole[] = [
-  'team-leader',
-  'overflow-guard', 'security-auth',
-  'memory-cache', 'render-optimizer',
-  'deadcode-scanner', 'coding-convention',
-  'stress-tester', 'dependency-linker',
+  "team-leader",
+  "overflow-guard",
+  "security-auth",
+  "memory-cache",
+  "render-optimizer",
+  "deadcode-scanner",
+  "coding-convention",
+  "stress-tester",
+  "dependency-linker",
 ];
 
 /** 티어별 검증 에이전트 수 제한. agentCount에 맞춰 앞에서부터 슬라이스. */
 export function getVerifyRolesForTier(agentCount: number): AgentRole[] {
   if (agentCount >= 8) return VERIFY_ONLY_ROLES;
   // 팀장 + 상위 N개 검증 에이전트 (보안 > 컨벤션 > 데드코드 우선)
-  const priority: AgentRole[] = ['security-auth', 'coding-convention', 'deadcode-scanner', 'overflow-guard', 'memory-cache', 'render-optimizer', 'stress-tester', 'dependency-linker'];
-  return ['team-leader', ...priority.slice(0, agentCount)];
+  const priority: AgentRole[] = [
+    "security-auth",
+    "coding-convention",
+    "deadcode-scanner",
+    "overflow-guard",
+    "memory-cache",
+    "render-optimizer",
+    "stress-tester",
+    "dependency-linker",
+  ];
+  return ["team-leader", ...priority.slice(0, agentCount)];
 }
 
 /** 생성 → 검증 프리셋 — 이지모드 전체 흐름용 */
 export const GENERATE_AND_VERIFY_ROLES: AgentRole[] = [
-  'team-leader',
-  'domain-analyst', 'state-designer',
-  'core-engine', 'api-binding',
-  'css-layout', 'interaction-motion',
-  'overflow-guard', 'security-auth',
-  'memory-cache', 'render-optimizer',
-  'deadcode-scanner', 'coding-convention',
-  'progressive-repair',
+  "team-leader",
+  "domain-analyst",
+  "state-designer",
+  "core-engine",
+  "api-binding",
+  "css-layout",
+  "interaction-motion",
+  "overflow-guard",
+  "security-auth",
+  "memory-cache",
+  "render-optimizer",
+  "deadcode-scanner",
+  "coding-convention",
+  "progressive-repair",
 ];
 
 /** Execution order — agents run in this sequence regardless of input order. */
 const ROLE_ORDER: AgentRole[] = [
-  'team-leader', 'frontend-lead', 'backend-lead',
-  'domain-analyst', 'state-designer',
-  'css-layout', 'interaction-motion',
-  'core-engine', 'api-binding',
-  'overflow-guard', 'security-auth',
-  'memory-cache', 'render-optimizer',
-  'deadcode-scanner', 'coding-convention',
-  'stress-tester', 'dependency-linker',
-  'progressive-repair', 'snapshot-manager',
+  "team-leader",
+  "frontend-lead",
+  "backend-lead",
+  "domain-analyst",
+  "state-designer",
+  "css-layout",
+  "interaction-motion",
+  "core-engine",
+  "api-binding",
+  "overflow-guard",
+  "security-auth",
+  "memory-cache",
+  "render-optimizer",
+  "deadcode-scanner",
+  "coding-convention",
+  "stress-tester",
+  "dependency-linker",
+  "progressive-repair",
+  "snapshot-manager",
 ];
 
 function generateId(): string {
@@ -351,7 +391,7 @@ export function createAgentSession(
     task,
     agents: [...roles],
     messages: [],
-    status: 'idle',
+    status: "idle",
     conflicts: [],
   };
 }
@@ -443,11 +483,11 @@ const TEST_FAILURE_PATTERNS = [
 ];
 
 function detectRejection(content: string): boolean {
-  return REJECTION_PATTERNS.some(p => p.test(content));
+  return REJECTION_PATTERNS.some((p) => p.test(content));
 }
 
 function detectTestFailure(content: string): boolean {
-  return TEST_FAILURE_PATTERNS.some(p => p.test(content));
+  return TEST_FAILURE_PATTERNS.some((p) => p.test(content));
 }
 
 // IDENTITY_SEAL: PART-5 | role=FeedbackLoopDetection | inputs=agentOutput | outputs=boolean
@@ -469,7 +509,7 @@ function detectDesignConflict(reviewerContent: string): string | null {
   ];
   for (const p of patterns) {
     if (p.test(reviewerContent)) {
-      return 'Reviewer identified architectural design issues';
+      return "Reviewer identified architectural design issues";
     }
   }
   return null;
@@ -480,7 +520,7 @@ function detectDesignConflict(reviewerContent: string): string | null {
  */
 function detectImplementationConflict(testerContent: string): string | null {
   if (detectTestFailure(testerContent)) {
-    return 'Tester found failures in developer implementation';
+    return "Tester found failures in developer implementation";
   }
   return null;
 }
@@ -511,7 +551,7 @@ function buildAgentInput(
     sections.push(`## Output from ${msg.role}\n${msg.content}`);
   }
 
-  return sections.join('\n\n');
+  return sections.join("\n\n");
 }
 
 /**
@@ -523,29 +563,37 @@ async function runSingleAgent(
   onMessage: (msg: AgentMessage) => void,
   signal?: AbortSignal,
 ): Promise<AgentMessage> {
-  let accumulated = '';
+  let accumulated = "";
   const agentMsg: AgentMessage = {
     id: generateId(),
     role,
-    content: '',
+    content: "",
     timestamp: Date.now(),
     confidence: 0,
   };
 
   // UI-generating agents (css-layout, interaction-motion) receive the full design system + linter spec.
-  const isUIAgent = role === 'css-layout' || role === 'interaction-motion';
-  const designAppendix = isUIAgent ? `\n\n${DESIGN_SYSTEM_SPEC}\n\n${DESIGN_LINTER_SPEC}` : '';
+  const isUIAgent = role === "css-layout" || role === "interaction-motion";
+  const designAppendix = isUIAgent
+    ? `\n\n${DESIGN_SYSTEM_SPEC}\n\n${DESIGN_LINTER_SPEC}`
+    : "";
 
   // Code-generating agents receive framework idiom directive when detected.
-  const isCodeGenAgent = isUIAgent || role === 'frontend-lead' || role === 'core-engine';
-  const idiomAppendix = isCodeGenAgent && _detectedFramework
-    ? `\n\n${buildIdiomDirective(_detectedFramework)}`
-    : '';
+  const isCodeGenAgent =
+    isUIAgent || role === "frontend-lead" || role === "core-engine";
+  const idiomAppendix =
+    isCodeGenAgent && _detectedFramework
+      ? `\n\n${buildIdiomDirective(_detectedFramework)}`
+      : "";
 
   const streamOpts = {
     systemInstruction: `${AGENT_PROMPTS[role]}\n\n${CODE_STUDIO_ARCHITECTURE_APPENDIX}${designAppendix}${idiomAppendix}`,
-    messages: [{ role: 'user' as const, content: userInput }],
-    temperature: ['verification', 'repair'].includes(AGENT_REGISTRY[role].category) ? 0.2 : 0.4,
+    messages: [{ role: "user" as const, content: userInput }],
+    temperature: ["verification", "repair"].includes(
+      AGENT_REGISTRY[role].category,
+    )
+      ? 0.2
+      : 0.4,
     signal,
     onChunk(text: string) {
       accumulated += text;
@@ -558,7 +606,7 @@ async function runSingleAgent(
   if (isMultiKeyActive()) {
     await streamWithMultiKey({
       ...streamOpts,
-      role: CODE_ROLE_TO_MULTI_KEY[role] ?? 'general',
+      role: CODE_ROLE_TO_MULTI_KEY[role] ?? "general",
     });
   } else {
     await streamChat(streamOpts);
@@ -586,10 +634,10 @@ async function rerunAgentWithFeedback(
   const base = buildAgentInput(task, codeContext, priorMessages);
   const enhancedInput = [
     base,
-    '',
+    "",
     `## Feedback from ${feedbackSource} (address these issues)`,
     feedback,
-  ].join('\n');
+  ].join("\n");
 
   return runSingleAgent(targetRole, enhancedInput, onMessage, signal);
 }
@@ -611,13 +659,13 @@ export async function runAgentPipeline(
   signal?: AbortSignal,
 ): Promise<AgentSession> {
   const session = createAgentSession(task, roles);
-  session.status = 'running';
+  session.status = "running";
   const startTime = Date.now();
 
   // Detect framework from code context for idiom injection
   if (codeContext.trim()) {
     _detectedFramework = detectFramework([
-      { name: 'context.tsx', content: codeContext },
+      { name: "context.tsx", content: codeContext },
     ]);
   } else {
     _detectedFramework = null;
@@ -629,29 +677,29 @@ export async function runAgentPipeline(
     // --- Pre-processing: Architectural Rules Check ---
     const enforceArchRules = () => {
       // Create a leadership or validation step internally to verify initial limits
-      if (!task.includes('Next.js 16')) {
+      if (!task.includes("Next.js 16")) {
         // Just an example check logic
       }
-      return '[Preflight Plan Accepted] Architectural boundaries are structured.';
+      return "[Preflight Plan Accepted] Architectural boundaries are structured.";
     };
     const preflightMsg: AgentMessage = {
       id: generateId(),
-      role: 'team-leader',
-      content: enforceArchRules() + '\nRule-based preprocessing complete.',
+      role: "team-leader",
+      content: enforceArchRules() + "\nRule-based preprocessing complete.",
       timestamp: Date.now(),
       confidence: 1.0,
     };
-    if (sortedRoles.includes('team-leader')) {
-       session.messages.push(preflightMsg);
-       onMessage(preflightMsg);
-       // Remove from queue so it's not run redundantly
-       const idx = sortedRoles.indexOf('team-leader');
-       if(idx !== -1) sortedRoles.splice(idx, 1);
+    if (sortedRoles.includes("team-leader")) {
+      session.messages.push(preflightMsg);
+      onMessage(preflightMsg);
+      // Remove from queue so it's not run redundantly
+      const idx = sortedRoles.indexOf("team-leader");
+      if (idx !== -1) sortedRoles.splice(idx, 1);
     }
 
     for (const role of sortedRoles) {
       if (signal?.aborted) {
-        throw new DOMException('Agent pipeline aborted', 'AbortError');
+        throw new DOMException("Agent pipeline aborted", "AbortError");
       }
 
       const userInput = buildAgentInput(task, codeContext, session.messages);
@@ -659,24 +707,33 @@ export async function runAgentPipeline(
       session.messages.push(agentMsg);
 
       // --- Feedback loop: verification -> repair ---
-      if (AGENT_REGISTRY[role].category === 'verification') {
+      if (AGENT_REGISTRY[role].category === "verification") {
         const isRejection = detectRejection(agentMsg.content);
         const isTestFailure = detectTestFailure(agentMsg.content);
 
         if (isRejection || isTestFailure) {
-          const conflictDesc = isRejection ? detectDesignConflict(agentMsg.content) : detectImplementationConflict(agentMsg.content);
-          
+          const conflictDesc = isRejection
+            ? detectDesignConflict(agentMsg.content)
+            : detectImplementationConflict(agentMsg.content);
+
           if (conflictDesc) {
             session.conflicts.push({
-              between: ['progressive-repair', role],
+              between: ["progressive-repair", role],
               description: conflictDesc,
               resolved: false,
             });
           }
 
-          if (roles.includes('progressive-repair')) {
+          if (roles.includes("progressive-repair")) {
             const fixMsg = await rerunAgentWithFeedback(
-              'progressive-repair', task, codeContext, session.messages, agentMsg.content, role, onMessage, signal,
+              "progressive-repair",
+              task,
+              codeContext,
+              session.messages,
+              agentMsg.content,
+              role,
+              onMessage,
+              signal,
             );
             session.messages.push(fixMsg);
 
@@ -690,25 +747,28 @@ export async function runAgentPipeline(
       }
     }
 
-    session.status = 'done';
-    session.finalOutput = session.messages.at(-1)?.content ?? '';
+    session.status = "done";
+    session.finalOutput = session.messages.at(-1)?.content ?? "";
   } catch (err) {
-    if (err instanceof DOMException && err.name === 'AbortError') {
-      session.status = 'error';
-      session.finalOutput = '[Pipeline aborted by user]';
+    if (err instanceof DOMException && err.name === "AbortError") {
+      session.status = "error";
+      session.finalOutput = "[Pipeline aborted by user]";
     } else {
-      session.status = 'error';
+      session.status = "error";
       session.finalOutput = err instanceof Error ? err.message : String(err);
     }
   }
 
   // Session summary
   const totalTokens = session.messages.reduce(
-    (sum, m) => sum + Math.ceil(m.content.length / 4), 0,
+    (sum, m) => sum + Math.ceil(m.content.length / 4),
+    0,
   );
-  const avgConfidence = session.messages.length > 0
-    ? session.messages.reduce((sum, m) => sum + m.confidence, 0) / session.messages.length
-    : 0;
+  const avgConfidence =
+    session.messages.length > 0
+      ? session.messages.reduce((sum, m) => sum + m.confidence, 0) /
+        session.messages.length
+      : 0;
 
   session.summary = {
     totalAgentsRun: session.messages.length,

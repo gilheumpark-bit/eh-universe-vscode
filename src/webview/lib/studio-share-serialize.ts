@@ -8,7 +8,9 @@ function section(title: string, body: string | undefined): string | null {
 }
 
 /** Scene direction / 연출 데이터 — RAG용 텍스트 요약 */
-function sceneDirectionToText(sd: NonNullable<StoryConfig["sceneDirection"]>): string {
+function sceneDirectionToText(
+  sd: NonNullable<StoryConfig["sceneDirection"]>,
+): string {
   const lines: string[] = [];
   if (sd.plotStructure?.trim()) lines.push(`Plot: ${sd.plotStructure.trim()}`);
   if (sd.writerNotes?.trim()) lines.push(`Notes: ${sd.writerNotes.trim()}`);
@@ -39,7 +41,9 @@ function compactWorldSimJson(config: StoryConfig): string | null {
   try {
     let s = JSON.stringify(raw);
     if (s.length > MAX_SIM_JSON) {
-      s = s.slice(0, MAX_SIM_JSON) + `\n… [truncated ${s.length - MAX_SIM_JSON} chars]`;
+      s =
+        s.slice(0, MAX_SIM_JSON) +
+        `\n… [truncated ${s.length - MAX_SIM_JSON} chars]`;
     }
     return s;
   } catch {
@@ -47,7 +51,10 @@ function compactWorldSimJson(config: StoryConfig): string | null {
   }
 }
 
-export function buildShareWorldBible(config: StoryConfig, isKO: boolean): string {
+export function buildShareWorldBible(
+  config: StoryConfig,
+  isKO: boolean,
+): string {
   const t = {
     core: isKO ? "핵심 전제" : "Core Premise",
     power: isKO ? "권력 구조" : "Power Structure",
@@ -91,9 +98,13 @@ export function buildShareWorldBible(config: StoryConfig, isKO: boolean): string
   return blocks.join("\n\n");
 }
 
-function charBlock(c: StoryConfig["characters"][number], isKO: boolean): string {
+function charBlock(
+  c: StoryConfig["characters"][number],
+  isKO: boolean,
+): string {
   const lines: string[] = [`### ${c.name} (${c.role})`, c.traits];
-  if (c.appearance?.trim()) lines.push(isKO ? `외형: ${c.appearance}` : `Appearance: ${c.appearance}`);
+  if (c.appearance?.trim())
+    lines.push(isKO ? `외형: ${c.appearance}` : `Appearance: ${c.appearance}`);
   const extras: [string, string | undefined][] = [
     [isKO ? "욕망" : "Desire", c.desire],
     [isKO ? "결핍" : "Deficiency", c.deficiency],
@@ -111,7 +122,10 @@ function charBlock(c: StoryConfig["characters"][number], isKO: boolean): string 
   return lines.join("\n");
 }
 
-export function buildShareCharacterSheet(config: StoryConfig, isKO: boolean): string {
+export function buildShareCharacterSheet(
+  config: StoryConfig,
+  isKO: boolean,
+): string {
   const parts = config.characters.map((c) => charBlock(c, isKO));
   const rel = config.charRelations;
   if (rel?.length) {
@@ -125,9 +139,15 @@ export function buildShareCharacterSheet(config: StoryConfig, isKO: boolean): st
   return parts.join("\n\n");
 }
 
-export function buildShareStyleProfile(config: StoryConfig, isKO: boolean): string {
+export function buildShareStyleProfile(
+  config: StoryConfig,
+  isKO: boolean,
+): string {
   const sp = config.styleProfile;
-  if (!sp) return isKO ? "스타일 프로필이 설정되지 않았습니다." : "No style profile configured.";
+  if (!sp)
+    return isKO
+      ? "스타일 프로필이 설정되지 않았습니다."
+      : "No style profile configured.";
   const lines: string[] = [];
   if (sp.selectedDNA?.length) {
     lines.push(
@@ -137,8 +157,10 @@ export function buildShareStyleProfile(config: StoryConfig, isKO: boolean): stri
     );
   }
   lines.push(...Object.entries(sp.sliders).map(([k, v]) => `${k}: ${v}/5`));
-  if (sp.checkedSF?.length) lines.push(`SF techniques: ${sp.checkedSF.join(", ")}`);
-  if (sp.checkedWeb?.length) lines.push(`Web techniques: ${sp.checkedWeb.join(", ")}`);
+  if (sp.checkedSF?.length)
+    lines.push(`SF techniques: ${sp.checkedSF.join(", ")}`);
+  if (sp.checkedWeb?.length)
+    lines.push(`Web techniques: ${sp.checkedWeb.join(", ")}`);
   return lines.join("\n");
 }
 
@@ -150,7 +172,10 @@ export function buildShareEpisodeContent(
   const episodes = messages.filter((m) => m.role === "assistant" && m.content);
   const ep = episodes.length
     ? episodes
-        .map((m, i) => `## ${isKO ? "에피소드" : "Episode"} ${i + 1}\n\n${m.content}`)
+        .map(
+          (m, i) =>
+            `## ${isKO ? "에피소드" : "Episode"} ${i + 1}\n\n${m.content}`,
+        )
         .join("\n\n---\n\n")
     : "";
   const sd = config.sceneDirection;

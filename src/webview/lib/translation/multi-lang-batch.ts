@@ -3,7 +3,7 @@
 // ============================================================
 // EN+JA+ZH 동시 배치. 각 언어별 진행 상태 추적.
 
-export type TargetLanguage = 'EN' | 'JP' | 'CN';
+export type TargetLanguage = "EN" | "JP" | "CN";
 
 export interface MultiLangBatchConfig {
   targets: TargetLanguage[];
@@ -13,7 +13,7 @@ export interface MultiLangBatchConfig {
 
 export interface MultiLangProgress {
   language: TargetLanguage;
-  status: 'pending' | 'translating' | 'done' | 'error';
+  status: "pending" | "translating" | "done" | "error";
   progress: number; // 0-100
   episodesDone: number;
   episodesTotal: number;
@@ -28,10 +28,13 @@ export interface MultiLangResult {
 }
 
 /** 다국어 배치 진행 상태 초기화 */
-export function initMultiLangProgress(targets: TargetLanguage[], totalEpisodes: number): MultiLangProgress[] {
-  return targets.map(lang => ({
+export function initMultiLangProgress(
+  targets: TargetLanguage[],
+  totalEpisodes: number,
+): MultiLangProgress[] {
+  return targets.map((lang) => ({
     language: lang,
-    status: 'pending',
+    status: "pending",
     progress: 0,
     episodesDone: 0,
     episodesTotal: totalEpisodes,
@@ -44,23 +47,27 @@ export function updateLangProgress(
   lang: TargetLanguage,
   update: Partial<MultiLangProgress>,
 ): MultiLangProgress[] {
-  return progresses.map(p =>
-    p.language === lang ? { ...p, ...update } : p,
-  );
+  return progresses.map((p) => (p.language === lang ? { ...p, ...update } : p));
 }
 
 /** 전체 진행률 계산 */
 export function overallProgress(progresses: MultiLangProgress[]): number {
   if (progresses.length === 0) return 0;
-  return Math.round(progresses.reduce((a, p) => a + p.progress, 0) / progresses.length);
+  return Math.round(
+    progresses.reduce((a, p) => a + p.progress, 0) / progresses.length,
+  );
 }
 
 /** 모든 언어 완료 여부 */
 export function allDone(progresses: MultiLangProgress[]): boolean {
-  return progresses.every(p => p.status === 'done' || p.status === 'error');
+  return progresses.every((p) => p.status === "done" || p.status === "error");
 }
 
 /** 출판용 언어별 파일명 생성 */
-export function getOutputFileName(baseName: string, lang: TargetLanguage, episode: number): string {
-  return `${baseName}_EP${String(episode).padStart(3, '0')}_${lang}`;
+export function getOutputFileName(
+  baseName: string,
+  lang: TargetLanguage,
+  episode: number,
+): string {
+  return `${baseName}_EP${String(episode).padStart(3, "0")}_${lang}`;
 }

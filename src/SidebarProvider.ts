@@ -3,7 +3,7 @@
 // ============================================================
 // 더미 오딧 제거, Quill 상태 동기화, Health Score 표시
 
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   _view?: vscode.WebviewView;
@@ -23,29 +23,33 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     // Step 45~48: 메시지 핸들러
     webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
-        case 'onInfo':
+        case "onInfo":
           if (data.value) vscode.window.showInformationMessage(data.value);
           break;
-        case 'onError':
+        case "onError":
           if (data.value) vscode.window.showErrorMessage(data.value);
           break;
-        case 'analyze-current':
-          vscode.commands.executeCommand('cs-quill.analyzeFile');
+        case "analyze-current":
+          vscode.commands.executeCommand("cs-quill.analyzeFile");
           break;
-        case 'fix-all':
-          vscode.commands.executeCommand('cs-quill.fixAll');
+        case "fix-all":
+          vscode.commands.executeCommand("cs-quill.fixAll");
           break;
-        case 'reconnect':
-          vscode.commands.executeCommand('cs-quill.reconnect');
+        case "reconnect":
+          vscode.commands.executeCommand("cs-quill.reconnect");
           break;
       }
     });
   }
 
   // Step 46: Health Score 업데이트 (extension에서 호출)
-  public updateHealthScore(score: number, errorCount: number, connected: boolean): void {
+  public updateHealthScore(
+    score: number,
+    errorCount: number,
+    connected: boolean,
+  ): void {
     this._view?.webview.postMessage({
-      type: 'health-update',
+      type: "health-update",
       payload: { score, errorCount, connected },
     });
   }
@@ -56,10 +60,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   private _getHtmlForWebview(webview: vscode.Webview) {
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'dist', 'webview.js'),
+      vscode.Uri.joinPath(this._extensionUri, "dist", "webview.js"),
     );
     const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'dist', 'style.css'),
+      vscode.Uri.joinPath(this._extensionUri, "dist", "style.css"),
     );
     const nonce = getNonce();
 
@@ -129,8 +133,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 }
 
 function getNonce() {
-  let text = '';
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let text = "";
+  const possible =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   for (let i = 0; i < 32; i++) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }

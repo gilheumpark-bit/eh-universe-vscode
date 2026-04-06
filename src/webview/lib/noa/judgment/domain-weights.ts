@@ -7,7 +7,7 @@ import type { DomainType } from "../types";
 import { DEFAULT_DOMAIN_WEIGHTS } from "../config";
 
 const WEIGHT_MAP = new Map(
-  DEFAULT_DOMAIN_WEIGHTS.map((w) => [w.domain, w.multiplier])
+  DEFAULT_DOMAIN_WEIGHTS.map((w) => [w.domain, w.multiplier]),
 );
 
 /**

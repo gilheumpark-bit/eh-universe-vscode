@@ -4,7 +4,7 @@
 // 소설 특화 6축(immersion, emotionResonance...) 대신
 // 일반 번역에 맞는 평가 축 사용. 도메인별 추가 축 지원.
 
-import { type GeneralDomain, GENERAL_DOMAIN_PRESETS } from './general-domains';
+import { type GeneralDomain, GENERAL_DOMAIN_PRESETS } from "./general-domains";
 
 // ── Base Scoring Axes (모든 도메인 공통) ──
 
@@ -36,7 +36,13 @@ export function buildGeneralScoringPrompt(
   domain: GeneralDomain,
 ): string {
   const preset = GENERAL_DOMAIN_PRESETS[domain];
-  const allAxes = ['accuracy', 'naturalness', 'completeness', 'formatFidelity', ...preset.extraAxes];
+  const allAxes = [
+    "accuracy",
+    "naturalness",
+    "completeness",
+    "formatFidelity",
+    ...preset.extraAxes,
+  ];
   const uniqueAxes = [...new Set(allAxes)];
 
   return `You are a translation quality evaluator. Score the following translation on each axis (0-100).
@@ -51,22 +57,28 @@ ${sourceText}
 ${translatedText}
 </translated_text>
 
-Respond with ONLY a JSON object. Keys: ${uniqueAxes.map(a => `"${a}"`).join(', ')}.
+Respond with ONLY a JSON object. Keys: ${uniqueAxes.map((a) => `"${a}"`).join(", ")}.
 Each value is an integer 0-100. No commentary.`;
 }
 
 export function getGeneralScoreSchema(domain: GeneralDomain) {
   const preset = GENERAL_DOMAIN_PRESETS[domain];
-  const allAxes = ['accuracy', 'naturalness', 'completeness', 'formatFidelity', ...preset.extraAxes];
+  const allAxes = [
+    "accuracy",
+    "naturalness",
+    "completeness",
+    "formatFidelity",
+    ...preset.extraAxes,
+  ];
   const uniqueAxes = [...new Set(allAxes)];
 
-  const properties: Record<string, { type: 'number' }> = {};
+  const properties: Record<string, { type: "number" }> = {};
   for (const axis of uniqueAxes) {
-    properties[axis] = { type: 'number' as const };
+    properties[axis] = { type: "number" as const };
   }
 
   return {
-    type: 'object' as const,
+    type: "object" as const,
     properties,
     required: uniqueAxes,
   };
@@ -80,14 +92,15 @@ export function parseGeneralScore(
   try {
     // JSON 블록 추출
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON found');
+    if (!jsonMatch) throw new Error("No JSON found");
     const parsed = JSON.parse(jsonMatch[0]);
 
     const axes: GeneralScoreAxes = {
       accuracy: Number(parsed.accuracy) || 0,
       naturalness: Number(parsed.naturalness) || 0,
       completeness: Number(parsed.completeness) || 0,
-      formatFidelity: Number(parsed.formatFidelity) || Number(parsed.format_fidelity) || 0,
+      formatFidelity:
+        Number(parsed.formatFidelity) || Number(parsed.format_fidelity) || 0,
     };
 
     // 도메인별 추가 축
@@ -98,8 +111,13 @@ export function parseGeneralScore(
       }
     }
 
-    const values = Object.values(axes).filter((v): v is number => typeof v === 'number' && v > 0);
-    const score = values.length > 0 ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0;
+    const values = Object.values(axes).filter(
+      (v): v is number => typeof v === "number" && v > 0,
+    );
+    const score =
+      values.length > 0
+        ? Math.round(values.reduce((a, b) => a + b, 0) / values.length)
+        : 0;
 
     return { score, axes, passed: score >= threshold, domain };
   } catch {

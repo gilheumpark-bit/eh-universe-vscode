@@ -12,35 +12,47 @@ export interface KeyboardLayoutInfo {
 
 /** 키보드 레이아웃 감지 */
 export async function detectKeyboardLayout(): Promise<KeyboardLayoutInfo> {
-  if (typeof navigator === 'undefined' || !('keyboard' in navigator)) {
-    return { supported: false, layout: 'unknown', keyMap: new Map() };
+  if (typeof navigator === "undefined" || !("keyboard" in navigator)) {
+    return { supported: false, layout: "unknown", keyMap: new Map() };
   }
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Keyboard API (navigator.keyboard) has no TS declarations
-    const layoutMap: Map<string, string> = await (navigator as any).keyboard.getLayoutMap();
+    const layoutMap: Map<string, string> = await (
+      navigator as any
+    ).keyboard.getLayoutMap();
     const keyMap = new Map<string, string>();
 
     // 핵심 키 매핑 추출
-    const keyCodes = ['KeyQ', 'KeyW', 'KeyA', 'KeyZ', 'KeyY', 'Semicolon', 'BracketLeft', 'Slash'];
+    const keyCodes = [
+      "KeyQ",
+      "KeyW",
+      "KeyA",
+      "KeyZ",
+      "KeyY",
+      "Semicolon",
+      "BracketLeft",
+      "Slash",
+    ];
     for (const code of keyCodes) {
       const value = layoutMap.get(code);
       if (value) keyMap.set(code, value);
     }
 
     // 레이아웃 추정
-    const q = layoutMap.get('KeyQ') || '';
-    const w = layoutMap.get('KeyW') || '';
-    const y = layoutMap.get('KeyY') || '';
+    const q = layoutMap.get("KeyQ") || "";
+    const w = layoutMap.get("KeyW") || "";
+    const y = layoutMap.get("KeyY") || "";
 
-    let layout = 'QWERTY';
-    if (q === 'a' && w === 'z') layout = 'AZERTY';
-    else if (y === 'z') layout = 'QWERTZ';
-    else if (q === 'ㅂ' || q === 'q') layout = q === 'ㅂ' ? 'KO-2벌식' : 'QWERTY';
+    let layout = "QWERTY";
+    if (q === "a" && w === "z") layout = "AZERTY";
+    else if (y === "z") layout = "QWERTZ";
+    else if (q === "ㅂ" || q === "q")
+      layout = q === "ㅂ" ? "KO-2벌식" : "QWERTY";
 
     return { supported: true, layout, keyMap };
   } catch {
-    return { supported: false, layout: 'unknown', keyMap: new Map() };
+    return { supported: false, layout: "unknown", keyMap: new Map() };
   }
 }
 
@@ -53,13 +65,14 @@ export function formatShortcut(
   modifiers: string[], // ['Ctrl', 'Shift']
   keyCode: string, // 'KeyZ'
 ): string {
-  const key = keyMap.get(keyCode) || keyCode.replace('Key', '');
-  const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent);
+  const key = keyMap.get(keyCode) || keyCode.replace("Key", "");
+  const isMac =
+    typeof navigator !== "undefined" && /Mac/i.test(navigator.userAgent);
 
   const modMap: Record<string, string> = isMac
-    ? { Ctrl: '⌘', Shift: '⇧', Alt: '⌥', Meta: '⌘' }
-    : { Ctrl: 'Ctrl', Shift: 'Shift', Alt: 'Alt', Meta: 'Win' };
+    ? { Ctrl: "⌘", Shift: "⇧", Alt: "⌥", Meta: "⌘" }
+    : { Ctrl: "Ctrl", Shift: "Shift", Alt: "Alt", Meta: "Win" };
 
-  const mods = modifiers.map(m => modMap[m] || m);
-  return [...mods, key.toUpperCase()].join(isMac ? '' : '+');
+  const mods = modifiers.map((m) => modMap[m] || m);
+  return [...mods, key.toUpperCase()].join(isMac ? "" : "+");
 }

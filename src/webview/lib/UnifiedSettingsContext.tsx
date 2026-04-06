@@ -5,13 +5,29 @@
 // 테마(밤/낮), 언어, API 키 슬롯을 한 곳에서 관리
 // ============================================================
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
 
 // ── 테마 ──
 export type ThemeMode = "dark" | "light";
 
 // ── API 키 슬롯 (코드 스튜디오 기반) ──
-export type SlotRole = "default" | "coder" | "reviewer" | "tester" | "security" | "architect" | "debugger" | "documenter" | "custom";
+export type SlotRole =
+  | "default"
+  | "coder"
+  | "reviewer"
+  | "tester"
+  | "security"
+  | "architect"
+  | "debugger"
+  | "documenter"
+  | "custom";
 
 export interface APIKeySlot {
   id: string;
@@ -47,7 +63,9 @@ interface UnifiedSettingsContextType {
   enabledSlots: APIKeySlot[];
 }
 
-const UnifiedSettingsContext = createContext<UnifiedSettingsContextType | null>(null);
+const UnifiedSettingsContext = createContext<UnifiedSettingsContextType | null>(
+  null,
+);
 
 // ── Storage Keys ──
 const THEME_KEY = "eh-theme";
@@ -91,7 +109,9 @@ function migrateOldKeys(): APIKeySlot[] {
   };
 
   for (const [pid, info] of Object.entries(providerMap)) {
-    const key = localStorage.getItem(`noa_${pid}_key`) || localStorage.getItem(`noa_api_key_${pid}`);
+    const key =
+      localStorage.getItem(`noa_${pid}_key`) ||
+      localStorage.getItem(`noa_api_key_${pid}`);
     if (key && key.trim()) {
       slots.push({
         id: crypto.randomUUID(),
@@ -166,7 +186,8 @@ export function UnifiedSettingsProvider({ children }: { children: ReactNode }) {
         "--color-surface-strong": "rgba(37,35,32,0.94)",
         "--color-surface-soft": "rgba(28,26,23,0.78)",
       };
-      for (const [k, v] of Object.entries(darkVars)) root.style.setProperty(k, v);
+      for (const [k, v] of Object.entries(darkVars))
+        root.style.setProperty(k, v);
     }
   }, [theme]);
 
@@ -181,7 +202,7 @@ export function UnifiedSettingsProvider({ children }: { children: ReactNode }) {
   // ── 초기 로드 시 슬롯 → ai-providers 동기화 ──
   useEffect(() => {
     if (slots.length > 0) syncToLegacyKeys(slots);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- 초기 1회만
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 초기 1회만
   }, []);
 
   // ── Slot CRUD ──
@@ -192,24 +213,40 @@ export function UnifiedSettingsProvider({ children }: { children: ReactNode }) {
     syncToLegacyKeys(next);
   }, []);
 
-  const addSlot = useCallback((slot: Omit<APIKeySlot, "id">) => {
-    persist([...slots, { ...slot, id: crypto.randomUUID() }]);
-  }, [slots, persist]);
+  const addSlot = useCallback(
+    (slot: Omit<APIKeySlot, "id">) => {
+      persist([...slots, { ...slot, id: crypto.randomUUID() }]);
+    },
+    [slots, persist],
+  );
 
-  const updateSlot = useCallback((id: string, updates: Partial<APIKeySlot>) => {
-    persist(slots.map((s) => (s.id === id ? { ...s, ...updates } : s)));
-  }, [slots, persist]);
+  const updateSlot = useCallback(
+    (id: string, updates: Partial<APIKeySlot>) => {
+      persist(slots.map((s) => (s.id === id ? { ...s, ...updates } : s)));
+    },
+    [slots, persist],
+  );
 
-  const removeSlot = useCallback((id: string) => {
-    persist(slots.filter((s) => s.id !== id));
-  }, [slots, persist]);
+  const removeSlot = useCallback(
+    (id: string) => {
+      persist(slots.filter((s) => s.id !== id));
+    },
+    [slots, persist],
+  );
 
-  const toggleSlot = useCallback((id: string) => {
-    persist(slots.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)));
-  }, [slots, persist]);
+  const toggleSlot = useCallback(
+    (id: string) => {
+      persist(
+        slots.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)),
+      );
+    },
+    [slots, persist],
+  );
 
   // ── Helpers ──
-  const enabledSlots = slots.filter((s) => s.enabled && s.apiKey.trim().length > 0);
+  const enabledSlots = slots.filter(
+    (s) => s.enabled && s.apiKey.trim().length > 0,
+  );
 
   const getKeyForProvider = useCallback(
     (provider: string) => {
@@ -250,23 +287,40 @@ export function UnifiedSettingsProvider({ children }: { children: ReactNode }) {
 
 export function useUnifiedSettings() {
   const ctx = useContext(UnifiedSettingsContext);
-  if (!ctx) throw new Error("useUnifiedSettings must be used within UnifiedSettingsProvider");
+  if (!ctx)
+    throw new Error(
+      "useUnifiedSettings must be used within UnifiedSettingsProvider",
+    );
   return ctx;
 }
 
 // ── Legacy Sync (동기) ──
 /** ai-providers.ts의 setApiKey/setActiveProvider를 동기 호출하여 키 즉시 반영 */
 function syncToLegacyKeys(slots: APIKeySlot[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   try {
     // 동기 import — 이미 같은 번들에 포함되어 있으므로 circular dependency 아님
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { setApiKey, setActiveProvider, setActiveModel } = require('@/lib/ai-providers');
-    const providers = ["gemini", "openai", "claude", "groq", "mistral", "ollama", "lmstudio"] as const;
+    const {
+      setApiKey,
+      setActiveProvider,
+      setActiveModel,
+    } = require("@/lib/ai-providers");
+    const providers = [
+      "gemini",
+      "openai",
+      "claude",
+      "groq",
+      "mistral",
+      "ollama",
+      "lmstudio",
+    ] as const;
     let firstActiveProvider: string | null = null;
     let firstActiveModel: string | null = null;
     for (const pid of providers) {
-      const activeSlot = slots.find((s) => s.provider === pid && s.enabled && s.apiKey.trim());
+      const activeSlot = slots.find(
+        (s) => s.provider === pid && s.enabled && s.apiKey.trim(),
+      );
       if (activeSlot) {
         setApiKey(pid, activeSlot.apiKey);
         if (!firstActiveProvider) {
@@ -274,28 +328,47 @@ function syncToLegacyKeys(slots: APIKeySlot[]): void {
           firstActiveModel = activeSlot.model;
         }
       } else {
-        setApiKey(pid, '');
+        setApiKey(pid, "");
       }
     }
     if (firstActiveProvider) {
-      setActiveProvider(firstActiveProvider as typeof providers[number]);
+      setActiveProvider(firstActiveProvider as (typeof providers)[number]);
       if (firstActiveModel) setActiveModel(firstActiveModel);
     }
   } catch {
     // 번들링 문제 시 폴백 — 비동기 import
-    import('@/lib/ai-providers').then(({ setApiKey, setActiveProvider, setActiveModel }) => {
-      const providers = ["gemini", "openai", "claude", "groq", "mistral", "ollama", "lmstudio"] as const;
-      let first: string | null = null;
-      let firstModel: string | null = null;
-      for (const pid of providers) {
-        const s = slots.find((sl) => sl.provider === pid && sl.enabled && sl.apiKey.trim());
-        if (s) { setApiKey(pid, s.apiKey); if (!first) { first = pid; firstModel = s.model; } }
-        else { setApiKey(pid, ''); }
-      }
-      if (first) {
-        setActiveProvider(first as typeof providers[number]);
-        if (firstModel) setActiveModel(firstModel);
-      }
-    }).catch(() => {});
+    import("@/lib/ai-providers")
+      .then(({ setApiKey, setActiveProvider, setActiveModel }) => {
+        const providers = [
+          "gemini",
+          "openai",
+          "claude",
+          "groq",
+          "mistral",
+          "ollama",
+          "lmstudio",
+        ] as const;
+        let first: string | null = null;
+        let firstModel: string | null = null;
+        for (const pid of providers) {
+          const s = slots.find(
+            (sl) => sl.provider === pid && sl.enabled && sl.apiKey.trim(),
+          );
+          if (s) {
+            setApiKey(pid, s.apiKey);
+            if (!first) {
+              first = pid;
+              firstModel = s.model;
+            }
+          } else {
+            setApiKey(pid, "");
+          }
+        }
+        if (first) {
+          setActiveProvider(first as (typeof providers)[number]);
+          if (firstModel) setActiveModel(firstModel);
+        }
+      })
+      .catch(() => {});
   }
 }

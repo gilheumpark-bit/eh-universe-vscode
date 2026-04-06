@@ -8,7 +8,7 @@
 // PART 1 — Types
 // ============================================================
 
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState } from "react";
 
 export interface ShortcutBinding {
   /** e.g. "ctrl+shift+p", "f1", "ctrl+s" */
@@ -51,13 +51,19 @@ interface ParsedCombo {
 }
 
 function parseCombo(keys: string): ParsedCombo {
-  const parts = keys.toLowerCase().split('+').map((p) => p.trim());
+  const parts = keys
+    .toLowerCase()
+    .split("+")
+    .map((p) => p.trim());
   return {
-    ctrl: parts.includes('ctrl') || parts.includes('control'),
-    shift: parts.includes('shift'),
-    alt: parts.includes('alt'),
-    meta: parts.includes('meta') || parts.includes('cmd'),
-    key: parts.filter((p) => !['ctrl', 'control', 'shift', 'alt', 'meta', 'cmd'].includes(p))[0] ?? '',
+    ctrl: parts.includes("ctrl") || parts.includes("control"),
+    shift: parts.includes("shift"),
+    alt: parts.includes("alt"),
+    meta: parts.includes("meta") || parts.includes("cmd"),
+    key:
+      parts.filter(
+        (p) => !["ctrl", "control", "shift", "alt", "meta", "cmd"].includes(p),
+      )[0] ?? "",
   };
 }
 
@@ -70,16 +76,22 @@ function matchesCombo(e: KeyboardEvent, combo: ParsedCombo): boolean {
   const comboKey = combo.key.toLowerCase();
 
   // Function keys
-  if (comboKey.startsWith('f') && /^f\d+$/.test(comboKey)) {
+  if (comboKey.startsWith("f") && /^f\d+$/.test(comboKey)) {
     return eventKey === comboKey;
   }
 
   // Named keys
   const KEY_MAP: Record<string, string> = {
-    '`': '`', 'backquote': '`',
-    'space': ' ', 'enter': 'enter', 'escape': 'escape',
-    'tab': 'tab', 'backspace': 'backspace', 'delete': 'delete',
-    '?': '?', '/': '/',
+    "`": "`",
+    backquote: "`",
+    space: " ",
+    enter: "enter",
+    escape: "escape",
+    tab: "tab",
+    backspace: "backspace",
+    delete: "delete",
+    "?": "?",
+    "/": "/",
   };
 
   const normalized = KEY_MAP[comboKey] ?? comboKey;
@@ -133,7 +145,10 @@ export function useCodeStudioKeyboard(
 
       // Skip when typing in input/textarea (unless it's a global shortcut)
       const target = e.target as HTMLElement;
-      const isInputFocused = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      const isInputFocused =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
 
       for (const [, binding] of bindingsRef.current) {
         // Modal guard
@@ -143,7 +158,8 @@ export function useCodeStudioKeyboard(
 
         if (matchesCombo(e, combo)) {
           // Allow input-focused shortcuts only for combos with modifiers
-          if (isInputFocused && !combo.ctrl && !combo.alt && !combo.meta) continue;
+          if (isInputFocused && !combo.ctrl && !combo.alt && !combo.meta)
+            continue;
 
           e.preventDefault();
           e.stopPropagation();
@@ -153,8 +169,8 @@ export function useCodeStudioKeyboard(
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, []);
 
   return { register, unregister, suppress, getBindings };

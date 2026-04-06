@@ -12,11 +12,11 @@ export type BuildPromptParams = {
   storySummary?: string;
   sourceText?: string;
   stage?: number;
-  mode?: 'novel' | 'general';
+  mode?: "novel" | "general";
   /** Novel-only: preserve dialogue vs narration markers and punctuation habits */
   preserveDialogueLayout?: boolean;
   /** Sub-template for general mode accuracy */
-  domainPreset?: 'general' | 'legal' | 'it' | 'medical';
+  domainPreset?: "general" | "legal" | "it" | "medical";
 };
 
 function dialogueRuleNovel(to: string): string {
@@ -27,11 +27,11 @@ function dialogueRuleNovel(to: string): string {
 
 const DOMAIN_EXTRA: Record<string, string> = {
   legal:
-    'DOMAIN LEGAL: Preserve defined terms, party names, article numbers, and citation formats. Do not paraphrase obligations or dates.',
-  it: 'DOMAIN IT: Preserve API names, commands, paths, version numbers, and code tokens exactly. Translate comments and prose only.',
+    "DOMAIN LEGAL: Preserve defined terms, party names, article numbers, and citation formats. Do not paraphrase obligations or dates.",
+  it: "DOMAIN IT: Preserve API names, commands, paths, version numbers, and code tokens exactly. Translate comments and prose only.",
   medical:
-    'DOMAIN MEDICAL: Use standard terminology for the target locale. Do not invent dosages or diagnoses; keep numbers and units exactly.',
-  general: '',
+    "DOMAIN MEDICAL: Use standard terminology for the target locale. Do not invent dosages or diagnoses; keep numbers and units exactly.",
+  general: "",
 };
 
 export function buildPrompt(params: BuildPromptParams): string {
@@ -39,8 +39,8 @@ export function buildPrompt(params: BuildPromptParams): string {
     text,
     from,
     to,
-    tone = 'natural',
-    genre = 'Novel',
+    tone = "natural",
+    genre = "Novel",
     context,
     glossary,
     characterProfiles,
@@ -49,9 +49,9 @@ export function buildPrompt(params: BuildPromptParams): string {
     storySummary,
     sourceText,
     stage,
-    mode = 'novel',
+    mode = "novel",
     preserveDialogueLayout = true,
-    domainPreset = 'general',
+    domainPreset = "general",
   } = params;
 
   if (stage === 10) {
@@ -64,35 +64,41 @@ You are updating the running Story Bible for a serialized novel translation work
 4. Preserve names, titles, spellings, and terminology exactly as they appear in the chapter text.
 5. If a new honorific or name variant CONFLICTS with an earlier bullet in [Current Story Bible], add a line "CONFLICT CHECK:" explaining the discrepancy briefly — do not silently overwrite established facts.
 </strict_directives>
-${storySummary ? `[Current Story Bible]:\n${storySummary}\n` : ''}
-${characterProfiles ? `[Character Profiles]:\n${characterProfiles}\n` : ''}
-${context ? `[World Lore]:\n${context}\n` : ''}
-${continuityNotes ? `[Cross Project Continuity Notes]:\n${continuityNotes}\n` : ''}
+${storySummary ? `[Current Story Bible]:\n${storySummary}\n` : ""}
+${characterProfiles ? `[Character Profiles]:\n${characterProfiles}\n` : ""}
+${context ? `[World Lore]:\n${context}\n` : ""}
+${continuityNotes ? `[Cross Project Continuity Notes]:\n${continuityNotes}\n` : ""}
 <chapter_text>
 ${text}
 </chapter_text>
 Output ONLY the summary points.`;
   }
 
-  const domainLine = DOMAIN_EXTRA[domainPreset] || '';
+  const domainLine = DOMAIN_EXTRA[domainPreset] || "";
 
-  let baseInstructions = `[SYSTEM: DETERMINISTIC TRANSLATION ENGINE — MODE: ${mode === 'general' ? 'GENERAL ACCURACY' : 'NOVEL SPECIALIST'}]
+  let baseInstructions = `[SYSTEM: DETERMINISTIC TRANSLATION ENGINE — MODE: ${mode === "general" ? "GENERAL ACCURACY" : "NOVEL SPECIALIST"}]
 You are a highly constrained, professional translation engine converting text from ${from} to ${to}.
 <strict_directives>
 1. NO YAP: Output ONLY the requested final text. NEVER output intros/outros like "Here is the translation" or "Understood".
 2. FORMAT PRESERVATION: Do NOT wrap your output in markdown code blocks (\`\`\`). Do NOT alter capitalization artificially.
 3. 1:1 STRUCTURE: You MUST preserve the exact paragraph/line break structure of the source text. Do not merge or split paragraphs.
-${mode === 'general'
-  ? `4. STRICT ACCURACY: Prioritize factual accuracy above all else. Do NOT add creative interpretation. Preserve technical terms, proper nouns, and numeric data exactly.
+${
+  mode === "general"
+    ? `4. STRICT ACCURACY: Prioritize factual accuracy above all else. Do NOT add creative interpretation. Preserve technical terms, proper nouns, and numeric data exactly.
 ${domainLine}`
-  : `4. TONE & GENRE OVERRIDE: Your output MUST strictly reflect Tone: [${tone}] and Genre: [${genre}].
-${preserveDialogueLayout ? dialogueRuleNovel(to) : ''}`}
+    : `4. TONE & GENRE OVERRIDE: Your output MUST strictly reflect Tone: [${tone}] and Genre: [${genre}].
+${preserveDialogueLayout ? dialogueRuleNovel(to) : ""}`
+}
 </strict_directives>
 `;
-  if (glossary) baseInstructions += `[Glossary — apply these term mappings consistently]:\n${glossary}\n`;
-  if (characterProfiles) baseInstructions += `[Character Profiles]:\n${characterProfiles}\n`;
-  if (storySummary) baseInstructions += `[Previous Story Summary]:\n${storySummary}\n`;
-  if (continuityNotes) baseInstructions += `[Cross Project Continuity Notes]:\n${continuityNotes}\n`;
+  if (glossary)
+    baseInstructions += `[Glossary — apply these term mappings consistently]:\n${glossary}\n`;
+  if (characterProfiles)
+    baseInstructions += `[Character Profiles]:\n${characterProfiles}\n`;
+  if (storySummary)
+    baseInstructions += `[Previous Story Summary]:\n${storySummary}\n`;
+  if (continuityNotes)
+    baseInstructions += `[Cross Project Continuity Notes]:\n${continuityNotes}\n`;
   if (episodeContext) {
     baseInstructions += `
 CRITICAL INSTRUCTION: The following excerpts are PREVIOUS TRANSLATED CHAPTERS or approved continuity references.
@@ -104,7 +110,7 @@ ${episodeContext}
   }
   if (context) baseInstructions += `Additional Context:\n${context}\n`;
 
-  let prompt = '';
+  let prompt = "";
 
   if (stage === 1) {
     prompt = `${baseInstructions}
@@ -154,9 +160,11 @@ Output ONLY the revised draft.`;
   } else if (stage === 5) {
     prompt = `${baseInstructions}
 MISSION: Stage 5 (Chief Editor).
-${mode === 'general'
-  ? 'Fix grammar errors, typos, and unnatural phrasing. Do NOT change the meaning or add creative embellishment. Keep it factual and precise.'
-  : 'Perform a final polish. Fix any lingering awkward phrasing, typos, or grammatical errors. Ensure perfect narrative flow.'}
+${
+  mode === "general"
+    ? "Fix grammar errors, typos, and unnatural phrasing. Do NOT change the meaning or add creative embellishment. Keep it factual and precise."
+    : "Perform a final polish. Fix any lingering awkward phrasing, typos, or grammatical errors. Ensure perfect narrative flow."
+}
 <source_text>
 ${sourceText}
 </source_text>

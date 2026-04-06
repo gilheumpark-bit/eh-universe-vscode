@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import type { EpisodeSceneSheet, EpisodeSceneEntry, AppLanguage } from "@/lib/studio-types";
+import type {
+  EpisodeSceneSheet,
+  EpisodeSceneEntry,
+  AppLanguage,
+} from "@/lib/studio-types";
 
 // ============================================================
 // PART 0 — TYPES & CONSTANTS
@@ -18,59 +22,152 @@ interface EpisodeScenePanelProps {
 
 const TONE_BY_LANG: Record<string, string[]> = {
   KO: ["감동", "긴장", "개그", "액션", "일상", "반전", "공포", "서사"],
-  EN: ["touching", "tension", "comedy", "action", "daily", "twist", "horror", "epic"],
-  JP: ["感動", "緊張", "コメディ", "アクション", "日常", "反転", "ホラー", "叙事"],
+  EN: [
+    "touching",
+    "tension",
+    "comedy",
+    "action",
+    "daily",
+    "twist",
+    "horror",
+    "epic",
+  ],
+  JP: [
+    "感動",
+    "緊張",
+    "コメディ",
+    "アクション",
+    "日常",
+    "反転",
+    "ホラー",
+    "叙事",
+  ],
   CN: ["感人", "紧张", "喜剧", "动作", "日常", "反转", "恐怖", "叙事"],
 };
 
 /** Per-component labels (not in global i18n to keep the panel self-contained) */
-const LABELS: Record<string, {
-  title: string; save: string; edit: string; delete: string;
-  confirm: string; cancel: string; addScene: string; epTitle: string;
-  arc: string; characters: string; sceneId: string; sceneName: string;
-  sceneChars: string; tone: string; summary: string; keyDialogue: string;
-  emotionPoint: string; nextScene: string; empty: string;
-  deleteConfirm: string; ep: string; scenes: string;
-}> = {
+const LABELS: Record<
+  string,
+  {
+    title: string;
+    save: string;
+    edit: string;
+    delete: string;
+    confirm: string;
+    cancel: string;
+    addScene: string;
+    epTitle: string;
+    arc: string;
+    characters: string;
+    sceneId: string;
+    sceneName: string;
+    sceneChars: string;
+    tone: string;
+    summary: string;
+    keyDialogue: string;
+    emotionPoint: string;
+    nextScene: string;
+    empty: string;
+    deleteConfirm: string;
+    ep: string;
+    scenes: string;
+  }
+> = {
   KO: {
-    title: "에피소드 씬시트", save: "현재 화 씬시트 저장", edit: "편집",
-    delete: "삭제", confirm: "저장", cancel: "취소", addScene: "+ 씬 추가",
-    epTitle: "화 제목", arc: "아크", characters: "등장인물",
-    sceneId: "씬#", sceneName: "씬명", sceneChars: "등장인물",
-    tone: "톤", summary: "씬 요약", keyDialogue: "핵심 대사",
-    emotionPoint: "포인트", nextScene: "다음 씬",
-    empty: "저장된 씬시트가 없습니다", deleteConfirm: "삭제하시겠습니까?",
-    ep: "화", scenes: "씬",
+    title: "에피소드 씬시트",
+    save: "현재 화 씬시트 저장",
+    edit: "편집",
+    delete: "삭제",
+    confirm: "저장",
+    cancel: "취소",
+    addScene: "+ 씬 추가",
+    epTitle: "화 제목",
+    arc: "아크",
+    characters: "등장인물",
+    sceneId: "씬#",
+    sceneName: "씬명",
+    sceneChars: "등장인물",
+    tone: "톤",
+    summary: "씬 요약",
+    keyDialogue: "핵심 대사",
+    emotionPoint: "포인트",
+    nextScene: "다음 씬",
+    empty: "저장된 씬시트가 없습니다",
+    deleteConfirm: "삭제하시겠습니까?",
+    ep: "화",
+    scenes: "씬",
   },
   EN: {
-    title: "Episode Scene Sheets", save: "Save Current Episode", edit: "Edit",
-    delete: "Delete", confirm: "Save", cancel: "Cancel", addScene: "+ Add Scene",
-    epTitle: "Episode Title", arc: "Arc", characters: "Characters",
-    sceneId: "#", sceneName: "Scene", sceneChars: "Characters",
-    tone: "Tone", summary: "Summary", keyDialogue: "Key Dialogue",
-    emotionPoint: "Point", nextScene: "Next",
-    empty: "No saved scene sheets", deleteConfirm: "Delete this scene sheet?",
-    ep: "ep.", scenes: "scenes",
+    title: "Episode Scene Sheets",
+    save: "Save Current Episode",
+    edit: "Edit",
+    delete: "Delete",
+    confirm: "Save",
+    cancel: "Cancel",
+    addScene: "+ Add Scene",
+    epTitle: "Episode Title",
+    arc: "Arc",
+    characters: "Characters",
+    sceneId: "#",
+    sceneName: "Scene",
+    sceneChars: "Characters",
+    tone: "Tone",
+    summary: "Summary",
+    keyDialogue: "Key Dialogue",
+    emotionPoint: "Point",
+    nextScene: "Next",
+    empty: "No saved scene sheets",
+    deleteConfirm: "Delete this scene sheet?",
+    ep: "ep.",
+    scenes: "scenes",
   },
   JP: {
-    title: "エピソードシーンシート", save: "現在話のシーンシート保存", edit: "編集",
-    delete: "削除", confirm: "保存", cancel: "キャンセル", addScene: "+ シーン追加",
-    epTitle: "話タイトル", arc: "アーク", characters: "登場人物",
-    sceneId: "#", sceneName: "シーン名", sceneChars: "登場人物",
-    tone: "トーン", summary: "シーン要約", keyDialogue: "核心台詞",
-    emotionPoint: "ポイント", nextScene: "次シーン",
-    empty: "保存済みシーンシートなし", deleteConfirm: "削除しますか？",
-    ep: "話", scenes: "シーン",
+    title: "エピソードシーンシート",
+    save: "現在話のシーンシート保存",
+    edit: "編集",
+    delete: "削除",
+    confirm: "保存",
+    cancel: "キャンセル",
+    addScene: "+ シーン追加",
+    epTitle: "話タイトル",
+    arc: "アーク",
+    characters: "登場人物",
+    sceneId: "#",
+    sceneName: "シーン名",
+    sceneChars: "登場人物",
+    tone: "トーン",
+    summary: "シーン要約",
+    keyDialogue: "核心台詞",
+    emotionPoint: "ポイント",
+    nextScene: "次シーン",
+    empty: "保存済みシーンシートなし",
+    deleteConfirm: "削除しますか？",
+    ep: "話",
+    scenes: "シーン",
   },
   CN: {
-    title: "章节场景表", save: "保存当前话场景表", edit: "编辑",
-    delete: "删除", confirm: "保存", cancel: "取消", addScene: "+ 添加场景",
-    epTitle: "话标题", arc: "篇章", characters: "登场人物",
-    sceneId: "#", sceneName: "场景名", sceneChars: "登场人物",
-    tone: "基调", summary: "场景概要", keyDialogue: "核心台词",
-    emotionPoint: "要点", nextScene: "下一场景",
-    empty: "无已保存的场景表", deleteConfirm: "确定删除吗？",
-    ep: "话", scenes: "场景",
+    title: "章节场景表",
+    save: "保存当前话场景表",
+    edit: "编辑",
+    delete: "删除",
+    confirm: "保存",
+    cancel: "取消",
+    addScene: "+ 添加场景",
+    epTitle: "话标题",
+    arc: "篇章",
+    characters: "登场人物",
+    sceneId: "#",
+    sceneName: "场景名",
+    sceneChars: "登场人物",
+    tone: "基调",
+    summary: "场景概要",
+    keyDialogue: "核心台词",
+    emotionPoint: "要点",
+    nextScene: "下一场景",
+    empty: "无已保存的场景表",
+    deleteConfirm: "确定删除吗？",
+    ep: "话",
+    scenes: "场景",
   },
 };
 
@@ -102,24 +199,47 @@ function SceneEditor({
   const [characters, setCharacters] = useState(initial?.characters ?? "");
   const [scenes, setScenes] = useState<EpisodeSceneEntry[]>(
     initial?.scenes ?? [
-      { sceneId: `${episode}-1`, sceneName: "", characters: "", tone: "긴장", summary: "", keyDialogue: "", emotionPoint: "", nextScene: "" },
-    ]
+      {
+        sceneId: `${episode}-1`,
+        sceneName: "",
+        characters: "",
+        tone: "긴장",
+        summary: "",
+        keyDialogue: "",
+        emotionPoint: "",
+        nextScene: "",
+      },
+    ],
   );
 
-  const updateScene = useCallback((idx: number, field: keyof EpisodeSceneEntry, value: string) => {
-    setScenes(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s));
-  }, []);
+  const updateScene = useCallback(
+    (idx: number, field: keyof EpisodeSceneEntry, value: string) => {
+      setScenes((prev) =>
+        prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s)),
+      );
+    },
+    [],
+  );
 
   const addScene = useCallback(() => {
     const nextNum = scenes.length + 1;
-    setScenes(prev => [
+    setScenes((prev) => [
       ...prev,
-      { sceneId: `${episode}-${nextNum}`, sceneName: "", characters: "", tone: "긴장", summary: "", keyDialogue: "", emotionPoint: "", nextScene: "" },
+      {
+        sceneId: `${episode}-${nextNum}`,
+        sceneName: "",
+        characters: "",
+        tone: "긴장",
+        summary: "",
+        keyDialogue: "",
+        emotionPoint: "",
+        nextScene: "",
+      },
     ]);
   }, [scenes.length, episode]);
 
   const removeScene = useCallback((idx: number) => {
-    setScenes(prev => prev.filter((_, i) => i !== idx));
+    setScenes((prev) => prev.filter((_, i) => i !== idx));
   }, []);
 
   const handleSave = () => {
@@ -133,8 +253,10 @@ function SceneEditor({
     });
   };
 
-  const inputCls = "w-full bg-bg-secondary border border-border rounded px-2 py-1 text-sm text-text-primary font-mono focus:border-accent-purple focus:outline-none";
-  const selectCls = "bg-bg-secondary border border-border rounded px-1 py-1 text-xs text-text-primary font-mono focus:border-accent-purple focus:outline-none";
+  const inputCls =
+    "w-full bg-bg-secondary border border-border rounded px-2 py-1 text-sm text-text-primary font-mono focus:border-accent-purple focus:outline-none";
+  const selectCls =
+    "bg-bg-secondary border border-border rounded px-1 py-1 text-xs text-text-primary font-mono focus:border-accent-purple focus:outline-none";
 
   return (
     <div className="space-y-3 p-3 bg-bg-secondary/50 rounded-lg border border-border">
@@ -142,15 +264,27 @@ function SceneEditor({
       <div className="grid grid-cols-3 gap-2">
         <div>
           <label className="text-xs text-text-tertiary">{L.epTitle}</label>
-          <input className={inputCls} value={title} onChange={e => setTitle(e.target.value)} />
+          <input
+            className={inputCls}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
         </div>
         <div>
           <label className="text-xs text-text-tertiary">{L.arc}</label>
-          <input className={inputCls} value={arc} onChange={e => setArc(e.target.value)} />
+          <input
+            className={inputCls}
+            value={arc}
+            onChange={(e) => setArc(e.target.value)}
+          />
         </div>
         <div>
           <label className="text-xs text-text-tertiary">{L.characters}</label>
-          <input className={inputCls} value={characters} onChange={e => setCharacters(e.target.value)} />
+          <input
+            className={inputCls}
+            value={characters}
+            onChange={(e) => setCharacters(e.target.value)}
+          />
         </div>
       </div>
 
@@ -159,13 +293,27 @@ function SceneEditor({
         <table className="w-full text-xs border-collapse font-mono">
           <thead>
             <tr className="bg-bg-secondary">
-              <th className="border border-border px-2 py-1 text-text-secondary w-14">{L.sceneId}</th>
-              <th className="border border-border px-2 py-1 text-text-secondary w-20">{L.sceneName}</th>
-              <th className="border border-border px-2 py-1 text-text-secondary w-16">{L.tone}</th>
-              <th className="border border-border px-2 py-1 text-text-secondary">{L.summary}</th>
-              <th className="border border-border px-2 py-1 text-text-secondary">{L.keyDialogue}</th>
-              <th className="border border-border px-2 py-1 text-text-secondary w-24">{L.emotionPoint}</th>
-              <th className="border border-border px-2 py-1 text-text-secondary w-16">{L.nextScene}</th>
+              <th className="border border-border px-2 py-1 text-text-secondary w-14">
+                {L.sceneId}
+              </th>
+              <th className="border border-border px-2 py-1 text-text-secondary w-20">
+                {L.sceneName}
+              </th>
+              <th className="border border-border px-2 py-1 text-text-secondary w-16">
+                {L.tone}
+              </th>
+              <th className="border border-border px-2 py-1 text-text-secondary">
+                {L.summary}
+              </th>
+              <th className="border border-border px-2 py-1 text-text-secondary">
+                {L.keyDialogue}
+              </th>
+              <th className="border border-border px-2 py-1 text-text-secondary w-24">
+                {L.emotionPoint}
+              </th>
+              <th className="border border-border px-2 py-1 text-text-secondary w-16">
+                {L.nextScene}
+              </th>
               <th className="border border-border px-2 py-1 w-8"></th>
             </tr>
           </thead>
@@ -173,30 +321,80 @@ function SceneEditor({
             {scenes.map((scene, idx) => (
               <tr key={idx} className="hover:bg-bg-secondary/50">
                 <td className="border border-border px-1 py-1">
-                  <input className="w-full bg-transparent text-xs text-text-primary text-center focus:outline-none" value={scene.sceneId} onChange={e => updateScene(idx, "sceneId", e.target.value)} />
+                  <input
+                    className="w-full bg-transparent text-xs text-text-primary text-center focus:outline-none"
+                    value={scene.sceneId}
+                    onChange={(e) =>
+                      updateScene(idx, "sceneId", e.target.value)
+                    }
+                  />
                 </td>
                 <td className="border border-border px-1 py-1">
-                  <input className="w-full bg-transparent text-xs text-text-primary focus:outline-none" value={scene.sceneName} onChange={e => updateScene(idx, "sceneName", e.target.value)} />
+                  <input
+                    className="w-full bg-transparent text-xs text-text-primary focus:outline-none"
+                    value={scene.sceneName}
+                    onChange={(e) =>
+                      updateScene(idx, "sceneName", e.target.value)
+                    }
+                  />
                 </td>
                 <td className="border border-border px-1 py-1">
-                  <select className={selectCls} value={scene.tone} onChange={e => updateScene(idx, "tone", e.target.value)}>
-                    {(TONE_BY_LANG[lang] ?? TONE_BY_LANG.KO).map(t => <option key={t} value={t}>{t}</option>)}
+                  <select
+                    className={selectCls}
+                    value={scene.tone}
+                    onChange={(e) => updateScene(idx, "tone", e.target.value)}
+                  >
+                    {(TONE_BY_LANG[lang] ?? TONE_BY_LANG.KO).map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
                   </select>
                 </td>
                 <td className="border border-border px-1 py-1">
-                  <input className="w-full bg-transparent text-xs text-text-primary focus:outline-none" value={scene.summary} onChange={e => updateScene(idx, "summary", e.target.value)} />
+                  <input
+                    className="w-full bg-transparent text-xs text-text-primary focus:outline-none"
+                    value={scene.summary}
+                    onChange={(e) =>
+                      updateScene(idx, "summary", e.target.value)
+                    }
+                  />
                 </td>
                 <td className="border border-border px-1 py-1">
-                  <input className="w-full bg-transparent text-xs text-text-primary focus:outline-none" value={scene.keyDialogue} onChange={e => updateScene(idx, "keyDialogue", e.target.value)} />
+                  <input
+                    className="w-full bg-transparent text-xs text-text-primary focus:outline-none"
+                    value={scene.keyDialogue}
+                    onChange={(e) =>
+                      updateScene(idx, "keyDialogue", e.target.value)
+                    }
+                  />
                 </td>
                 <td className="border border-border px-1 py-1">
-                  <input className="w-full bg-transparent text-xs text-text-primary focus:outline-none" value={scene.emotionPoint} onChange={e => updateScene(idx, "emotionPoint", e.target.value)} />
+                  <input
+                    className="w-full bg-transparent text-xs text-text-primary focus:outline-none"
+                    value={scene.emotionPoint}
+                    onChange={(e) =>
+                      updateScene(idx, "emotionPoint", e.target.value)
+                    }
+                  />
                 </td>
                 <td className="border border-border px-1 py-1">
-                  <input className="w-full bg-transparent text-xs text-text-primary focus:outline-none text-center" value={scene.nextScene} onChange={e => updateScene(idx, "nextScene", e.target.value)} />
+                  <input
+                    className="w-full bg-transparent text-xs text-text-primary focus:outline-none text-center"
+                    value={scene.nextScene}
+                    onChange={(e) =>
+                      updateScene(idx, "nextScene", e.target.value)
+                    }
+                  />
                 </td>
                 <td className="border border-border px-1 py-1 text-center">
-                  <button onClick={() => removeScene(idx)} className="text-red-400 hover:text-red-300 text-xs" title={L.delete}>✕</button>
+                  <button
+                    onClick={() => removeScene(idx)}
+                    className="text-red-400 hover:text-red-300 text-xs"
+                    title={L.delete}
+                  >
+                    ✕
+                  </button>
                 </td>
               </tr>
             ))}
@@ -204,12 +402,27 @@ function SceneEditor({
         </table>
       </div>
 
-      <button onClick={addScene} className="text-xs text-accent-purple hover:text-accent-purple/80 font-mono">{L.addScene}</button>
+      <button
+        onClick={addScene}
+        className="text-xs text-accent-purple hover:text-accent-purple/80 font-mono"
+      >
+        {L.addScene}
+      </button>
 
       {/* Actions */}
       <div className="flex gap-2 justify-end">
-        <button onClick={onCancel} className="px-3 py-1 text-xs bg-bg-secondary hover:bg-bg-secondary/80 rounded text-text-secondary border border-border font-mono">{L.cancel}</button>
-        <button onClick={handleSave} className="px-3 py-1 text-xs bg-accent-purple hover:bg-accent-purple/80 rounded text-white font-mono">{L.confirm}</button>
+        <button
+          onClick={onCancel}
+          className="px-3 py-1 text-xs bg-bg-secondary hover:bg-bg-secondary/80 rounded text-text-secondary border border-border font-mono"
+        >
+          {L.cancel}
+        </button>
+        <button
+          onClick={handleSave}
+          className="px-3 py-1 text-xs bg-accent-purple hover:bg-accent-purple/80 rounded text-white font-mono"
+        >
+          {L.confirm}
+        </button>
       </div>
     </div>
   );
@@ -220,7 +433,13 @@ function SceneEditor({
 // PART 2 — READ-ONLY SCENE TABLE
 // ============================================================
 
-function SceneTable({ sheet, lang }: { sheet: EpisodeSceneSheet; lang: AppLanguage }) {
+function SceneTable({
+  sheet,
+  lang,
+}: {
+  sheet: EpisodeSceneSheet;
+  lang: AppLanguage;
+}) {
   const L = getL(lang);
   const toneColor: Record<string, string> = {
     감동: "bg-green-900/40 text-green-300",
@@ -238,27 +457,57 @@ function SceneTable({ sheet, lang }: { sheet: EpisodeSceneSheet; lang: AppLangua
       <table className="w-full text-xs border-collapse font-mono">
         <thead>
           <tr className="bg-bg-secondary">
-            <th className="border border-border px-2 py-1 text-text-tertiary w-12">{L.sceneId}</th>
-            <th className="border border-border px-2 py-1 text-text-tertiary w-16">{L.sceneName}</th>
-            <th className="border border-border px-2 py-1 text-text-tertiary w-14">{L.tone}</th>
-            <th className="border border-border px-2 py-1 text-text-tertiary">{L.summary}</th>
-            <th className="border border-border px-2 py-1 text-text-tertiary">{L.keyDialogue}</th>
-            <th className="border border-border px-2 py-1 text-text-tertiary w-20">{L.emotionPoint}</th>
-            <th className="border border-border px-2 py-1 text-text-tertiary w-14">{L.nextScene}</th>
+            <th className="border border-border px-2 py-1 text-text-tertiary w-12">
+              {L.sceneId}
+            </th>
+            <th className="border border-border px-2 py-1 text-text-tertiary w-16">
+              {L.sceneName}
+            </th>
+            <th className="border border-border px-2 py-1 text-text-tertiary w-14">
+              {L.tone}
+            </th>
+            <th className="border border-border px-2 py-1 text-text-tertiary">
+              {L.summary}
+            </th>
+            <th className="border border-border px-2 py-1 text-text-tertiary">
+              {L.keyDialogue}
+            </th>
+            <th className="border border-border px-2 py-1 text-text-tertiary w-20">
+              {L.emotionPoint}
+            </th>
+            <th className="border border-border px-2 py-1 text-text-tertiary w-14">
+              {L.nextScene}
+            </th>
           </tr>
         </thead>
         <tbody>
           {sheet.scenes.map((s, i) => (
             <tr key={i} className="hover:bg-bg-secondary/30">
-              <td className="border border-border px-2 py-1 text-text-secondary text-center">{s.sceneId}</td>
-              <td className="border border-border px-2 py-1 text-text-primary">{s.sceneName}</td>
-              <td className="border border-border px-1 py-1 text-center">
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${toneColor[s.tone] ?? "bg-bg-secondary text-text-secondary"}`}>{s.tone}</span>
+              <td className="border border-border px-2 py-1 text-text-secondary text-center">
+                {s.sceneId}
               </td>
-              <td className="border border-border px-2 py-1 text-text-secondary">{s.summary}</td>
-              <td className="border border-border px-2 py-1 text-text-secondary italic">{s.keyDialogue}</td>
-              <td className="border border-border px-2 py-1 text-text-tertiary">{s.emotionPoint}</td>
-              <td className="border border-border px-2 py-1 text-text-tertiary text-center">{s.nextScene}</td>
+              <td className="border border-border px-2 py-1 text-text-primary">
+                {s.sceneName}
+              </td>
+              <td className="border border-border px-1 py-1 text-center">
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${toneColor[s.tone] ?? "bg-bg-secondary text-text-secondary"}`}
+                >
+                  {s.tone}
+                </span>
+              </td>
+              <td className="border border-border px-2 py-1 text-text-secondary">
+                {s.summary}
+              </td>
+              <td className="border border-border px-2 py-1 text-text-secondary italic">
+                {s.keyDialogue}
+              </td>
+              <td className="border border-border px-2 py-1 text-text-tertiary">
+                {s.emotionPoint}
+              </td>
+              <td className="border border-border px-2 py-1 text-text-tertiary text-center">
+                {s.nextScene}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -290,22 +539,30 @@ export default function EpisodeScenePanel({
     setEditingEp(currentEpisode);
   };
 
-  const handleConfirm = useCallback((sheet: EpisodeSceneSheet) => {
-    const exists = episodeSceneSheets.some(s => s.episode === sheet.episode);
-    if (exists) {
-      onUpdate(sheet);
-    } else {
-      onSave(sheet);
-    }
-    setEditingEp(null);
-  }, [episodeSceneSheets, onSave, onUpdate]);
+  const handleConfirm = useCallback(
+    (sheet: EpisodeSceneSheet) => {
+      const exists = episodeSceneSheets.some(
+        (s) => s.episode === sheet.episode,
+      );
+      if (exists) {
+        onUpdate(sheet);
+      } else {
+        onSave(sheet);
+      }
+      setEditingEp(null);
+    },
+    [episodeSceneSheets, onSave, onUpdate],
+  );
 
-  const handleDelete = useCallback((ep: number) => {
-    if (confirm(L.deleteConfirm)) {
-      onDelete(ep);
-      if (expandedEp === ep) setExpandedEp(null);
-    }
-  }, [onDelete, expandedEp, L.deleteConfirm]);
+  const handleDelete = useCallback(
+    (ep: number) => {
+      if (confirm(L.deleteConfirm)) {
+        onDelete(ep);
+        if (expandedEp === ep) setExpandedEp(null);
+      }
+    },
+    [onDelete, expandedEp, L.deleteConfirm],
+  );
 
   return (
     <div className="space-y-2">
@@ -314,7 +571,8 @@ export default function EpisodeScenePanel({
         onClick={handleSaveNew}
         className="w-full px-3 py-2 text-xs bg-accent-purple/20 hover:bg-accent-purple/30 border border-accent-purple/30 rounded-lg text-accent-purple font-mono transition-colors"
       >
-        {currentEpisode}{L.ep} {L.save}
+        {currentEpisode}
+        {L.ep} {L.save}
       </button>
 
       {/* Editor */}
@@ -322,7 +580,7 @@ export default function EpisodeScenePanel({
         <SceneEditor
           lang={lang}
           episode={editingEp}
-          initial={episodeSceneSheets.find(s => s.episode === editingEp)}
+          initial={episodeSceneSheets.find((s) => s.episode === editingEp)}
           onConfirm={handleConfirm}
           onCancel={() => setEditingEp(null)}
         />
@@ -330,27 +588,48 @@ export default function EpisodeScenePanel({
 
       {/* Saved sheets list */}
       {sorted.length === 0 && editingEp === null && (
-        <p className="text-xs text-text-tertiary text-center py-2 font-mono">{L.empty}</p>
+        <p className="text-xs text-text-tertiary text-center py-2 font-mono">
+          {L.empty}
+        </p>
       )}
 
-      {sorted.map(sheet => (
-        <div key={sheet.episode} className="border border-border rounded-lg overflow-hidden">
+      {sorted.map((sheet) => (
+        <div
+          key={sheet.episode}
+          className="border border-border rounded-lg overflow-hidden"
+        >
           {/* Header */}
           <button
-            onClick={() => setExpandedEp(expandedEp === sheet.episode ? null : sheet.episode)}
+            onClick={() =>
+              setExpandedEp(expandedEp === sheet.episode ? null : sheet.episode)
+            }
             className="w-full flex items-center justify-between px-3 py-2 bg-bg-secondary/50 hover:bg-bg-secondary text-left transition-colors"
           >
             <div className="flex-1 min-w-0">
               <span className="text-sm font-medium text-text-primary font-mono">
-                {sheet.episode}{L.ep}
+                {sheet.episode}
+                {L.ep}
                 {sheet.title && <> &laquo;{sheet.title}&raquo;</>}
               </span>
-              {sheet.arc && <span className="ml-2 text-xs text-text-tertiary">[{sheet.arc}]</span>}
-              {sheet.characters && <span className="ml-2 text-xs text-text-tertiary">{sheet.characters}</span>}
+              {sheet.arc && (
+                <span className="ml-2 text-xs text-text-tertiary">
+                  [{sheet.arc}]
+                </span>
+              )}
+              {sheet.characters && (
+                <span className="ml-2 text-xs text-text-tertiary">
+                  {sheet.characters}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-1 ml-2 flex-shrink-0">
-              <span className="text-[10px] text-text-tertiary">{sheet.scenes.length}{L.scenes}</span>
-              <span className="text-text-tertiary">{expandedEp === sheet.episode ? "▼" : "▶"}</span>
+              <span className="text-[10px] text-text-tertiary">
+                {sheet.scenes.length}
+                {L.scenes}
+              </span>
+              <span className="text-text-tertiary">
+                {expandedEp === sheet.episode ? "▼" : "▶"}
+              </span>
             </div>
           </button>
 
@@ -359,8 +638,18 @@ export default function EpisodeScenePanel({
             <div className="p-2 border-t border-border bg-bg-primary/30">
               <SceneTable sheet={sheet} lang={lang} />
               <div className="flex gap-2 justify-end mt-2">
-                <button onClick={() => setEditingEp(sheet.episode)} className="px-2 py-1 text-[10px] bg-bg-secondary hover:bg-bg-secondary/80 rounded text-text-secondary border border-border font-mono">{L.edit}</button>
-                <button onClick={() => handleDelete(sheet.episode)} className="px-2 py-1 text-[10px] bg-red-900/30 hover:bg-red-900/50 rounded text-red-400 font-mono">{L.delete}</button>
+                <button
+                  onClick={() => setEditingEp(sheet.episode)}
+                  className="px-2 py-1 text-[10px] bg-bg-secondary hover:bg-bg-secondary/80 rounded text-text-secondary border border-border font-mono"
+                >
+                  {L.edit}
+                </button>
+                <button
+                  onClick={() => handleDelete(sheet.episode)}
+                  className="px-2 py-1 text-[10px] bg-red-900/30 hover:bg-red-900/50 rounded text-red-400 font-mono"
+                >
+                  {L.delete}
+                </button>
               </div>
             </div>
           )}

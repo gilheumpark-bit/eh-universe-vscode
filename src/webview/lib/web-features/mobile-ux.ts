@@ -5,20 +5,26 @@
 
 /** 모바일 기기 감지 */
 export function isMobile(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-    || (navigator.maxTouchPoints > 0 && window.innerWidth < 768);
+  if (typeof navigator === "undefined") return false;
+  return (
+    /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    ) ||
+    (navigator.maxTouchPoints > 0 && window.innerWidth < 768)
+  );
 }
 
 /** 터치 기기 감지 */
 export function isTouchDevice(): boolean {
-  if (typeof window === 'undefined') return false;
-  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  if (typeof window === "undefined") return false;
+  return "ontouchstart" in window || navigator.maxTouchPoints > 0;
 }
 
 /** 가상 키보드 열림 감지 (iOS/Android) */
-export function onVirtualKeyboard(callback: (open: boolean) => void): () => void {
-  if (typeof visualViewport === 'undefined') return () => {};
+export function onVirtualKeyboard(
+  callback: (open: boolean) => void,
+): () => void {
+  if (typeof visualViewport === "undefined") return () => {};
 
   const threshold = 150; // px
   let wasOpen = false;
@@ -33,24 +39,24 @@ export function onVirtualKeyboard(callback: (open: boolean) => void): () => void
     }
   };
 
-  visualViewport!.addEventListener('resize', handler);
-  return () => visualViewport!.removeEventListener('resize', handler);
+  visualViewport!.addEventListener("resize", handler);
+  return () => visualViewport!.removeEventListener("resize", handler);
 }
 
 /** 안전 영역 (노치/홈바) CSS 변수 설정 */
 export function applySafeArea(): void {
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
   const style = document.documentElement.style;
-  style.setProperty('--safe-top', 'env(safe-area-inset-top, 0px)');
-  style.setProperty('--safe-bottom', 'env(safe-area-inset-bottom, 0px)');
-  style.setProperty('--safe-left', 'env(safe-area-inset-left, 0px)');
-  style.setProperty('--safe-right', 'env(safe-area-inset-right, 0px)');
+  style.setProperty("--safe-top", "env(safe-area-inset-top, 0px)");
+  style.setProperty("--safe-bottom", "env(safe-area-inset-bottom, 0px)");
+  style.setProperty("--safe-left", "env(safe-area-inset-left, 0px)");
+  style.setProperty("--safe-right", "env(safe-area-inset-right, 0px)");
 }
 
 /** 스와이프 제스처 감지 */
 export function onSwipe(
   element: HTMLElement,
-  handler: (direction: 'left' | 'right' | 'up' | 'down') => void,
+  handler: (direction: "left" | "right" | "up" | "down") => void,
   threshold: number = 50,
 ): () => void {
   let startX = 0;
@@ -70,17 +76,17 @@ export function onSwipe(
     if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) return;
 
     if (Math.abs(dx) > Math.abs(dy)) {
-      handler(dx > 0 ? 'right' : 'left');
+      handler(dx > 0 ? "right" : "left");
     } else {
-      handler(dy > 0 ? 'down' : 'up');
+      handler(dy > 0 ? "down" : "up");
     }
   };
 
-  element.addEventListener('touchstart', onStart, { passive: true });
-  element.addEventListener('touchend', onEnd, { passive: true });
+  element.addEventListener("touchstart", onStart, { passive: true });
+  element.addEventListener("touchend", onEnd, { passive: true });
   return () => {
-    element.removeEventListener('touchstart', onStart);
-    element.removeEventListener('touchend', onEnd);
+    element.removeEventListener("touchstart", onStart);
+    element.removeEventListener("touchend", onEnd);
   };
 }
 
@@ -112,23 +118,25 @@ export function onPullToRefresh(
     if (!pulling) return;
     pulling = false;
     const dy = e.changedTouches[0].clientY - startY;
-    element.style.transition = 'transform 0.3s ease';
-    element.style.transform = '';
-    setTimeout(() => { element.style.transition = ''; }, 300);
+    element.style.transition = "transform 0.3s ease";
+    element.style.transform = "";
+    setTimeout(() => {
+      element.style.transition = "";
+    }, 300);
     if (dy > threshold) await onRefresh();
   };
 
-  element.addEventListener('touchstart', onStart, { passive: true });
-  element.addEventListener('touchmove', onMove, { passive: true });
-  element.addEventListener('touchend', onEnd, { passive: true });
+  element.addEventListener("touchstart", onStart, { passive: true });
+  element.addEventListener("touchmove", onMove, { passive: true });
+  element.addEventListener("touchend", onEnd, { passive: true });
   return () => {
-    element.removeEventListener('touchstart', onStart);
-    element.removeEventListener('touchmove', onMove);
-    element.removeEventListener('touchend', onEnd);
+    element.removeEventListener("touchstart", onStart);
+    element.removeEventListener("touchmove", onMove);
+    element.removeEventListener("touchend", onEnd);
   };
 }
 
 /** 모바일에서 텍스트 선택 후 컨텍스트 메뉴 (번역/검색/공유) */
 export function getSelectedText(): string {
-  return window.getSelection()?.toString()?.trim() || '';
+  return window.getSelection()?.toString()?.trim() || "";
 }

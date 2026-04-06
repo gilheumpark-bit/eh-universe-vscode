@@ -70,10 +70,12 @@ async function loadSession(): Promise<SessionSnapshot | null> {
     const db = await openDB();
     const tx = db.transaction(STORE_NAME, "readonly");
     const req = tx.objectStore(STORE_NAME).get(SESSION_KEY);
-    const result = await new Promise<SessionSnapshot | null>((resolve, reject) => {
-      req.onsuccess = () => resolve(req.result ?? null);
-      req.onerror = () => reject(req.error);
-    });
+    const result = await new Promise<SessionSnapshot | null>(
+      (resolve, reject) => {
+        req.onsuccess = () => resolve(req.result ?? null);
+        req.onerror = () => reject(req.error);
+      },
+    );
     db.close();
     return result;
   } catch {

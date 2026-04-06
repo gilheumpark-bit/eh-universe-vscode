@@ -8,7 +8,7 @@
 
 /** View Transitions 지원 여부 */
 export function supportsViewTransitions(): boolean {
-  return typeof document !== 'undefined' && 'startViewTransition' in document;
+  return typeof document !== "undefined" && "startViewTransition" in document;
 }
 
 /**
@@ -17,7 +17,7 @@ export function supportsViewTransitions(): boolean {
  */
 export function withViewTransition(updateFn: () => void | Promise<void>): void {
   if (supportsViewTransitions()) {
-        (document as any).startViewTransition(updateFn);
+    (document as any).startViewTransition(updateFn);
   } else {
     updateFn();
   }
@@ -34,12 +34,14 @@ export function morphTransition(
 ): void {
   if (supportsViewTransitions()) {
     element.style.viewTransitionName = transitionName;
-        const transition = (document as any).startViewTransition(updateFn);
-    transition.finished.then(() => {
-      element.style.viewTransitionName = '';
-    }).catch(() => {
-      element.style.viewTransitionName = '';
-    });
+    const transition = (document as any).startViewTransition(updateFn);
+    transition.finished
+      .then(() => {
+        element.style.viewTransitionName = "";
+      })
+      .catch(() => {
+        element.style.viewTransitionName = "";
+      });
   } else {
     updateFn();
   }
@@ -59,13 +61,15 @@ export function tabTransition(
     return;
   }
 
-  const direction = nextIndex > currentIndex ? 'forward' : 'backward';
+  const direction = nextIndex > currentIndex ? "forward" : "backward";
   document.documentElement.dataset.transitionDirection = direction;
 
-    const transition = (document as any).startViewTransition(updateFn);
-  transition.finished.then(() => {
-    delete document.documentElement.dataset.transitionDirection;
-  }).catch(() => {
-    delete document.documentElement.dataset.transitionDirection;
-  });
+  const transition = (document as any).startViewTransition(updateFn);
+  transition.finished
+    .then(() => {
+      delete document.documentElement.dataset.transitionDirection;
+    })
+    .catch(() => {
+      delete document.documentElement.dataset.transitionDirection;
+    });
 }

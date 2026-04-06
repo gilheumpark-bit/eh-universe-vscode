@@ -2,18 +2,39 @@ import type { User } from "firebase/auth";
 // Firebase Firestore — static import for data-layer modules.
 // Dynamic alternative: import('firebase/firestore') via lazyFirestore() in firebase.ts
 import {
-  collection, deleteDoc, doc, getDoc, getDocs, increment,
-  limit, orderBy, query, setDoc, updateDoc, writeBatch, where,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  increment,
+  limit,
+  orderBy,
+  query,
+  setDoc,
+  updateDoc,
+  writeBatch,
+  where,
   type QueryConstraint,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import {
-  type BoardType, type BookmarkRecord, type CommentRecord,
-  type CreatePlanetWithFirstLogInput, type CreateBoardPostInput,
-  type CreatePostInput, type CreateSettlementInput,
-  type PlanetRecord, type PlanetStatus, type PostRecord,
-  type ReactionRecord, type ReactionType, type ReportReason,
-  type ReportRecord, type SettlementRecord, type UserRecord,
+  type BoardType,
+  type BookmarkRecord,
+  type CommentRecord,
+  type CreatePlanetWithFirstLogInput,
+  type CreateBoardPostInput,
+  type CreatePostInput,
+  type CreateSettlementInput,
+  type PlanetRecord,
+  type PlanetStatus,
+  type PostRecord,
+  type ReactionRecord,
+  type ReactionType,
+  type ReportReason,
+  type ReportRecord,
+  type SettlementRecord,
+  type UserRecord,
   REPORT_TYPE_TO_BOARD_TYPE,
 } from "@/lib/network-types";
 
@@ -21,7 +42,7 @@ import {
 // PART 1 - SHARED HELPERS
 // ============================================================
 
-import { collectionName } from '@/lib/firebase';
+import { collectionName } from "@/lib/firebase";
 
 export const COLLECTIONS = {
   users: collectionName("users"),
@@ -45,7 +66,11 @@ export function nowIso() {
   return new Date().toISOString();
 }
 
-export function clampNullable(value: number | null | undefined, min: number, max: number) {
+export function clampNullable(
+  value: number | null | undefined,
+  min: number,
+  max: number,
+) {
   if (value == null || Number.isNaN(value)) return null;
   return Math.max(min, Math.min(max, value));
 }
@@ -59,12 +84,13 @@ export function normalizeOptionalText(value: string | undefined | null) {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
-export function normalizeStringArray(values: string[] | undefined | null, maxLength: number) {
+export function normalizeStringArray(
+  values: string[] | undefined | null,
+  maxLength: number,
+) {
   return Array.from(
     new Set(
-      (values ?? [])
-        .map((value) => normalizeText(value))
-        .filter(Boolean),
+      (values ?? []).map((value) => normalizeText(value)).filter(Boolean),
     ),
   ).slice(0, maxLength);
 }
@@ -75,7 +101,10 @@ export function summarizeContent(content: string) {
   return `${compact.slice(0, 177)}...`;
 }
 
-export function buildDefaultUserRecord(userId: string, nickname?: string | null): UserRecord {
+export function buildDefaultUserRecord(
+  userId: string,
+  nickname?: string | null,
+): UserRecord {
   const timestamp = nowIso();
   return {
     id: userId,
@@ -88,7 +117,10 @@ export function buildDefaultUserRecord(userId: string, nickname?: string | null)
   };
 }
 
-export function sanitizePlanetStatus(status: PlanetStatus | null | undefined, fallback: PlanetStatus): PlanetStatus {
+export function sanitizePlanetStatus(
+  status: PlanetStatus | null | undefined,
+  fallback: PlanetStatus,
+): PlanetStatus {
   return status ?? fallback;
 }
 
@@ -96,7 +128,7 @@ export function sanitizePlanetStatus(status: PlanetStatus | null | undefined, fa
  * Strip HTML tags from user input to prevent XSS via Firestore stored content.
  */
 export function stripHtml(value: string): string {
-  return value.replace(/<[^>]*>/g, '');
+  return value.replace(/<[^>]*>/g, "");
 }
 
 /**
@@ -110,7 +142,10 @@ export function sanitizeTitle(value: string | undefined | null): string {
 /**
  * Sanitize user-provided content: strip HTML, trim, enforce max length.
  */
-export function sanitizeContent(value: string | undefined | null, maxLength = 50_000): string {
+export function sanitizeContent(
+  value: string | undefined | null,
+  maxLength = 50_000,
+): string {
   const raw = normalizeText(value);
   return stripHtml(raw).slice(0, maxLength);
 }
@@ -124,4 +159,3 @@ export function sanitizeComment(value: string | undefined | null): string {
 }
 
 // IDENTITY_SEAL: PART-1 | role=shared firestore helpers | inputs=raw form values | outputs=sanitized payload values
-

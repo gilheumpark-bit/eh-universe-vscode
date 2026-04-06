@@ -8,7 +8,17 @@
 // ============================================================
 
 import { useState, useCallback, useRef } from "react";
-import { Database, Play, Clock, Table2, Settings, Loader2, AlertTriangle, ChevronRight, ChevronDown } from "lucide-react";
+import {
+  Database,
+  Play,
+  Clock,
+  Table2,
+  Settings,
+  Loader2,
+  AlertTriangle,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
 
 export interface DBConnection {
   id: string;
@@ -146,7 +156,10 @@ function ResultsTable({ result }: { result: QueryResult | null }) {
         <thead className="sticky top-0 bg-bg-primary">
           <tr>
             {result.columns.map((col) => (
-              <th key={col} className="border-b border-border px-3 py-1.5 text-left font-medium text-text-secondary">
+              <th
+                key={col}
+                className="border-b border-border px-3 py-1.5 text-left font-medium text-text-secondary"
+              >
                 {col}
               </th>
             ))}
@@ -156,7 +169,10 @@ function ResultsTable({ result }: { result: QueryResult | null }) {
           {result.rows.map((row, ri) => (
             <tr key={ri} className="hover:bg-bg-secondary/60">
               {result.columns.map((col) => (
-                <td key={col} className="border-b border-border px-3 py-1 text-text-primary">
+                <td
+                  key={col}
+                  className="border-b border-border px-3 py-1 text-text-primary"
+                >
                   {String(row[col] ?? "NULL")}
                 </td>
               ))}
@@ -187,10 +203,14 @@ export default function DatabasePanel({
   const SIMULATION_BADGE = (
     <div className="flex items-center gap-1.5 border-b border-border/30 bg-amber-950/30 px-3 py-1">
       <Database size={12} className="text-amber-400" />
-      <span className="text-[9px] font-medium text-amber-300">(시뮬레이션 / Simulated)</span>
+      <span className="text-[9px] font-medium text-amber-300">
+        (시뮬레이션 / Simulated)
+      </span>
     </div>
   );
-  const [activeConn, setActiveConn] = useState<string>(connections[0]?.id ?? "");
+  const [activeConn, setActiveConn] = useState<string>(
+    connections[0]?.id ?? "",
+  );
   const [query, setQuery] = useState("SELECT * FROM ");
   const [result, setResult] = useState<QueryResult | null>(null);
   const [running, setRunning] = useState(false);
@@ -204,11 +224,22 @@ export default function DatabasePanel({
       const res = await onExecuteQuery(activeConn, query);
       setResult(res);
       setHistory((h) => [
-        { id: `q-${Date.now()}`, query: query.trim(), timestamp: Date.now(), success: !res.error },
+        {
+          id: `q-${Date.now()}`,
+          query: query.trim(),
+          timestamp: Date.now(),
+          success: !res.error,
+        },
         ...h.slice(0, 49),
       ]);
     } catch (err) {
-      setResult({ columns: [], rows: [], rowCount: 0, executionTime: 0, error: String(err) });
+      setResult({
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        executionTime: 0,
+        error: String(err),
+      });
     } finally {
       setRunning(false);
     }
@@ -225,54 +256,65 @@ export default function DatabasePanel({
     <div className="flex h-full flex-col">
       {SIMULATION_BADGE}
       <div className="flex flex-1 min-h-0">
-      {/* Sidebar */}
-      <div className="w-48 shrink-0 border-r border-border overflow-y-auto bg-bg-secondary/50">
-        <div className="border-b border-border px-2 py-2">
-          <select
-            value={activeConn}
-            onChange={(e) => setActiveConn(e.target.value)}
-            className="w-full rounded bg-bg-secondary/40 px-2 py-1 text-xs text-text-primary border border-border outline-none"
-          >
-            {connections.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-        <TableList tables={tables} onSelect={(t) => setQuery(`SELECT * FROM ${t} LIMIT 100;`)} />
-        <HistoryList history={history} onSelect={setQuery} />
-      </div>
-
-      {/* Main area */}
-      <div className="flex flex-1 flex-col">
-        {/* Query editor */}
-        <div className="border-b border-border p-2">
-          <textarea
-            ref={textareaRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            rows={4}
-            className="w-full resize-none rounded border border-border bg-bg-secondary/80 px-3 py-2 font-mono text-xs text-text-primary outline-none focus:border-accent-purple/50"
-            placeholder="Enter SQL query... (Ctrl+Enter to execute)"
-          />
-          <div className="mt-1 flex items-center justify-between">
-            <span className="text-[10px] text-text-tertiary">Ctrl+Enter to execute</span>
-            <button
-              onClick={execute}
-              disabled={running}
-              className="flex items-center gap-1 rounded bg-accent-green px-3 py-1 text-xs text-bg-primary hover:bg-accent-green/80 disabled:opacity-50 transition-colors"
+        {/* Sidebar */}
+        <div className="w-48 shrink-0 border-r border-border overflow-y-auto bg-bg-secondary/50">
+          <div className="border-b border-border px-2 py-2">
+            <select
+              value={activeConn}
+              onChange={(e) => setActiveConn(e.target.value)}
+              className="w-full rounded bg-bg-secondary/40 px-2 py-1 text-xs text-text-primary border border-border outline-none"
             >
-              {running ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />}
-              Execute
-            </button>
+              {connections.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <TableList
+            tables={tables}
+            onSelect={(t) => setQuery(`SELECT * FROM ${t} LIMIT 100;`)}
+          />
+          <HistoryList history={history} onSelect={setQuery} />
+        </div>
+
+        {/* Main area */}
+        <div className="flex flex-1 flex-col">
+          {/* Query editor */}
+          <div className="border-b border-border p-2">
+            <textarea
+              ref={textareaRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              rows={4}
+              className="w-full resize-none rounded border border-border bg-bg-secondary/80 px-3 py-2 font-mono text-xs text-text-primary outline-none focus:border-accent-purple/50"
+              placeholder="Enter SQL query... (Ctrl+Enter to execute)"
+            />
+            <div className="mt-1 flex items-center justify-between">
+              <span className="text-[10px] text-text-tertiary">
+                Ctrl+Enter to execute
+              </span>
+              <button
+                onClick={execute}
+                disabled={running}
+                className="flex items-center gap-1 rounded bg-accent-green px-3 py-1 text-xs text-bg-primary hover:bg-accent-green/80 disabled:opacity-50 transition-colors"
+              >
+                {running ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <Play size={12} />
+                )}
+                Execute
+              </button>
+            </div>
+          </div>
+
+          {/* Results */}
+          <div className="flex-1 overflow-hidden">
+            <ResultsTable result={result} />
           </div>
         </div>
-
-        {/* Results */}
-        <div className="flex-1 overflow-hidden">
-          <ResultsTable result={result} />
-        </div>
-      </div>
       </div>
     </div>
   );

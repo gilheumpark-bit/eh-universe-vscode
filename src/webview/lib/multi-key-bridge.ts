@@ -21,7 +21,7 @@ import {
   executeParallel,
   evaluateCrossValidation,
   type CrossValidationResult,
-} from './multi-key-manager';
+} from "./multi-key-manager";
 
 import {
   type ProviderId,
@@ -34,13 +34,13 @@ import {
   setApiKey,
   getActiveModel,
   setActiveModel,
-} from './ai-providers';
+} from "./ai-providers";
 
 // ============================================================
 // PART 2 — Slot-aware Streaming
 // ============================================================
 
-export interface MultiKeyStreamOptions extends Omit<StreamOptions, 'onChunk'> {
+export interface MultiKeyStreamOptions extends Omit<StreamOptions, "onChunk"> {
   role?: AgentRole;
   onChunk: (text: string) => void;
   /** 특정 슬롯 강제 지정 (역할 매칭 무시) */
@@ -64,7 +64,7 @@ export async function streamWithMultiKey(opts: MultiKeyStreamOptions): Promise<{
 
   // Fallback: 멀티키 미설정 → 기존 단일키
   if (activeCount === 0) {
-    let accumulated = '';
+    let accumulated = "";
     const text = await originalStreamChat({
       ...opts,
       onChunk: (chunk) => {
@@ -81,11 +81,14 @@ export async function streamWithMultiKey(opts: MultiKeyStreamOptions): Promise<{
   }
 
   // 슬롯 결정
-  const role = opts.role ?? 'general';
+  const role = opts.role ?? "general";
   let slot: KeySlot | null = null;
 
   if (opts.forceSlotId) {
-    slot = config.slots.find((s) => s.id === opts.forceSlotId && s.enabled && s.apiKey) ?? null;
+    slot =
+      config.slots.find(
+        (s) => s.id === opts.forceSlotId && s.enabled && s.apiKey,
+      ) ?? null;
   }
   if (!slot) {
     slot = getSlotForRole(config, role);
@@ -93,7 +96,7 @@ export async function streamWithMultiKey(opts: MultiKeyStreamOptions): Promise<{
 
   // 슬롯 없으면 fallback
   if (!slot) {
-    let accumulated = '';
+    let accumulated = "";
     const text = await originalStreamChat({
       ...opts,
       onChunk: (chunk) => {
@@ -118,7 +121,7 @@ export async function streamWithMultiKey(opts: MultiKeyStreamOptions): Promise<{
   setActiveModel(slot.model);
   setApiKey(slot.provider, slot.apiKey);
 
-  let accumulated = '';
+  let accumulated = "";
   try {
     const text = await originalStreamChat({
       ...opts,
@@ -130,10 +133,15 @@ export async function streamWithMultiKey(opts: MultiKeyStreamOptions): Promise<{
 
     // 사용량 추적 (대략적 토큰 추정: 4자 ≈ 1토큰)
     const inputTokens = Math.ceil(
-      opts.messages.reduce((acc, m) => acc + m.content.length, 0) / 4
+      opts.messages.reduce((acc, m) => acc + m.content.length, 0) / 4,
     );
     const outputTokens = Math.ceil(text.length / 4);
-    const updatedConfig = trackSlotUsage(config, slot.id, inputTokens, outputTokens);
+    const updatedConfig = trackSlotUsage(
+      config,
+      slot.id,
+      inputTokens,
+      outputTokens,
+    );
     saveMultiKeyConfig(updatedConfig);
 
     return {
@@ -170,7 +178,7 @@ export interface CrossValidationOptions {
  * crossValidation이 비활성이거나 후보가 2개 미만이면 단일 호출 fallback.
  */
 export async function streamWithCrossValidation(
-  opts: CrossValidationOptions
+  opts: CrossValidationOptions,
 ): Promise<CrossValidationResult> {
   const config = loadMultiKeyConfig();
 
@@ -181,7 +189,7 @@ export async function streamWithCrossValidation(
       return { consensus: false, results: [], avgScore: 0, divergence: 1 };
     }
 
-    let fullText = '';
+    let fullText = "";
     await streamWithMultiKey({
       role: opts.role,
       systemInstruction: opts.systemInstruction,
@@ -189,17 +197,21 @@ export async function streamWithCrossValidation(
       temperature: opts.temperature,
       maxTokens: opts.maxTokens,
       signal: opts.signal,
-      onChunk: (c) => { fullText += c; },
+      onChunk: (c) => {
+        fullText += c;
+      },
     });
 
     const score = opts.scoreExtractor(fullText);
-    return evaluateCrossValidation([{
-      score,
-      response: fullText,
-      slotId: slot.id,
-      provider: slot.provider,
-      model: slot.model,
-    }]);
+    return evaluateCrossValidation([
+      {
+        score,
+        response: fullText,
+        slotId: slot.id,
+        provider: slot.provider,
+        model: slot.model,
+      },
+    ]);
   }
 
   // 병렬 크로스밸리데이션
@@ -211,7 +223,7 @@ export async function streamWithCrossValidation(
       return { consensus: false, results: [], avgScore: 0, divergence: 1 };
     }
 
-    let fullText = '';
+    let fullText = "";
     await streamWithMultiKey({
       role: opts.role,
       forceSlotId: slot.id,
@@ -220,17 +232,21 @@ export async function streamWithCrossValidation(
       temperature: opts.temperature,
       maxTokens: opts.maxTokens,
       signal: opts.signal,
-      onChunk: (c) => { fullText += c; },
+      onChunk: (c) => {
+        fullText += c;
+      },
     });
 
     const score = opts.scoreExtractor(fullText);
-    return evaluateCrossValidation([{
-      score,
-      response: fullText,
-      slotId: slot.id,
-      provider: slot.provider,
-      model: slot.model,
-    }]);
+    return evaluateCrossValidation([
+      {
+        score,
+        response: fullText,
+        slotId: slot.id,
+        provider: slot.provider,
+        model: slot.model,
+      },
+    ]);
   }
 
   // 병렬 실행
@@ -247,22 +263,29 @@ export async function streamWithCrossValidation(
       setApiKey(slot.provider, slot.apiKey);
 
       try {
-        let text = '';
+        let text = "";
         await originalStreamChat({
           systemInstruction: opts.systemInstruction,
           messages: opts.messages,
           temperature: opts.temperature,
           maxTokens: opts.maxTokens,
           signal: opts.signal,
-          onChunk: (c) => { text += c; },
+          onChunk: (c) => {
+            text += c;
+          },
         });
 
         // 사용량 추적
         const inputTokens = Math.ceil(
-          opts.messages.reduce((acc, m) => acc + m.content.length, 0) / 4
+          opts.messages.reduce((acc, m) => acc + m.content.length, 0) / 4,
         );
         const outputTokens = Math.ceil(text.length / 4);
-        const updatedConfig = trackSlotUsage(loadMultiKeyConfig(), slot.id, inputTokens, outputTokens);
+        const updatedConfig = trackSlotUsage(
+          loadMultiKeyConfig(),
+          slot.id,
+          inputTokens,
+          outputTokens,
+        );
         saveMultiKeyConfig(updatedConfig);
 
         return text;

@@ -2,7 +2,7 @@
 // StudioError — Typed error class for consistent error handling
 // ============================================================
 
-import { StudioErrorCode, ERROR_META } from './error-codes';
+import { StudioErrorCode, ERROR_META } from "./error-codes";
 
 export class StudioError extends Error {
   readonly code: StudioErrorCode;
@@ -20,7 +20,7 @@ export class StudioError extends Error {
     },
   ) {
     super(message);
-    this.name = 'StudioError';
+    this.name = "StudioError";
     this.code = code;
     this.retryable = ERROR_META[code]?.retryable ?? false;
     this.httpStatus = opts?.httpStatus ?? ERROR_META[code]?.httpStatus;
@@ -30,7 +30,10 @@ export class StudioError extends Error {
 }
 
 /** Classify a raw error into StudioError */
-export function classifyAsStudioError(err: unknown, provider?: string): StudioError {
+export function classifyAsStudioError(
+  err: unknown,
+  provider?: string,
+): StudioError {
   if (err instanceof StudioError) return err;
 
   const msg = err instanceof Error ? err.message : String(err);
@@ -41,12 +44,18 @@ export function classifyAsStudioError(err: unknown, provider?: string): StudioEr
     return new StudioError(StudioErrorCode.KEY_MISSING, msg, { provider });
   }
   if (/401|invalid.*key|forbidden/i.test(msg)) {
-    return new StudioError(StudioErrorCode.KEY_INVALID, msg, { httpStatus: 401, provider });
+    return new StudioError(StudioErrorCode.KEY_INVALID, msg, {
+      httpStatus: 401,
+      provider,
+    });
   }
 
   // Rate Limit
   if (/429|rate.?limit|too many/i.test(msg)) {
-    return new StudioError(StudioErrorCode.RATE_LIMIT, msg, { httpStatus: 429, provider });
+    return new StudioError(StudioErrorCode.RATE_LIMIT, msg, {
+      httpStatus: 429,
+      provider,
+    });
   }
   if (/free.?tier|limit.?reached/i.test(msg)) {
     return new StudioError(StudioErrorCode.FREE_TIER_LIMIT, msg, { provider });
@@ -67,7 +76,9 @@ export function classifyAsStudioError(err: unknown, provider?: string): StudioEr
 
   // Size
   if (/413|too large|request.?size/i.test(msg)) {
-    return new StudioError(StudioErrorCode.CONTENT_TOO_LARGE, msg, { httpStatus: 413 });
+    return new StudioError(StudioErrorCode.CONTENT_TOO_LARGE, msg, {
+      httpStatus: 413,
+    });
   }
 
   // Parse
@@ -80,5 +91,8 @@ export function classifyAsStudioError(err: unknown, provider?: string): StudioEr
     return new StudioError(StudioErrorCode.STORAGE_FULL, msg);
   }
 
-  return new StudioError(StudioErrorCode.UNKNOWN, msg, { provider, cause: err });
+  return new StudioError(StudioErrorCode.UNKNOWN, msg, {
+    provider,
+    cause: err,
+  });
 }

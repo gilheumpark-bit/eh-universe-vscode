@@ -132,7 +132,12 @@ register("ask", "Quick AI query", async (args, ctx) => {
   }
   ctx.onAskAI?.(prompt);
   return {
-    lines: [{ text: `\u2192 AI \uC9C8\uC758 \uC804\uC1A1: "${prompt}"`, color: "blue" }],
+    lines: [
+      {
+        text: `\u2192 AI \uC9C8\uC758 \uC804\uC1A1: "${prompt}"`,
+        color: "blue",
+      },
+    ],
   };
 });
 
@@ -150,7 +155,10 @@ function cslCommand(args: string[], ctx: CommandContext): CommandResult {
     ctx.onRunPipeline?.(fileName);
     return {
       lines: [
-        { text: `[CSL] \uD30C\uC774\uD504\uB77C\uC778 \uC2E4\uD589: ${fileName}`, color: "green" },
+        {
+          text: `[CSL] \uD30C\uC774\uD504\uB77C\uC778 \uC2E4\uD589: ${fileName}`,
+          color: "green",
+        },
         {
           text: "[CSL] \uACB0\uACFC\uB294 Pipeline \uD328\uB110\uC5D0 \uD45C\uC2DC\uB429\uB2C8\uB2E4.",
           color: "blue",
@@ -173,14 +181,22 @@ function cslCommand(args: string[], ctx: CommandContext): CommandResult {
     return {
       lines: [
         { text: "Code Studio Pipeline Teams:", color: "blue" },
-        { text: "  1. Simulation    \u2014 \uC758\uB3C4 \uD30C\uC2F1, \uB4DC\uB77C\uC774\uB7F0" },
+        {
+          text: "  1. Simulation    \u2014 \uC758\uB3C4 \uD30C\uC2F1, \uB4DC\uB77C\uC774\uB7F0",
+        },
         { text: "  2. Generation    \u2014 AI \uCF54\uB4DC \uC0DD\uC131" },
         { text: "  3. Validation    \u2014 \uC815\uC801 \uAC80\uC99D" },
         { text: "  4. Size/Density  \u2014 \uBC00\uB3C4 \uAC80\uC99D" },
         { text: "  5. Asset Trace   \u2014 \uC758\uC874\uC131 \uCD94\uC801" },
-        { text: "  6. Stability     \u2014 \uD68C\uADC0 \uC704\uD5D8 \uBD84\uC11D" },
-        { text: "  7. Release/IP    \u2014 \uBCF4\uC548 \uC2A4\uCE94 + \uB9B4\uB9AC\uC988 \uAC8C\uC774\uD2B8" },
-        { text: "  8. Governance    \u2014 \uC2E0\uB8B0\uB3C4 + \uBCF5\uC7A1\uB3C4 \uC608\uC0B0" },
+        {
+          text: "  6. Stability     \u2014 \uD68C\uADC0 \uC704\uD5D8 \uBD84\uC11D",
+        },
+        {
+          text: "  7. Release/IP    \u2014 \uBCF4\uC548 \uC2A4\uCE94 + \uB9B4\uB9AC\uC988 \uAC8C\uC774\uD2B8",
+        },
+        {
+          text: "  8. Governance    \u2014 \uC2E0\uB8B0\uB3C4 + \uBCF5\uC7A1\uB3C4 \uC608\uC0B0",
+        },
       ],
     };
   }

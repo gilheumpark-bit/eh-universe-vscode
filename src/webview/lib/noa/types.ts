@@ -80,9 +80,15 @@ export interface TrinityWeights {
 // ============================================================
 
 export type GradeLevel =
-  | "Platinum" | "Gold" | "LightGold"
-  | "Silver" | "Lime" | "Orange"
-  | "Red" | "DeepRed" | "Black";
+  | "Platinum"
+  | "Gold"
+  | "LightGold"
+  | "Silver"
+  | "Lime"
+  | "Orange"
+  | "Red"
+  | "DeepRed"
+  | "Black";
 
 export type GradeStep = 1 | 2 | 3;
 
@@ -174,7 +180,7 @@ export interface AuditVerification {
 
 export interface AuditManager {
   append(
-    entry: Omit<AuditEntry, "id" | "hash" | "prevHash" | "hmacSignature">
+    entry: Omit<AuditEntry, "id" | "hash" | "prevHash" | "hmacSignature">,
   ): Promise<AuditEntry>;
   verify(): Promise<AuditVerification>;
   getChain(): AuditChainState;
@@ -211,7 +217,7 @@ export interface RiskBudgetManager {
     riskCost: number,
     promptLength: number,
     responseLength: number,
-    responseText?: string
+    responseText?: string,
   ): AvailabilityResult;
   /** Apply burn-rate sanitization to a response based on tactical path. */
   sanitize?(text: string, path: string): string;

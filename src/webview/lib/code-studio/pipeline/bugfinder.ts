@@ -2,23 +2,38 @@
 // PART 1 — Types & Constants
 // ============================================================
 
-import { streamChat, getApiKey, getActiveProvider } from '@/lib/ai-providers';
+import { streamChat, getApiKey, getActiveProvider } from "@/lib/ai-providers";
 
 export interface BugReport {
   id: string;
-  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
+  severity: "critical" | "high" | "medium" | "low" | "info";
   line: number;
   description: string;
   suggestion: string;
-  category: 'logic' | 'security' | 'performance' | 'style' | 'error-handling' | 'type-safety';
-  source?: 'ai' | 'static' | 'ast';
+  category:
+    | "logic"
+    | "security"
+    | "performance"
+    | "style"
+    | "error-handling"
+    | "type-safety";
+  source?: "ai" | "static" | "ast";
 }
 
-const VALID_SEVERITIES = new Set<BugReport['severity']>([
-  'critical', 'high', 'medium', 'low', 'info',
+const VALID_SEVERITIES = new Set<BugReport["severity"]>([
+  "critical",
+  "high",
+  "medium",
+  "low",
+  "info",
 ]);
-const VALID_CATEGORIES = new Set<BugReport['category']>([
-  'logic', 'security', 'performance', 'style', 'error-handling', 'type-safety',
+const VALID_CATEGORIES = new Set<BugReport["category"]>([
+  "logic",
+  "security",
+  "performance",
+  "style",
+  "error-handling",
+  "type-safety",
 ]);
 
 let _idCounter = 0;
@@ -42,7 +57,11 @@ Rules:
 - "line" must be a 1-based line number referencing the source code.
 - Be precise. Do not fabricate issues that do not exist in the code.`;
 
-function buildUserPrompt(code: string, language: string, fileName: string): string {
+function buildUserPrompt(
+  code: string,
+  language: string,
+  fileName: string,
+): string {
   return `File: ${fileName}
 Language: ${language}
 
@@ -62,8 +81,8 @@ function parseAiResponse(raw: string): BugReport[] {
   }
 
   // Find the outermost JSON array
-  const start = cleaned.indexOf('[');
-  const end = cleaned.lastIndexOf(']');
+  const start = cleaned.indexOf("[");
+  const end = cleaned.lastIndexOf("]");
   if (start === -1 || end === -1 || end <= start) return [];
 
   let parsed: unknown;
@@ -77,30 +96,30 @@ function parseAiResponse(raw: string): BugReport[] {
 
   const results: BugReport[] = [];
   for (const item of parsed) {
-    if (typeof item !== 'object' || item === null) continue;
+    if (typeof item !== "object" || item === null) continue;
     const rec = item as Record<string, unknown>;
 
-    const severity = String(rec.severity ?? 'info');
-    const category = String(rec.category ?? 'logic');
+    const severity = String(rec.severity ?? "info");
+    const category = String(rec.category ?? "logic");
     const line = Number(rec.line);
-    const description = String(rec.description ?? '');
-    const suggestion = String(rec.suggestion ?? '');
+    const description = String(rec.description ?? "");
+    const suggestion = String(rec.suggestion ?? "");
 
     if (!description) continue;
     if (!Number.isFinite(line) || line < 1) continue;
 
     results.push({
       id: nextId(),
-      severity: VALID_SEVERITIES.has(severity as BugReport['severity'])
-        ? (severity as BugReport['severity'])
-        : 'info',
+      severity: VALID_SEVERITIES.has(severity as BugReport["severity"])
+        ? (severity as BugReport["severity"])
+        : "info",
       line: Math.floor(line),
       description,
       suggestion,
-      category: VALID_CATEGORIES.has(category as BugReport['category'])
-        ? (category as BugReport['category'])
-        : 'logic',
-      source: 'ai',
+      category: VALID_CATEGORIES.has(category as BugReport["category"])
+        ? (category as BugReport["category"])
+        : "logic",
+      source: "ai",
     });
   }
 
@@ -124,12 +143,14 @@ export async function findBugs(
   const apiKey = getApiKey(provider);
   if (!apiKey) return [];
 
-  let accumulated = '';
+  let accumulated = "";
 
   try {
     await streamChat({
       systemInstruction: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: buildUserPrompt(code, language, fileName) }],
+      messages: [
+        { role: "user", content: buildUserPrompt(code, language, fileName) },
+      ],
       temperature: 0.2,
       signal,
       onChunk(text: string) {
@@ -138,12 +159,12 @@ export async function findBugs(
     });
   } catch (err) {
     // AbortError는 호출자에게 다시 전파
-    if (err instanceof DOMException && err.name === 'AbortError') throw err;
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
     return [];
   }
 
   const rawReports = parseAiResponse(accumulated);
-  const lineCount = code.split('\n').length;
+  const lineCount = code.split("\n").length;
   return validateAiResults(rawReports, lineCount);
 }
 
@@ -161,7 +182,7 @@ export async function findBugs(
 export function findBugsStatic(code: string, language: string): BugReport[] {
   if (!code.trim()) return [];
 
-  const lines = code.split('\n');
+  const lines = code.split("\n");
   const reports: BugReport[] = [];
 
   // ---- Detectors ----
@@ -175,7 +196,7 @@ export function findBugsStatic(code: string, language: string): BugReport[] {
 
   // Tag source
   for (const r of reports) {
-    r.source = 'static';
+    r.source = "static";
   }
 
   return reports;
@@ -188,7 +209,9 @@ function detectUnusedVariables(
   language: string,
   reports: BugReport[],
 ): void {
-  const isJsTsFamily = /^(javascript|typescript|jsx|tsx|js|ts)$/i.test(language);
+  const isJsTsFamily = /^(javascript|typescript|jsx|tsx|js|ts)$/i.test(
+    language,
+  );
   const isPython = /^python$/i.test(language);
 
   // Pattern: capture variable declarations
@@ -206,7 +229,7 @@ function detectUnusedVariables(
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim();
     // Skip comments
-    if (trimmed.startsWith('//') || trimmed.startsWith('#')) continue;
+    if (trimmed.startsWith("//") || trimmed.startsWith("#")) continue;
 
     for (const pat of declPatterns) {
       const m = trimmed.match(pat);
@@ -216,20 +239,20 @@ function detectUnusedVariables(
     }
   }
 
-  const fullText = lines.join('\n');
+  const fullText = lines.join("\n");
   for (const decl of declarations) {
     // Count occurrences of the identifier (word-boundary match)
-    const re = new RegExp(`\\b${escapeRegex(decl.name)}\\b`, 'g');
+    const re = new RegExp(`\\b${escapeRegex(decl.name)}\\b`, "g");
     const matches = fullText.match(re);
     // 1 occurrence = only the declaration itself
     if (matches && matches.length <= 1) {
       reports.push({
         id: nextId(),
-        severity: 'low',
+        severity: "low",
         line: decl.line,
         description: `Variable "${decl.name}" is assigned but never read.`,
         suggestion: `Remove the unused variable or use it in subsequent logic.`,
-        category: 'style',
+        category: "style",
       });
     }
   }
@@ -239,7 +262,8 @@ function detectNullDereference(lines: string[], reports: BugReport[]): void {
   // Heuristic: assignment with `null` or `undefined`, then property access
   // without a null check in between. Simplified: look for `= null` or
   // `= undefined` then within 5 lines `.something` on the same identifier.
-  const nullAssign = /(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:null|undefined)/;
+  const nullAssign =
+    /(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:null|undefined)/;
 
   for (let i = 0; i < lines.length; i++) {
     const m = lines[i].match(nullAssign);
@@ -263,11 +287,11 @@ function detectNullDereference(lines: string[], reports: BugReport[]): void {
       if (accessPattern.test(line)) {
         reports.push({
           id: nextId(),
-          severity: 'high',
+          severity: "high",
           line: j + 1,
           description: `Possible null dereference: "${varName}" was assigned null/undefined at line ${i + 1} and accessed without a null check.`,
           suggestion: `Add a null check before accessing properties of "${varName}".`,
-          category: 'error-handling',
+          category: "error-handling",
         });
         break;
       }
@@ -285,15 +309,21 @@ function detectUnreachableCode(lines: string[], reports: BugReport[]): void {
     for (let j = i + 1; j < lines.length; j++) {
       const next = lines[j].trim();
       if (!next) continue; // skip blank lines
-      if (next === '}' || next === ')' || next.startsWith('case ') || next === 'default:') break;
+      if (
+        next === "}" ||
+        next === ")" ||
+        next.startsWith("case ") ||
+        next === "default:"
+      )
+        break;
       // Still in the same block with executable code
       reports.push({
         id: nextId(),
-        severity: 'medium',
+        severity: "medium",
         line: j + 1,
         description: `Unreachable code detected after return statement at line ${i + 1}.`,
         suggestion: `Remove the unreachable code or restructure the control flow.`,
-        category: 'logic',
+        category: "logic",
       });
       break;
     }
@@ -305,7 +335,9 @@ function detectEmptyCatch(
   language: string,
   reports: BugReport[],
 ): void {
-  const isJsTsFamily = /^(javascript|typescript|jsx|tsx|js|ts)$/i.test(language);
+  const isJsTsFamily = /^(javascript|typescript|jsx|tsx|js|ts)$/i.test(
+    language,
+  );
   const isPython = /^python$/i.test(language);
 
   for (let i = 0; i < lines.length; i++) {
@@ -313,16 +345,16 @@ function detectEmptyCatch(
 
     if (isJsTsFamily && /catch\s*\(/.test(trimmed)) {
       // Check if the catch block body is empty: { }
-      const remaining = lines.slice(i).join('\n');
+      const remaining = lines.slice(i).join("\n");
       const catchBody = remaining.match(/catch\s*\([^)]*\)\s*\{([^}]*)\}/);
       if (catchBody && !catchBody[1].trim()) {
         reports.push({
           id: nextId(),
-          severity: 'medium',
+          severity: "medium",
           line: i + 1,
           description: `Empty catch block swallows errors silently.`,
           suggestion: `At minimum, log the error (e.g., console.error) or rethrow it.`,
-          category: 'error-handling',
+          category: "error-handling",
         });
       }
     }
@@ -331,14 +363,14 @@ function detectEmptyCatch(
       // except ...: followed by pass/blank
       if (i + 1 < lines.length) {
         const nextLine = lines[i + 1].trim();
-        if (nextLine === 'pass' || nextLine === '') {
+        if (nextLine === "pass" || nextLine === "") {
           reports.push({
             id: nextId(),
-            severity: 'medium',
+            severity: "medium",
             line: i + 1,
             description: `Empty except block silently ignores exceptions.`,
             suggestion: `Handle the exception properly or at least log it.`,
-            category: 'error-handling',
+            category: "error-handling",
           });
         }
       }
@@ -351,10 +383,13 @@ function detectMissingSwitchDefault(
   language: string,
   reports: BugReport[],
 ): void {
-  const isJsTsFamily = /^(javascript|typescript|jsx|tsx|js|ts|java|c|cpp|csharp|go)$/i.test(language);
+  const isJsTsFamily =
+    /^(javascript|typescript|jsx|tsx|js|ts|java|c|cpp|csharp|go)$/i.test(
+      language,
+    );
   if (!isJsTsFamily) return;
 
-  const fullText = lines.join('\n');
+  const fullText = lines.join("\n");
   // Find switch blocks that lack a `default:` case
   const switchRegex = /switch\s*\([^)]*\)\s*\{/g;
   let match: RegExpExecArray | null;
@@ -363,25 +398,25 @@ function detectMissingSwitchDefault(
     const startIdx = match.index + match[0].length;
     let depth = 1;
     let pos = startIdx;
-    let blockContent = '';
+    let blockContent = "";
 
     while (pos < fullText.length && depth > 0) {
-      if (fullText[pos] === '{') depth++;
-      else if (fullText[pos] === '}') depth--;
+      if (fullText[pos] === "{") depth++;
+      else if (fullText[pos] === "}") depth--;
       if (depth > 0) blockContent += fullText[pos];
       pos++;
     }
 
     if (!/\bdefault\s*:/.test(blockContent)) {
       // Calculate line number of the switch statement
-      const lineNum = fullText.slice(0, match.index).split('\n').length;
+      const lineNum = fullText.slice(0, match.index).split("\n").length;
       reports.push({
         id: nextId(),
-        severity: 'low',
+        severity: "low",
         line: lineNum,
         description: `Switch statement has no default case.`,
         suggestion: `Add a default case to handle unexpected values.`,
-        category: 'logic',
+        category: "logic",
       });
     }
   }
@@ -394,16 +429,21 @@ function detectDivisionByZero(lines: string[], reports: BugReport[]): void {
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim();
     // Skip comments
-    if (trimmed.startsWith('//') || trimmed.startsWith('#') || trimmed.startsWith('*')) continue;
+    if (
+      trimmed.startsWith("//") ||
+      trimmed.startsWith("#") ||
+      trimmed.startsWith("*")
+    )
+      continue;
 
     if (divByZero.test(trimmed)) {
       reports.push({
         id: nextId(),
-        severity: 'critical',
+        severity: "critical",
         line: i + 1,
         description: `Potential division by zero detected.`,
         suggestion: `Add a guard to ensure the divisor is not zero before dividing.`,
-        category: 'logic',
+        category: "logic",
       });
     }
   }
@@ -412,7 +452,7 @@ function detectDivisionByZero(lines: string[], reports: BugReport[]): void {
 // ---- Utility ----
 
 function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 // IDENTITY_SEAL: PART-3 | role=static-bug-detection | inputs=code,language | outputs=BugReport[]
@@ -426,7 +466,12 @@ function escapeRegex(str: string): string {
  * dependency on the `typescript` package at bundle time.
  */
 interface TsLikeModule {
-  createSourceFile(fileName: string, source: string, target: unknown, setParentNodes?: boolean): TsSourceFile;
+  createSourceFile(
+    fileName: string,
+    source: string,
+    target: unknown,
+    setParentNodes?: boolean,
+  ): TsSourceFile;
   forEachChild(node: TsNode, cb: (node: TsNode) => void): void;
   SyntaxKind: Record<string, number>;
   ScriptTarget?: Record<string, unknown>;
@@ -452,7 +497,10 @@ interface TsNode {
 }
 
 interface TsSourceFile extends TsNode {
-  getLineAndCharacterOfPosition(pos: number): { line: number; character: number };
+  getLineAndCharacterOfPosition(pos: number): {
+    line: number;
+    character: number;
+  };
   text: string;
 }
 
@@ -463,7 +511,7 @@ interface TsSourceFile extends TsNode {
 async function loadTs(): Promise<TsLikeModule | null> {
   try {
     // Dynamic import so the module is optional
-    const ts = await import('typescript');
+    const ts = await import("typescript");
     return (ts.default ?? ts) as unknown as TsLikeModule;
   } catch {
     return null;
@@ -481,8 +529,13 @@ async function loadTs(): Promise<TsLikeModule | null> {
  *  - Async function without try/catch around await
  *  - Unhandled Promise (async call without await)
  */
-export async function findBugsAst(code: string, language: string): Promise<BugReport[]> {
-  const isJsTsFamily = /^(javascript|typescript|jsx|tsx|js|ts)$/i.test(language);
+export async function findBugsAst(
+  code: string,
+  language: string,
+): Promise<BugReport[]> {
+  const isJsTsFamily = /^(javascript|typescript|jsx|tsx|js|ts)$/i.test(
+    language,
+  );
   if (!isJsTsFamily || !code.trim()) return [];
 
   const tsModule = await loadTs();
@@ -490,7 +543,7 @@ export async function findBugsAst(code: string, language: string): Promise<BugRe
   // Non-null const so inner closures can capture without narrowing issues
   const ts: TsLikeModule = tsModule;
 
-  const ext = /tsx|jsx/i.test(language) ? 'file.tsx' : 'file.ts';
+  const ext = /tsx|jsx/i.test(language) ? "file.tsx" : "file.ts";
   let sourceFile: TsSourceFile;
   try {
     sourceFile = ts.createSourceFile(
@@ -518,7 +571,9 @@ export async function findBugsAst(code: string, language: string): Promise<BugRe
   function collectIdentifiers(node: TsNode): void {
     // Variable declaration
     if (node.kind === SK.VariableDeclaration && node.name) {
-      const name = node.name.getText ? node.name.getText() : String(node.name.escapedText ?? '');
+      const name = node.name.getText
+        ? node.name.getText()
+        : String(node.name.escapedText ?? "");
       if (name && !declarations.has(name)) {
         declarations.set(name, { line: lineOf(node), count: 0 });
       }
@@ -526,7 +581,9 @@ export async function findBugsAst(code: string, language: string): Promise<BugRe
 
     // Identifier usage (not in declaration position)
     if (node.kind === SK.Identifier) {
-      const name = node.getText ? node.getText() : String(node.escapedText ?? '');
+      const name = node.getText
+        ? node.getText()
+        : String(node.escapedText ?? "");
       const entry = declarations.get(name);
       if (entry) {
         const parent = node.parent;
@@ -551,12 +608,12 @@ export async function findBugsAst(code: string, language: string): Promise<BugRe
     if (info.count === 0) {
       reports.push({
         id: nextId(),
-        severity: 'low',
+        severity: "low",
         line: info.line,
         description: `Variable "${name}" is declared but never read (AST scope analysis).`,
         suggestion: `Remove the unused variable or use it.`,
-        category: 'style',
-        source: 'ast',
+        category: "style",
+        source: "ast",
       });
     }
   }
@@ -572,12 +629,12 @@ export async function findBugsAst(code: string, language: string): Promise<BugRe
         if (!hasDefault) {
           reports.push({
             id: nextId(),
-            severity: 'low',
+            severity: "low",
             line: lineOf(node),
             description: `Switch statement has no default case (AST).`,
             suggestion: `Add a default case to handle unexpected values.`,
-            category: 'logic',
-            source: 'ast',
+            category: "logic",
+            source: "ast",
           });
         }
       }
@@ -618,12 +675,12 @@ export async function findBugsAst(code: string, language: string): Promise<BugRe
       if (hasAwait && !hasTryCatch) {
         reports.push({
           id: nextId(),
-          severity: 'medium',
+          severity: "medium",
           line: lineOf(node),
           description: `Async function uses await without try/catch error handling.`,
           suggestion: `Wrap await calls in try/catch or add a .catch() handler.`,
-          category: 'error-handling',
-          source: 'ast',
+          category: "error-handling",
+          source: "ast",
         });
       }
     }
@@ -637,7 +694,7 @@ export async function findBugsAst(code: string, language: string): Promise<BugRe
       const expr = node.expression;
       // CallExpression at statement level (not awaited, not .then'd)
       if (expr.kind === SK.CallExpression) {
-        const callText = expr.getText ? expr.getText() : '';
+        const callText = expr.getText ? expr.getText() : "";
         // Heuristic: function name starts with lowercase (likely user fn, not constructor)
         // and the call is a bare statement (no await, no .then)
         const parent = node.parent;
@@ -647,16 +704,17 @@ export async function findBugsAst(code: string, language: string): Promise<BugRe
 
         if (!isAwaited && !hasThen && !hasCatch) {
           // Check if the function name hints at async (fetch, load, save, get, post, etc.)
-          const asyncHints = /\b(fetch|load|save|get|post|put|delete|send|request|upload|download)\w*\s*\(/i;
+          const asyncHints =
+            /\b(fetch|load|save|get|post|put|delete|send|request|upload|download)\w*\s*\(/i;
           if (asyncHints.test(callText)) {
             reports.push({
               id: nextId(),
-              severity: 'medium',
+              severity: "medium",
               line: lineOf(node),
               description: `Potentially unhandled Promise: "${callText.slice(0, 50)}..." is called without await or .then().`,
               suggestion: `Add await or .then()/.catch() to handle the result.`,
-              category: 'error-handling',
-              source: 'ast',
+              category: "error-handling",
+              source: "ast",
             });
           }
         }
@@ -672,15 +730,18 @@ export async function findBugsAst(code: string, language: string): Promise<BugRe
       const init = node.initializer;
       const isNullish =
         init.kind === SK.NullKeyword ||
-        (init.kind === SK.Identifier && init.getText?.() === 'undefined');
+        (init.kind === SK.Identifier && init.getText?.() === "undefined");
 
       if (isNullish && node.name) {
-        const varName = node.name.getText ? node.name.getText() : '';
-        if (!varName) { ts.forEachChild(node, detectNullDerefAst); return; }
+        const varName = node.name.getText ? node.name.getText() : "";
+        if (!varName) {
+          ts.forEachChild(node, detectNullDerefAst);
+          return;
+        }
 
         const declLine = lineOf(node);
         // Scan next ~10 lines of source for unguarded property access
-        const codeLines = code.split('\n');
+        const codeLines = code.split("\n");
         const scanEnd = Math.min(declLine + 10, codeLines.length);
 
         for (let ln = declLine; ln < scanEnd; ln++) {
@@ -692,16 +753,18 @@ export async function findBugsAst(code: string, language: string): Promise<BugRe
           );
           if (guardRe.test(lineText)) break;
 
-          const accessRe = new RegExp(`\\b${escapeRegex(varName)}\\s*\\.\\s*[a-zA-Z_]`);
+          const accessRe = new RegExp(
+            `\\b${escapeRegex(varName)}\\s*\\.\\s*[a-zA-Z_]`,
+          );
           if (accessRe.test(lineText)) {
             reports.push({
               id: nextId(),
-              severity: 'high',
+              severity: "high",
               line: ln + 1,
               description: `Possible null dereference (AST): "${varName}" initialized to null/undefined at line ${declLine} and accessed without guard.`,
               suggestion: `Add a null/undefined check or use optional chaining (?.).`,
-              category: 'error-handling',
-              source: 'ast',
+              category: "error-handling",
+              source: "ast",
             });
             break;
           }
@@ -724,7 +787,10 @@ export async function findBugsAst(code: string, language: string): Promise<BugRe
 /**
  * Filter AI bug reports where `line` exceeds actual file line count.
  */
-function validateAiResults(reports: BugReport[], lineCount: number): BugReport[] {
+function validateAiResults(
+  reports: BugReport[],
+  lineCount: number,
+): BugReport[] {
   return reports.filter((r) => r.line >= 1 && r.line <= lineCount);
 }
 
@@ -762,8 +828,8 @@ export function deduplicateBugReports(reports: BugReport[]): BugReport[] {
         if (kept.has(j)) continue;
         if (areSimilarMessages(group[i].description, group[j].description)) {
           kept.add(j);
-          const bestPri = SOURCE_PRIORITY[group[best].source ?? 'ai'] ?? 0;
-          const jPri = SOURCE_PRIORITY[group[j].source ?? 'ai'] ?? 0;
+          const bestPri = SOURCE_PRIORITY[group[best].source ?? "ai"] ?? 0;
+          const jPri = SOURCE_PRIORITY[group[j].source ?? "ai"] ?? 0;
           if (jPri > bestPri) {
             kept.add(best);
             best = j;
@@ -785,7 +851,7 @@ function areSimilarMessages(a: string, b: string): boolean {
   const normalize = (s: string) =>
     s
       .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/[^a-z0-9\s]/g, "")
       .split(/\s+/)
       .filter((w) => w.length > 2);
 

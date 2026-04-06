@@ -4,31 +4,34 @@
 // Pipeline → Auto-fix → Re-verify, up to 3 rounds.
 // Pure async — no React hooks, no DOM, no side effects.
 
-import { runStaticPipeline } from '@/lib/code-studio/pipeline/pipeline';
-import type { PipelineResult, PipelineStage } from '@/lib/code-studio/pipeline/pipeline';
-import { findBugsStatic } from '@/lib/code-studio/pipeline/bugfinder';
-import type { BugReport } from '@/lib/code-studio/pipeline/bugfinder';
-import { generateFixes } from '@/lib/code-studio/pipeline/pipeline-utils';
-import type { FixSuggestion } from '@/lib/code-studio/pipeline/pipeline-utils';
-import type { Finding } from '@/lib/code-studio/pipeline/pipeline-teams';
-import { runStressReport } from '@/lib/code-studio/pipeline/stress-test';
-import type { StressReport } from '@/lib/code-studio/pipeline/stress-test';
-import { runChaosReport } from '@/lib/code-studio/pipeline/chaos-engineering';
-import type { ChaosReport } from '@/lib/code-studio/pipeline/chaos-engineering';
-import { scanProject } from '@/lib/code-studio/features/patent-scanner';
-import type { IPReport } from '@/lib/code-studio/features/patent-scanner';
-import type { FileNode } from '@/lib/code-studio/core/types';
-import { runProjectAudit } from '@/lib/code-studio/audit/audit-engine';
-import type { AuditContext } from '@/lib/code-studio/audit/audit-types';
+import { runStaticPipeline } from "@/lib/code-studio/pipeline/pipeline";
+import type {
+  PipelineResult,
+  PipelineStage,
+} from "@/lib/code-studio/pipeline/pipeline";
+import { findBugsStatic } from "@/lib/code-studio/pipeline/bugfinder";
+import type { BugReport } from "@/lib/code-studio/pipeline/bugfinder";
+import { generateFixes } from "@/lib/code-studio/pipeline/pipeline-utils";
+import type { FixSuggestion } from "@/lib/code-studio/pipeline/pipeline-utils";
+import type { Finding } from "@/lib/code-studio/pipeline/pipeline-teams";
+import { runStressReport } from "@/lib/code-studio/pipeline/stress-test";
+import type { StressReport } from "@/lib/code-studio/pipeline/stress-test";
+import { runChaosReport } from "@/lib/code-studio/pipeline/chaos-engineering";
+import type { ChaosReport } from "@/lib/code-studio/pipeline/chaos-engineering";
+import { scanProject } from "@/lib/code-studio/features/patent-scanner";
+import type { IPReport } from "@/lib/code-studio/features/patent-scanner";
+import type { FileNode } from "@/lib/code-studio/core/types";
+import { runProjectAudit } from "@/lib/code-studio/audit/audit-engine";
+import type { AuditContext } from "@/lib/code-studio/audit/audit-types";
 import {
   type SafeFixCategory,
   classifyFixDescription,
-} from '@/lib/code-studio/core/autofix-policy';
-import { runDesignLint } from '@/lib/code-studio/pipeline/design-lint';
-import type { DesignLintResult } from '@/lib/code-studio/pipeline/design-lint';
+} from "@/lib/code-studio/core/autofix-policy";
+import { runDesignLint } from "@/lib/code-studio/pipeline/design-lint";
+import type { DesignLintResult } from "@/lib/code-studio/pipeline/design-lint";
 
 // Re-export for existing consumers (`SafeFixCategory` was defined here).
-export type { SafeFixCategory } from '@/lib/code-studio/core/autofix-policy';
+export type { SafeFixCategory } from "@/lib/code-studio/core/autofix-policy";
 
 // ============================================================
 // PART 1 — Types & Configuration
@@ -46,7 +49,7 @@ export interface VerificationConfig {
 export interface VerificationIteration {
   round: number;
   pipelineScore: number;
-  pipelineStatus: 'pass' | 'warn' | 'fail';
+  pipelineStatus: "pass" | "warn" | "fail";
   bugCount: number;
   criticalBugCount: number;
   fixesApplied: number;
@@ -61,20 +64,20 @@ export interface VerificationIteration {
   designLintPassed?: boolean;
   designLintSummary?: string;
   combinedScore: number;
-  status: 'pass' | 'warn' | 'fail';
+  status: "pass" | "warn" | "fail";
 }
 
 export type StopReason =
-  | 'passed'
-  | 'max-iterations'
-  | 'no-progress'
-  | 'no-fixes'
-  | 'hard-gate-fail';
+  | "passed"
+  | "max-iterations"
+  | "no-progress"
+  | "no-fixes"
+  | "hard-gate-fail";
 
 export interface VerificationResult {
   iterations: VerificationIteration[];
   finalScore: number;
-  finalStatus: 'pass' | 'warn' | 'fail';
+  finalStatus: "pass" | "warn" | "fail";
   stopReason: StopReason;
   totalFixesApplied: number;
   hardGateFailures: string[];
@@ -90,12 +93,12 @@ const DEFAULT_CONFIG: VerificationConfig = {
   enableChaos: false,
   enableIP: true,
   safeFixCategories: [
-    'unused-import',
-    'console-remove',
-    'missing-semicolon',
-    'formatting',
-    'null-guard',
-    'type-import',
+    "unused-import",
+    "console-remove",
+    "missing-semicolon",
+    "formatting",
+    "null-guard",
+    "type-import",
   ],
 };
 
@@ -139,7 +142,10 @@ interface ScoreInput {
 }
 
 function calculateCombinedScore(input: ScoreInput): number {
-  const bugPenalty = Math.min(100, input.criticalBugCount * 25 + input.bugCount * 5);
+  const bugPenalty = Math.min(
+    100,
+    input.criticalBugCount * 25 + input.bugCount * 5,
+  );
   const bugScore = Math.max(0, 100 - bugPenalty);
 
   let totalWeight = 0;
@@ -154,19 +160,24 @@ function calculateCombinedScore(input: ScoreInput): number {
   scoreSum += bugScore * 0.2;
 
   // Stress and Chaos split the remaining 0.3
-  if (input.stressEnabled && input.stressScore != null && input.chaosEnabled && input.chaosScore != null) {
-      scoreSum += input.stressScore * 0.15;
-      scoreSum += input.chaosScore * 0.15;
-      totalWeight += 0.3;
+  if (
+    input.stressEnabled &&
+    input.stressScore != null &&
+    input.chaosEnabled &&
+    input.chaosScore != null
+  ) {
+    scoreSum += input.stressScore * 0.15;
+    scoreSum += input.chaosScore * 0.15;
+    totalWeight += 0.3;
   } else if (input.stressEnabled && input.stressScore != null) {
-      scoreSum += input.stressScore * 0.3;
-      totalWeight += 0.3;
+    scoreSum += input.stressScore * 0.3;
+    totalWeight += 0.3;
   } else if (input.chaosEnabled && input.chaosScore != null) {
-      scoreSum += input.chaosScore * 0.3;
-      totalWeight += 0.3;
+    scoreSum += input.chaosScore * 0.3;
+    totalWeight += 0.3;
   } else {
-      // If neither is enabled, pipeline gets 0.6 and bug gets 0.4
-      return Math.round(input.pipelineScore * 0.6 + bugScore * 0.4);
+    // If neither is enabled, pipeline gets 0.6 and bug gets 0.4
+    return Math.round(input.pipelineScore * 0.6 + bugScore * 0.4);
   }
 
   return Math.round(scoreSum / totalWeight);
@@ -175,10 +186,10 @@ function calculateCombinedScore(input: ScoreInput): number {
 function deriveStatus(
   score: number,
   threshold: number,
-): 'pass' | 'warn' | 'fail' {
-  if (score >= threshold) return 'pass';
-  if (score >= threshold - 15) return 'warn';
-  return 'fail';
+): "pass" | "warn" | "fail" {
+  if (score >= threshold) return "pass";
+  if (score >= threshold - 15) return "warn";
+  return "fail";
 }
 
 interface HardGateInput {
@@ -194,14 +205,14 @@ function checkHardGates(input: HardGateInput): string[] {
   if (input.criticalBugCount > 0) {
     failures.push(`critical bugs: ${input.criticalBugCount}`);
   }
-  if (input.stressGrade === 'F') {
-    failures.push('stress: F');
+  if (input.stressGrade === "F") {
+    failures.push("stress: F");
   }
-  if (input.chaosGrade === 'F') {
-    failures.push('chaos: F');
+  if (input.chaosGrade === "F") {
+    failures.push("chaos: F");
   }
-  if (input.ipGrade === 'F') {
-    failures.push('ip: F');
+  if (input.ipGrade === "F") {
+    failures.push("ip: F");
   }
 
   return failures;
@@ -247,7 +258,9 @@ function applyFixes(code: string, fixes: FixSuggestion[]): string {
  * Convert PipelineStage findings (string[]) into Finding objects
  * compatible with generateFixes.
  */
-function extractFindings(stages: PipelineStage[]): (Finding & { file?: string })[] {
+function extractFindings(
+  stages: PipelineStage[],
+): (Finding & { file?: string })[] {
   const findings: (Finding & { file?: string })[] = [];
 
   for (const stage of stages) {
@@ -256,9 +269,9 @@ function extractFindings(stages: PipelineStage[]): (Finding & { file?: string })
       const line = lineMatch ? parseInt(lineMatch[1], 10) : undefined;
       const message = lineMatch ? raw.slice(lineMatch[0].length) : raw;
 
-      let severity: Finding['severity'] = 'minor';
-      if (stage.status === 'fail') severity = 'critical';
-      if (stage.status === 'pass') severity = 'info';
+      let severity: Finding["severity"] = "minor";
+      if (stage.status === "fail") severity = "critical";
+      if (stage.status === "pass") severity = "info";
 
       findings.push({ severity, message, line });
     }
@@ -296,7 +309,7 @@ export async function runVerificationLoop(
       pipelineResult = {
         stages: [],
         overallScore: 0,
-        overallStatus: 'fail',
+        overallStatus: "fail",
         timestamp: Date.now(),
       };
     }
@@ -304,42 +317,51 @@ export async function runVerificationLoop(
     // --- Step 1.5: Run audit (code-health + UX) ---
     try {
       const auditCtx: AuditContext = {
-        files: [
-          { path: fileName, content: currentCode, language },
-        ],
+        files: [{ path: fileName, content: currentCode, language }],
         language,
       };
       const auditResult = runProjectAudit(auditCtx);
       // 감사 결과를 파이프라인 스테이지에 추가
       if (auditResult.totalFindings > 0) {
-        const allFindings = auditResult.areas.flatMap(a => a.findings);
+        const allFindings = auditResult.areas.flatMap((a) => a.findings);
         pipelineResult.stages.push({
-          name: 'audit',
-          status: auditResult.totalGrade === 'F' || auditResult.totalGrade === 'D' ? 'fail' : 'warn',
+          name: "audit",
+          status:
+            auditResult.totalGrade === "F" || auditResult.totalGrade === "D"
+              ? "fail"
+              : "warn",
           score: auditResult.totalScore,
           message: `Audit: ${auditResult.totalFindings} findings (${auditResult.totalGrade})`,
-          findings: allFindings.slice(0, 10).map(f => f.message),
+          findings: allFindings.slice(0, 10).map((f) => f.message),
         });
       }
-    } catch { /* audit is advisory, don't block pipeline */ }
+    } catch {
+      /* audit is advisory, don't block pipeline */
+    }
 
     // --- Step 1.6: Run design lint (UI code quality) ---
     let designLint: DesignLintResult | undefined;
     try {
-      const isUICode = /tsx?$/.test(fileName) && (/</.test(currentCode) || /className/.test(currentCode));
+      const isUICode =
+        /tsx?$/.test(fileName) &&
+        (/</.test(currentCode) || /className/.test(currentCode));
       if (isUICode) {
         designLint = runDesignLint(currentCode);
         if (designLint.issues.length > 0) {
           pipelineResult.stages.push({
-            name: 'design-lint',
-            status: designLint.passed ? 'warn' : 'fail',
+            name: "design-lint",
+            status: designLint.passed ? "warn" : "fail",
             score: designLint.score,
             message: designLint.summary,
-            findings: designLint.issues.slice(0, 8).map(i => `[${i.rule}] ${i.message}`),
+            findings: designLint.issues
+              .slice(0, 8)
+              .map((i) => `[${i.rule}] ${i.message}`),
           });
         }
       }
-    } catch { /* design lint is advisory */ }
+    } catch {
+      /* design lint is advisory */
+    }
 
     // --- Step 2: Run bug scan ---
     let bugs: BugReport[];
@@ -350,7 +372,7 @@ export async function runVerificationLoop(
     }
 
     const criticalBugCount = bugs.filter(
-      (b) => b.severity === 'critical',
+      (b) => b.severity === "critical",
     ).length;
 
     // --- Step 3: Optional stress test (round 1 only to save cost) ---
@@ -451,24 +473,52 @@ export async function runVerificationLoop(
 
     // --- Stop condition: passed ---
     if (combinedScore >= cfg.passThreshold && hardGates.length === 0) {
-      return buildResult(iterations, fixedCode, originalCode, 'passed', totalFixesApplied, []);
+      return buildResult(
+        iterations,
+        fixedCode,
+        originalCode,
+        "passed",
+        totalFixesApplied,
+        [],
+      );
     }
 
     // --- Stop condition: hard gate on final round ---
     if (round === cfg.maxIterations && hardGates.length > 0) {
-      return buildResult(iterations, fixedCode, originalCode, 'hard-gate-fail', totalFixesApplied, hardGates);
+      return buildResult(
+        iterations,
+        fixedCode,
+        originalCode,
+        "hard-gate-fail",
+        totalFixesApplied,
+        hardGates,
+      );
     }
 
     // --- Stop condition: no fixes available ---
     if (appliedCount === 0 && round > 1) {
-      return buildResult(iterations, currentCode, originalCode, 'no-fixes', totalFixesApplied, hardGates);
+      return buildResult(
+        iterations,
+        currentCode,
+        originalCode,
+        "no-fixes",
+        totalFixesApplied,
+        hardGates,
+      );
     }
 
     // --- Stop condition: no progress (score delta < 2 from previous round) ---
     if (round > 1) {
       const prevScore = iterations[round - 2].combinedScore;
       if (combinedScore - prevScore < 2) {
-        return buildResult(iterations, fixedCode, originalCode, 'no-progress', totalFixesApplied, hardGates);
+        return buildResult(
+          iterations,
+          fixedCode,
+          originalCode,
+          "no-progress",
+          totalFixesApplied,
+          hardGates,
+        );
       }
     }
 
@@ -481,10 +531,11 @@ export async function runVerificationLoop(
     iterations,
     currentCode,
     originalCode,
-    'max-iterations',
+    "max-iterations",
     totalFixesApplied,
     checkHardGates({
-      criticalBugCount: iterations[iterations.length - 1]?.criticalBugCount ?? 0,
+      criticalBugCount:
+        iterations[iterations.length - 1]?.criticalBugCount ?? 0,
       stressGrade: iterations[0]?.stressGrade,
       chaosGrade: iterations[0]?.chaosGrade,
       ipGrade: iterations[0]?.ipGrade,
@@ -506,7 +557,7 @@ function buildResult(
   return {
     iterations,
     finalScore: last?.combinedScore ?? 0,
-    finalStatus: last?.status ?? 'fail',
+    finalStatus: last?.status ?? "fail",
     stopReason,
     totalFixesApplied,
     hardGateFailures,

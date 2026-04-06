@@ -20,7 +20,7 @@ import type { HallucinationCheck } from "../types";
 export function checkHallucination(
   promptLength: number,
   responseLength: number,
-  responseText?: string
+  responseText?: string,
 ): HallucinationCheck {
   if (responseLength === 0 || promptLength === 0) {
     return { ratio: 0, suspicious: false };

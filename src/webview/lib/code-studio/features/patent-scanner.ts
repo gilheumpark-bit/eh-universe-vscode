@@ -2,7 +2,7 @@
 // Code Studio — Patent/IP Scanner
 // ============================================================
 
-import type { FileNode } from '../core/types';
+import type { FileNode } from "../core/types";
 
 // ============================================================
 // PART 1 — Types
@@ -21,14 +21,14 @@ export interface CodePatternMatch {
   line: number;
   pattern: string;
   description: string;
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
 }
 
 export interface IPReport {
   licenses: LicenseInfo[];
   patterns: CodePatternMatch[];
   score: number;
-  grade: 'A' | 'B' | 'C' | 'D' | 'F';
+  grade: "A" | "B" | "C" | "D" | "F";
   summary: string;
   recommendations: string[];
 }
@@ -39,17 +39,37 @@ export interface IPReport {
 // PART 2 — License Detection
 // ============================================================
 
-const LICENSE_PATTERNS: Array<{ regex: RegExp; license: string; spdxId: string }> = [
-  { regex: /MIT License/i, license: 'MIT', spdxId: 'MIT' },
-  { regex: /Apache License.*2\.0/i, license: 'Apache 2.0', spdxId: 'Apache-2.0' },
-  { regex: /GNU General Public License.*v3/i, license: 'GPL-3.0', spdxId: 'GPL-3.0-only' },
-  { regex: /GNU General Public License.*v2/i, license: 'GPL-2.0', spdxId: 'GPL-2.0-only' },
-  { regex: /BSD 3-Clause/i, license: 'BSD-3-Clause', spdxId: 'BSD-3-Clause' },
-  { regex: /BSD 2-Clause/i, license: 'BSD-2-Clause', spdxId: 'BSD-2-Clause' },
-  { regex: /ISC License/i, license: 'ISC', spdxId: 'ISC' },
-  { regex: /Mozilla Public License.*2\.0/i, license: 'MPL-2.0', spdxId: 'MPL-2.0' },
-  { regex: /Creative Commons/i, license: 'CC', spdxId: 'CC-BY-4.0' },
-  { regex: /Unlicense/i, license: 'Unlicense', spdxId: 'Unlicense' },
+const LICENSE_PATTERNS: Array<{
+  regex: RegExp;
+  license: string;
+  spdxId: string;
+}> = [
+  { regex: /MIT License/i, license: "MIT", spdxId: "MIT" },
+  {
+    regex: /Apache License.*2\.0/i,
+    license: "Apache 2.0",
+    spdxId: "Apache-2.0",
+  },
+  {
+    regex: /GNU General Public License.*v3/i,
+    license: "GPL-3.0",
+    spdxId: "GPL-3.0-only",
+  },
+  {
+    regex: /GNU General Public License.*v2/i,
+    license: "GPL-2.0",
+    spdxId: "GPL-2.0-only",
+  },
+  { regex: /BSD 3-Clause/i, license: "BSD-3-Clause", spdxId: "BSD-3-Clause" },
+  { regex: /BSD 2-Clause/i, license: "BSD-2-Clause", spdxId: "BSD-2-Clause" },
+  { regex: /ISC License/i, license: "ISC", spdxId: "ISC" },
+  {
+    regex: /Mozilla Public License.*2\.0/i,
+    license: "MPL-2.0",
+    spdxId: "MPL-2.0",
+  },
+  { regex: /Creative Commons/i, license: "CC", spdxId: "CC-BY-4.0" },
+  { regex: /Unlicense/i, license: "Unlicense", spdxId: "Unlicense" },
 ];
 
 const HEADER_PATTERNS = [
@@ -60,7 +80,9 @@ const HEADER_PATTERNS = [
   /^\s*\/\/.*SPDX-License-Identifier/m,
 ];
 
-function detectLicense(content: string): { license: string; spdxId: string } | null {
+function detectLicense(
+  content: string,
+): { license: string; spdxId: string } | null {
   for (const p of LICENSE_PATTERNS) {
     if (p.regex.test(content)) return { license: p.license, spdxId: p.spdxId };
   }
@@ -77,20 +99,52 @@ function hasLicenseHeader(content: string): boolean {
 // PART 3 — Code Pattern Scanning
 // ============================================================
 
-const SUSPICIOUS_PATTERNS: Array<{ regex: RegExp; description: string; severity: CodePatternMatch['severity'] }> = [
-  { regex: /stackoverflow\.com/i, description: 'Stack Overflow reference detected', severity: 'info' },
-  { regex: /copied from|taken from|based on/i, description: 'Copy attribution comment', severity: 'warning' },
-  { regex: /TODO:\s*remove|HACK|FIXME:\s*license/i, description: 'IP-related TODO/FIXME', severity: 'warning' },
-  { regex: /all rights reserved/i, description: 'All rights reserved notice', severity: 'critical' },
-  { regex: /proprietary|confidential/i, description: 'Proprietary/confidential marker', severity: 'critical' },
-  { regex: /patent pending|patented/i, description: 'Patent reference', severity: 'critical' },
+const SUSPICIOUS_PATTERNS: Array<{
+  regex: RegExp;
+  description: string;
+  severity: CodePatternMatch["severity"];
+}> = [
+  {
+    regex: /stackoverflow\.com/i,
+    description: "Stack Overflow reference detected",
+    severity: "info",
+  },
+  {
+    regex: /copied from|taken from|based on/i,
+    description: "Copy attribution comment",
+    severity: "warning",
+  },
+  {
+    regex: /TODO:\s*remove|HACK|FIXME:\s*license/i,
+    description: "IP-related TODO/FIXME",
+    severity: "warning",
+  },
+  {
+    regex: /all rights reserved/i,
+    description: "All rights reserved notice",
+    severity: "critical",
+  },
+  {
+    regex: /proprietary|confidential/i,
+    description: "Proprietary/confidential marker",
+    severity: "critical",
+  },
+  {
+    regex: /patent pending|patented/i,
+    description: "Patent reference",
+    severity: "critical",
+  },
 ];
 
-function flattenFiles(nodes: FileNode[], prefix = ''): Array<{ path: string; content: string }> {
+function flattenFiles(
+  nodes: FileNode[],
+  prefix = "",
+): Array<{ path: string; content: string }> {
   const out: Array<{ path: string; content: string }> = [];
   for (const n of nodes) {
     const p = prefix ? `${prefix}/${n.name}` : n.name;
-    if (n.type === 'file' && n.content != null) out.push({ path: p, content: n.content });
+    if (n.type === "file" && n.content != null)
+      out.push({ path: p, content: n.content });
     if (n.children) out.push(...flattenFiles(n.children, p));
   }
   return out;
@@ -113,15 +167,15 @@ export function scanProject(files: FileNode[]): IPReport {
     if (lic || /license/i.test(f.path)) {
       licenses.push({
         file: f.path,
-        license: lic?.license ?? 'Unknown',
-        spdxId: lic?.spdxId ?? '',
+        license: lic?.license ?? "Unknown",
+        spdxId: lic?.spdxId ?? "",
         hasHeader: hasLicenseHeader(f.content),
         isOSS: !!lic,
       });
     }
 
     // Pattern scanning
-    const lines = f.content.split('\n');
+    const lines = f.content.split("\n");
     for (let i = 0; i < lines.length; i++) {
       for (const sp of SUSPICIOUS_PATTERNS) {
         if (sp.regex.test(lines[i])) {
@@ -137,17 +191,31 @@ export function scanProject(files: FileNode[]): IPReport {
     }
   }
 
-  const criticals = patterns.filter((p) => p.severity === 'critical').length;
-  const warnings = patterns.filter((p) => p.severity === 'warning').length;
+  const criticals = patterns.filter((p) => p.severity === "critical").length;
+  const warnings = patterns.filter((p) => p.severity === "warning").length;
   const score = Math.max(0, 100 - criticals * 25 - warnings * 10);
-  const grade: IPReport['grade'] =
-    score >= 90 ? 'A' : score >= 70 ? 'B' : score >= 50 ? 'C' : score >= 30 ? 'D' : 'F';
+  const grade: IPReport["grade"] =
+    score >= 90
+      ? "A"
+      : score >= 70
+        ? "B"
+        : score >= 50
+          ? "C"
+          : score >= 30
+            ? "D"
+            : "F";
 
   const recommendations: string[] = [];
-  if (licenses.length === 0) recommendations.push('Add a LICENSE file to the project');
-  if (criticals > 0) recommendations.push('Review critical IP flags before distribution');
-  if (flat.some((f) => !hasLicenseHeader(f.content) && /\.(ts|tsx|js|jsx)$/.test(f.path))) {
-    recommendations.push('Consider adding license headers to source files');
+  if (licenses.length === 0)
+    recommendations.push("Add a LICENSE file to the project");
+  if (criticals > 0)
+    recommendations.push("Review critical IP flags before distribution");
+  if (
+    flat.some(
+      (f) => !hasLicenseHeader(f.content) && /\.(ts|tsx|js|jsx)$/.test(f.path),
+    )
+  ) {
+    recommendations.push("Consider adding license headers to source files");
   }
 
   return {

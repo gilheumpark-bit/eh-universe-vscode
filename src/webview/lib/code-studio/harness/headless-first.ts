@@ -4,9 +4,15 @@
 // AI에게 기능(로직)과 디자인(스타일)을 동시에 짜라고 하면 빈깡통.
 // 2단계로 분리: 뼈대(기능) → 검증 → 디자인 입히기 → 검증
 
-import { runFrontendGate1 } from '../pipeline/frontend-gate1';
-import { runFrontendGate2 } from '../pipeline/frontend-gate2';
-import { analyzeSpyPatterns, analyzeFuzzVulnerabilities, buildHarnessFeedback, type GateResult, type HarnessFeedback } from './adversarial-core';
+import { runFrontendGate1 } from "../pipeline/frontend-gate1";
+import { runFrontendGate2 } from "../pipeline/frontend-gate2";
+import {
+  analyzeSpyPatterns,
+  analyzeFuzzVulnerabilities,
+  buildHarnessFeedback,
+  type GateResult,
+  type HarnessFeedback,
+} from "./adversarial-core";
 
 export interface HeadlessFirstConfig {
   /** Phase 1 프롬프트 (뼈대 생성) */
@@ -36,13 +42,17 @@ export interface HeadlessFirstResult {
 }
 
 /** Phase 1 검증: 뼈대 코드 (기능만, 스타일 없음) */
-function verifyPhase1(code: string): { gate1: GateResult; spy: string[]; fuzz: string[] } {
+function verifyPhase1(code: string): {
+  gate1: GateResult;
+  spy: string[];
+  fuzz: string[];
+} {
   // Gate 1: 5-State + Dead DOM
   const g1 = runFrontendGate1(code);
   const gate1: GateResult = {
-    gate: 'Frontend Gate 1 (5-State + Dead DOM)',
+    gate: "Frontend Gate 1 (5-State + Dead DOM)",
     passed: g1.passed,
-    findings: g1.findings.map(f => f.message),
+    findings: g1.findings.map((f) => f.message),
     score: g1.score,
   };
 
@@ -60,9 +70,9 @@ function verifyPhase1(code: string): { gate1: GateResult; spy: string[]; fuzz: s
 function verifyPhase2(code: string): { gate2: GateResult } {
   const g2 = runFrontendGate2(code);
   const gate2: GateResult = {
-    gate: 'Frontend Gate 2 (Design Token)',
+    gate: "Frontend Gate 2 (Design Token)",
     passed: g2.passed,
-    findings: g2.findings.map(f => f.message),
+    findings: g2.findings.map((f) => f.message),
     score: g2.score,
   };
   return { gate2 };
@@ -73,35 +83,60 @@ function verifyPhase2(code: string): { gate2: GateResult } {
  * Phase 1: 뼈대 생성 → Gate1 + Spy + Fuzz 검증
  * Phase 2: 디자인 입히기 → Gate2 검증
  */
-export async function runHeadlessFirst(config: HeadlessFirstConfig): Promise<HeadlessFirstResult> {
+export async function runHeadlessFirst(
+  config: HeadlessFirstConfig,
+): Promise<HeadlessFirstResult> {
   // ── Phase 1: 뼈대 생성 ──
-  config.onProgress?.('phase1', '기능 뼈대 코드 생성 중...');
+  config.onProgress?.("phase1", "기능 뼈대 코드 생성 중...");
   const skeletonCode = await config.callAI(config.skeletonPrompt);
 
   // Phase 1 검증
-  config.onProgress?.('phase1-verify', '뼈대 코드 검증 중 (5-State, Dead DOM, Spy, Fuzz)...');
+  config.onProgress?.(
+    "phase1-verify",
+    "뼈대 코드 검증 중 (5-State, Dead DOM, Spy, Fuzz)...",
+  );
   const phase1 = verifyPhase1(skeletonCode);
 
-  const phase1Passed = phase1.gate1.passed && phase1.spy.length === 0 && phase1.fuzz.length === 0;
+  const phase1Passed =
+    phase1.gate1.passed && phase1.spy.length === 0 && phase1.fuzz.length === 0;
 
   if (!phase1Passed) {
     // Phase 1 실패 → 피드백 반환 (Phase 2 진행 안 함)
-    const feedback = buildHarnessFeedback([phase1.gate1], phase1.spy, phase1.fuzz);
+    const feedback = buildHarnessFeedback(
+      [phase1.gate1],
+      phase1.spy,
+      phase1.fuzz,
+    );
     return {
       code: skeletonCode,
       skeletonCode,
       approved: false,
       feedback,
-      phaseResults: { phase1, phase2: { gate2: { gate: 'Frontend Gate 2', passed: false, findings: ['Phase 1 미통과로 스킵'], score: 0 } } },
+      phaseResults: {
+        phase1,
+        phase2: {
+          gate2: {
+            gate: "Frontend Gate 2",
+            passed: false,
+            findings: ["Phase 1 미통과로 스킵"],
+            score: 0,
+          },
+        },
+      },
     };
   }
 
   // ── Phase 2: 디자인 입히기 ──
-  config.onProgress?.('phase2', '디자인 토큰 입히는 중...');
-  const designedCode = await config.callAI(config.designPrompt + '\n\n[검증 통과한 뼈대 코드]:\n```\n' + skeletonCode + '\n```');
+  config.onProgress?.("phase2", "디자인 토큰 입히는 중...");
+  const designedCode = await config.callAI(
+    config.designPrompt +
+      "\n\n[검증 통과한 뼈대 코드]:\n```\n" +
+      skeletonCode +
+      "\n```",
+  );
 
   // Phase 2 검증
-  config.onProgress?.('phase2-verify', '디자인 검증 중 (토큰 린트)...');
+  config.onProgress?.("phase2-verify", "디자인 검증 중 (토큰 린트)...");
   const phase2 = verifyPhase2(designedCode);
 
   const allPassed = phase2.gate2.passed;

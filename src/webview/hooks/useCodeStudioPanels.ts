@@ -13,13 +13,27 @@ import { useState, useCallback, useRef, useMemo } from "react";
 import { streamChat, type ChatMsg } from "@/lib/ai-providers";
 import type { AgentRole } from "@/lib/code-studio/ai/agents";
 import type { FileNode } from "@/lib/code-studio/core/types";
-import type { CanvasNode, CanvasConnection } from "@/components/code-studio/CanvasPanel";
+import type {
+  CanvasNode,
+  CanvasConnection,
+} from "@/components/code-studio/CanvasPanel";
 import type { SymbolEntry } from "@/components/code-studio/SymbolPalette";
 import type { AIFeature } from "@/components/code-studio/AIHub";
-import type { WorkspaceThread, WorkspaceMessage } from "@/components/code-studio/AIWorkspace";
-import type { DBConnection, QueryResult } from "@/components/code-studio/DatabasePanel";
+import type {
+  WorkspaceThread,
+  WorkspaceMessage,
+} from "@/components/code-studio/AIWorkspace";
+import type {
+  DBConnection,
+  QueryResult,
+} from "@/components/code-studio/DatabasePanel";
 import type { ConflictBlock } from "@/components/code-studio/MergeConflictEditor";
-import { estimateTaskCost, explainCode, lintCode, generateCommitMessage } from "@/lib/code-studio/ai/ai-features";
+import {
+  estimateTaskCost,
+  explainCode,
+  lintCode,
+  generateCommitMessage,
+} from "@/lib/code-studio/ai/ai-features";
 
 /** Recent file entry for the RecentFiles panel */
 export interface RecentFileEntry {
@@ -82,7 +96,11 @@ function extractSymbols(content: string, fileName: string): SymbolEntry[] {
 // PART 3 — Canvas Node Generation
 // ============================================================
 
-function generateCanvasNodes(fileTree: FileNode[], parentX = 0, parentY = 0): { nodes: CanvasNode[]; connections: CanvasConnection[] } {
+function generateCanvasNodes(
+  fileTree: FileNode[],
+  parentX = 0,
+  parentY = 0,
+): { nodes: CanvasNode[]; connections: CanvasConnection[] } {
   const nodes: CanvasNode[] = [];
   const connections: CanvasConnection[] = [];
   const x = parentX;
@@ -90,13 +108,14 @@ function generateCanvasNodes(fileTree: FileNode[], parentX = 0, parentY = 0): { 
 
   function traverse(items: FileNode[], depth: number, parentId?: string) {
     for (const item of items) {
-      const nodeType: CanvasNode["type"] = item.type === "folder"
-        ? "module"
-        : item.name.endsWith(".tsx") || item.name.endsWith(".jsx")
-          ? "component"
-          : item.name.includes("service") || item.name.includes("api")
-            ? "service"
-            : "file";
+      const nodeType: CanvasNode["type"] =
+        item.type === "folder"
+          ? "module"
+          : item.name.endsWith(".tsx") || item.name.endsWith(".jsx")
+            ? "component"
+            : item.name.includes("service") || item.name.includes("api")
+              ? "service"
+              : "file";
 
       const node: CanvasNode = {
         id: item.id,
@@ -111,7 +130,11 @@ function generateCanvasNodes(fileTree: FileNode[], parentX = 0, parentY = 0): { 
       nodes.push(node);
 
       if (parentId) {
-        connections.push({ id: `conn-${parentId}-${item.id}`, from: parentId, to: item.id });
+        connections.push({
+          id: `conn-${parentId}-${item.id}`,
+          from: parentId,
+          to: item.id,
+        });
       }
 
       y += 70;
@@ -184,16 +207,86 @@ function parseMergeConflicts(content: string): ConflictBlock[] {
 import React from "react";
 
 const DEFAULT_AI_FEATURES: Omit<AIFeature, "icon">[] = [
-  { id: "ghost-text", name: "Ghost Text", description: "Inline code completion suggestions as you type", category: "generation", enabled: true, usageCount: 0 },
-  { id: "chat-assist", name: "Chat Assistant", description: "AI chat for code questions and generation", category: "generation", enabled: true, usageCount: 0 },
-  { id: "code-creator", name: "Code Creator", description: "Generate entire files from natural language", category: "generation", enabled: true, usageCount: 0 },
-  { id: "autopilot", name: "Autopilot", description: "Autonomous multi-step code generation", category: "automation", enabled: false, usageCount: 0 },
-  { id: "bug-scan", name: "Bug Scanner", description: "Static analysis to detect potential bugs", category: "analysis", enabled: true, usageCount: 0 },
-  { id: "pipeline-analysis", name: "Pipeline Analysis", description: "8-team static analysis pipeline", category: "analysis", enabled: true, usageCount: 0 },
-  { id: "code-review", name: "AI Code Review", description: "Automated code review with suggestions", category: "analysis", enabled: false, usageCount: 0 },
-  { id: "stress-test", name: "Stress Testing", description: "Simulate edge cases and stress scenarios", category: "analysis", enabled: false, usageCount: 0 },
-  { id: "safe-fix", name: "Safe Auto-Fix", description: "Automatically apply safe fixes from verification", category: "automation", enabled: true, usageCount: 0 },
-  { id: "security-scan", name: "Security Scan", description: "Detect vulnerabilities and unsafe patterns", category: "security", enabled: true, usageCount: 0 },
+  {
+    id: "ghost-text",
+    name: "Ghost Text",
+    description: "Inline code completion suggestions as you type",
+    category: "generation",
+    enabled: true,
+    usageCount: 0,
+  },
+  {
+    id: "chat-assist",
+    name: "Chat Assistant",
+    description: "AI chat for code questions and generation",
+    category: "generation",
+    enabled: true,
+    usageCount: 0,
+  },
+  {
+    id: "code-creator",
+    name: "Code Creator",
+    description: "Generate entire files from natural language",
+    category: "generation",
+    enabled: true,
+    usageCount: 0,
+  },
+  {
+    id: "autopilot",
+    name: "Autopilot",
+    description: "Autonomous multi-step code generation",
+    category: "automation",
+    enabled: false,
+    usageCount: 0,
+  },
+  {
+    id: "bug-scan",
+    name: "Bug Scanner",
+    description: "Static analysis to detect potential bugs",
+    category: "analysis",
+    enabled: true,
+    usageCount: 0,
+  },
+  {
+    id: "pipeline-analysis",
+    name: "Pipeline Analysis",
+    description: "8-team static analysis pipeline",
+    category: "analysis",
+    enabled: true,
+    usageCount: 0,
+  },
+  {
+    id: "code-review",
+    name: "AI Code Review",
+    description: "Automated code review with suggestions",
+    category: "analysis",
+    enabled: false,
+    usageCount: 0,
+  },
+  {
+    id: "stress-test",
+    name: "Stress Testing",
+    description: "Simulate edge cases and stress scenarios",
+    category: "analysis",
+    enabled: false,
+    usageCount: 0,
+  },
+  {
+    id: "safe-fix",
+    name: "Safe Auto-Fix",
+    description: "Automatically apply safe fixes from verification",
+    category: "automation",
+    enabled: true,
+    usageCount: 0,
+  },
+  {
+    id: "security-scan",
+    name: "Security Scan",
+    description: "Detect vulnerabilities and unsafe patterns",
+    category: "security",
+    enabled: true,
+    usageCount: 0,
+  },
 ];
 
 // IDENTITY_SEAL: PART-5 | role=DefaultFeatures | inputs=none | outputs=DEFAULT_AI_FEATURES
@@ -203,51 +296,135 @@ const DEFAULT_AI_FEATURES: Omit<AIFeature, "icon">[] = [
 // ============================================================
 
 const DEMO_DB_CONNECTIONS: DBConnection[] = [
-  { id: "local-sqlite", name: "Local SQLite", type: "sqlite", connectionString: ":memory:", connected: true },
+  {
+    id: "local-sqlite",
+    name: "Local SQLite",
+    type: "sqlite",
+    connectionString: ":memory:",
+    connected: true,
+  },
 ];
 
 const DEMO_TABLES = ["users", "projects", "files", "sessions", "settings"];
 
-interface DemoRow { [key: string]: unknown }
+interface DemoRow {
+  [key: string]: unknown;
+}
 
 const DEMO_DATA: Record<string, { columns: string[]; rows: DemoRow[] }> = {
   users: {
     columns: ["id", "name", "email", "role", "created_at"],
     rows: [
-      { id: 1, name: "admin", email: "admin@eh-universe.dev", role: "admin", created_at: "2025-01-01" },
-      { id: 2, name: "developer", email: "dev@eh-universe.dev", role: "developer", created_at: "2025-03-15" },
-      { id: 3, name: "reviewer", email: "review@eh-universe.dev", role: "reviewer", created_at: "2025-06-01" },
+      {
+        id: 1,
+        name: "admin",
+        email: "admin@eh-universe.dev",
+        role: "admin",
+        created_at: "2025-01-01",
+      },
+      {
+        id: 2,
+        name: "developer",
+        email: "dev@eh-universe.dev",
+        role: "developer",
+        created_at: "2025-03-15",
+      },
+      {
+        id: 3,
+        name: "reviewer",
+        email: "review@eh-universe.dev",
+        role: "reviewer",
+        created_at: "2025-06-01",
+      },
     ],
   },
   projects: {
     columns: ["id", "name", "status", "language", "file_count"],
     rows: [
-      { id: 1, name: "eh-universe-web", status: "active", language: "TypeScript", file_count: 142 },
-      { id: 2, name: "eh-api", status: "active", language: "Python", file_count: 56 },
-      { id: 3, name: "eh-mobile", status: "paused", language: "Dart", file_count: 89 },
+      {
+        id: 1,
+        name: "eh-universe-web",
+        status: "active",
+        language: "TypeScript",
+        file_count: 142,
+      },
+      {
+        id: 2,
+        name: "eh-api",
+        status: "active",
+        language: "Python",
+        file_count: 56,
+      },
+      {
+        id: 3,
+        name: "eh-mobile",
+        status: "paused",
+        language: "Dart",
+        file_count: 89,
+      },
     ],
   },
   files: {
     columns: ["id", "project_id", "path", "size_kb", "last_modified"],
     rows: [
-      { id: 1, project_id: 1, path: "src/index.ts", size_kb: 2, last_modified: "2026-03-28" },
-      { id: 2, project_id: 1, path: "src/App.tsx", size_kb: 5, last_modified: "2026-03-29" },
-      { id: 3, project_id: 2, path: "main.py", size_kb: 8, last_modified: "2026-03-27" },
+      {
+        id: 1,
+        project_id: 1,
+        path: "src/index.ts",
+        size_kb: 2,
+        last_modified: "2026-03-28",
+      },
+      {
+        id: 2,
+        project_id: 1,
+        path: "src/App.tsx",
+        size_kb: 5,
+        last_modified: "2026-03-29",
+      },
+      {
+        id: 3,
+        project_id: 2,
+        path: "main.py",
+        size_kb: 8,
+        last_modified: "2026-03-27",
+      },
     ],
   },
   sessions: {
     columns: ["id", "user_id", "start_time", "duration_min", "active"],
     rows: [
-      { id: 1, user_id: 1, start_time: "2026-03-29 09:00", duration_min: 120, active: true },
-      { id: 2, user_id: 2, start_time: "2026-03-29 10:30", duration_min: 45, active: false },
+      {
+        id: 1,
+        user_id: 1,
+        start_time: "2026-03-29 09:00",
+        duration_min: 120,
+        active: true,
+      },
+      {
+        id: 2,
+        user_id: 2,
+        start_time: "2026-03-29 10:30",
+        duration_min: 45,
+        active: false,
+      },
     ],
   },
   settings: {
     columns: ["key", "value", "type", "updated_at"],
     rows: [
       { key: "theme", value: "dark", type: "string", updated_at: "2026-03-29" },
-      { key: "fontSize", value: "14", type: "number", updated_at: "2026-03-28" },
-      { key: "autoSave", value: "true", type: "boolean", updated_at: "2026-03-27" },
+      {
+        key: "fontSize",
+        value: "14",
+        type: "number",
+        updated_at: "2026-03-28",
+      },
+      {
+        key: "autoSave",
+        value: "true",
+        type: "boolean",
+        updated_at: "2026-03-27",
+      },
     ],
   },
 };
@@ -257,13 +434,21 @@ function executeLocalQuery(query: string): QueryResult {
   const trimmed = query.trim().toLowerCase();
 
   // SELECT * FROM <table>
-  const selectMatch = trimmed.match(/^select\s+(.+?)\s+from\s+(\w+)(?:\s+where\s+(.+?))?(?:\s+limit\s+(\d+))?;?\s*$/i);
+  const selectMatch = trimmed.match(
+    /^select\s+(.+?)\s+from\s+(\w+)(?:\s+where\s+(.+?))?(?:\s+limit\s+(\d+))?;?\s*$/i,
+  );
   if (selectMatch) {
     const tableName = selectMatch[2];
     const limit = selectMatch[4] ? parseInt(selectMatch[4]) : 100;
     const data = DEMO_DATA[tableName];
     if (!data) {
-      return { columns: [], rows: [], rowCount: 0, executionTime: Math.round(performance.now() - start), error: `Table '${tableName}' not found. Available: ${DEMO_TABLES.join(", ")}` };
+      return {
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        executionTime: Math.round(performance.now() - start),
+        error: `Table '${tableName}' not found. Available: ${DEMO_TABLES.join(", ")}`,
+      };
     }
 
     let rows = [...data.rows];
@@ -286,12 +471,19 @@ function executeLocalQuery(query: string): QueryResult {
       columns = selectMatch[1].split(",").map((c) => c.trim());
       rows = rows.map((r) => {
         const filtered: DemoRow = {};
-        for (const c of columns) { if (c in r) filtered[c] = r[c]; }
+        for (const c of columns) {
+          if (c in r) filtered[c] = r[c];
+        }
         return filtered;
       });
     }
 
-    return { columns, rows, rowCount: rows.length, executionTime: Math.round(performance.now() - start) };
+    return {
+      columns,
+      rows,
+      rowCount: rows.length,
+      executionTime: Math.round(performance.now() - start),
+    };
   }
 
   // SHOW TABLES
@@ -309,7 +501,13 @@ function executeLocalQuery(query: string): QueryResult {
   if (descMatch) {
     const data = DEMO_DATA[descMatch[1]];
     if (!data) {
-      return { columns: [], rows: [], rowCount: 0, executionTime: Math.round(performance.now() - start), error: `Table '${descMatch[1]}' not found` };
+      return {
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        executionTime: Math.round(performance.now() - start),
+        error: `Table '${descMatch[1]}' not found`,
+      };
     }
     return {
       columns: ["column_name", "type"],
@@ -324,9 +522,20 @@ function executeLocalQuery(query: string): QueryResult {
   if (countMatch) {
     const data = DEMO_DATA[countMatch[1]];
     if (!data) {
-      return { columns: [], rows: [], rowCount: 0, executionTime: Math.round(performance.now() - start), error: `Table '${countMatch[1]}' not found` };
+      return {
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        executionTime: Math.round(performance.now() - start),
+        error: `Table '${countMatch[1]}' not found`,
+      };
     }
-    return { columns: ["count"], rows: [{ count: data.rows.length }], rowCount: 1, executionTime: Math.round(performance.now() - start) };
+    return {
+      columns: ["count"],
+      rows: [{ count: data.rows.length }],
+      rowCount: 1,
+      executionTime: Math.round(performance.now() - start),
+    };
   }
 
   return {
@@ -334,7 +543,8 @@ function executeLocalQuery(query: string): QueryResult {
     rows: [],
     rowCount: 0,
     executionTime: Math.round(performance.now() - start),
-    error: "Supported queries: SELECT * FROM <table> [WHERE col=val] [LIMIT n], SHOW TABLES, DESCRIBE <table>, SELECT COUNT(*) FROM <table>",
+    error:
+      "Supported queries: SELECT * FROM <table> [WHERE col=val] [LIMIT n], SHOW TABLES, DESCRIBE <table>, SELECT COUNT(*) FROM <table>",
   };
 }
 
@@ -345,14 +555,22 @@ function executeLocalQuery(query: string): QueryResult {
 // ============================================================
 
 /** Aggregate state hook for Code Studio auxiliary panels: recent files, symbols, canvas, AI hub/workspace, DB, merge conflicts */
-export function useCodeStudioPanels({ files, activeFileContent, activeFileName, activeFileLanguage }: UseCodeStudioPanelsOptions) {
+export function useCodeStudioPanels({
+  files,
+  activeFileContent,
+  activeFileName,
+  activeFileLanguage,
+}: UseCodeStudioPanelsOptions) {
   // ── Recent Files ──────────────────────────────────────────
   const [recentFiles, setRecentFiles] = useState<RecentFileEntry[]>([]);
 
   const trackFileOpen = useCallback((fileId: string, fileName: string) => {
     setRecentFiles((prev) => {
       const filtered = prev.filter((f) => f.fileId !== fileId);
-      return [{ fileId, fileName, timestamp: Date.now() }, ...filtered].slice(0, 30);
+      return [{ fileId, fileName, timestamp: Date.now() }, ...filtered].slice(
+        0,
+        30,
+      );
     });
   }, []);
 
@@ -365,15 +583,24 @@ export function useCodeStudioPanels({ files, activeFileContent, activeFileName, 
   }, [activeFileContent, activeFileName]);
 
   // ── Code Actions (editor selection state) ─────────────────
-  const [editorSelection, setEditorSelection] = useState({ text: "", top: 0, left: 0 });
+  const [editorSelection, setEditorSelection] = useState({
+    text: "",
+    top: 0,
+    left: 0,
+  });
 
-  const updateEditorSelection = useCallback((text: string, top: number, left: number) => {
-    setEditorSelection({ text, top, left });
-  }, []);
+  const updateEditorSelection = useCallback(
+    (text: string, top: number, left: number) => {
+      setEditorSelection({ text, top, left });
+    },
+    [],
+  );
 
   // ── Canvas ────────────────────────────────────────────────
   const [canvasNodes, setCanvasNodes] = useState<CanvasNode[]>([]);
-  const [canvasConnections, setCanvasConnections] = useState<CanvasConnection[]>([]);
+  const [canvasConnections, setCanvasConnections] = useState<
+    CanvasConnection[]
+  >([]);
   const [canvasInitialized, setCanvasInitialized] = useState(false);
 
   const initCanvas = useCallback(() => {
@@ -392,16 +619,23 @@ export function useCodeStudioPanels({ files, activeFileContent, activeFileName, 
 
   // ── AI Hub ────────────────────────────────────────────────
   const [aiFeatures, setAiFeatures] = useState<AIFeature[]>(() =>
-    DEFAULT_AI_FEATURES.map((f) => ({ ...f, icon: null as unknown as React.ReactNode })),
+    DEFAULT_AI_FEATURES.map((f) => ({
+      ...f,
+      icon: null as unknown as React.ReactNode,
+    })),
   );
 
   const toggleAiFeature = useCallback((id: string, enabled: boolean) => {
-    setAiFeatures((prev) => prev.map((f) => f.id === id ? { ...f, enabled } : f));
+    setAiFeatures((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, enabled } : f)),
+    );
   }, []);
 
   // ── AI Workspace ──────────────────────────────────────────
   const [wsThreads, setWsThreads] = useState<WorkspaceThread[]>([]);
-  const [wsSharedMemory, setWsSharedMemory] = useState<Array<{ key: string; value: string; source: AgentRole; timestamp: number }>>([]);
+  const [wsSharedMemory, setWsSharedMemory] = useState<
+    Array<{ key: string; value: string; source: AgentRole; timestamp: number }>
+  >([]);
   const wsAbortRef = useRef<AbortController | null>(null);
 
   const createWsThread = useCallback((persona: AgentRole) => {
@@ -419,50 +653,95 @@ export function useCodeStudioPanels({ files, activeFileContent, activeFileName, 
     setWsThreads((prev) => prev.filter((t) => t.id !== threadId));
   }, []);
 
-  const sendWsMessage = useCallback(async (threadId: string, content: string): Promise<string> => {
-    const userMsg: WorkspaceMessage = { id: `msg-${Date.now()}`, role: "user", content, timestamp: Date.now() };
-    setWsThreads((prev) => prev.map((t) => t.id === threadId ? { ...t, messages: [...t.messages, userMsg] } : t));
+  const sendWsMessage = useCallback(
+    async (threadId: string, content: string): Promise<string> => {
+      const userMsg: WorkspaceMessage = {
+        id: `msg-${Date.now()}`,
+        role: "user",
+        content,
+        timestamp: Date.now(),
+      };
+      setWsThreads((prev) =>
+        prev.map((t) =>
+          t.id === threadId ? { ...t, messages: [...t.messages, userMsg] } : t,
+        ),
+      );
 
-    const thread = wsThreads.find((t) => t.id === threadId);
-    const systemPrompt = `You are a ${thread?.persona ?? "developer"} agent in an AI workspace. Be concise and focused on your role.`;
+      const thread = wsThreads.find((t) => t.id === threadId);
+      const systemPrompt = `You are a ${thread?.persona ?? "developer"} agent in an AI workspace. Be concise and focused on your role.`;
 
-    try {
-      wsAbortRef.current = new AbortController();
-      let accumulated = '';
-      const response = await streamChat({
-        systemInstruction: systemPrompt,
-        messages: [
-          ...(thread?.messages.map((m): ChatMsg => ({ role: m.role, content: m.content })) ?? []),
-          { role: "user", content } as ChatMsg,
-        ],
-        temperature: 0.7,
-        maxTokens: 2048,
-        signal: wsAbortRef.current.signal,
-        onChunk: (text: string) => { accumulated += text; },
-      });
+      try {
+        wsAbortRef.current = new AbortController();
+        let accumulated = "";
+        const response = await streamChat({
+          systemInstruction: systemPrompt,
+          messages: [
+            ...(thread?.messages.map(
+              (m): ChatMsg => ({ role: m.role, content: m.content }),
+            ) ?? []),
+            { role: "user", content } as ChatMsg,
+          ],
+          temperature: 0.7,
+          maxTokens: 2048,
+          signal: wsAbortRef.current.signal,
+          onChunk: (text: string) => {
+            accumulated += text;
+          },
+        });
 
-      const assistantMsg: WorkspaceMessage = { id: `msg-${Date.now()}-resp`, role: "assistant", content: response, timestamp: Date.now() };
-      setWsThreads((prev) => prev.map((t) => t.id === threadId ? { ...t, messages: [...t.messages, assistantMsg] } : t));
+        const assistantMsg: WorkspaceMessage = {
+          id: `msg-${Date.now()}-resp`,
+          role: "assistant",
+          content: response,
+          timestamp: Date.now(),
+        };
+        setWsThreads((prev) =>
+          prev.map((t) =>
+            t.id === threadId
+              ? { ...t, messages: [...t.messages, assistantMsg] }
+              : t,
+          ),
+        );
 
-      return response;
-    } catch {
-      const errorMsg: WorkspaceMessage = { id: `msg-${Date.now()}-err`, role: "assistant", content: "[Error] Failed to get response. Check API key configuration.", timestamp: Date.now() };
-      setWsThreads((prev) => prev.map((t) => t.id === threadId ? { ...t, messages: [...t.messages, errorMsg] } : t));
-      return errorMsg.content;
-    }
-  }, [wsThreads]);
+        return response;
+      } catch {
+        const errorMsg: WorkspaceMessage = {
+          id: `msg-${Date.now()}-err`,
+          role: "assistant",
+          content:
+            "[Error] Failed to get response. Check API key configuration.",
+          timestamp: Date.now(),
+        };
+        setWsThreads((prev) =>
+          prev.map((t) =>
+            t.id === threadId
+              ? { ...t, messages: [...t.messages, errorMsg] }
+              : t,
+          ),
+        );
+        return errorMsg.content;
+      }
+    },
+    [wsThreads],
+  );
 
   // ── Database ──────────────────────────────────────────────
   const dbConnections = DEMO_DB_CONNECTIONS;
   const dbTables = DEMO_TABLES;
 
-  const handleDbConnect = useCallback(async (_conn: DBConnection): Promise<boolean> => {
-    return true; // Demo: always connected
-  }, []);
+  const handleDbConnect = useCallback(
+    async (_conn: DBConnection): Promise<boolean> => {
+      return true; // Demo: always connected
+    },
+    [],
+  );
 
-  const handleDbQuery = useCallback(async (_connId: string, query: string): Promise<QueryResult> => {
-    return executeLocalQuery(query);
-  }, []);
+  const handleDbQuery = useCallback(
+    async (_connId: string, query: string): Promise<QueryResult> => {
+      return executeLocalQuery(query);
+    },
+    [],
+  );
 
   // ── Merge Conflicts ───────────────────────────────────────
   const mergeConflicts = useMemo(() => {
@@ -470,14 +749,28 @@ export function useCodeStudioPanels({ files, activeFileContent, activeFileName, 
     return parseMergeConflicts(activeFileContent);
   }, [activeFileContent]);
 
-  const [resolvedConflicts, setResolvedConflicts] = useState<Record<string, ConflictBlock>>({});
+  const [resolvedConflicts, setResolvedConflicts] = useState<
+    Record<string, ConflictBlock>
+  >({});
 
-  const resolveConflict = useCallback((conflictId: string, resolution: ConflictBlock["resolution"], manualContent?: string) => {
-    setResolvedConflicts((prev) => ({
-      ...prev,
-      [conflictId]: { ...mergeConflicts.find((c) => c.id === conflictId)!, resolved: true, resolution, manualContent },
-    }));
-  }, [mergeConflicts]);
+  const resolveConflict = useCallback(
+    (
+      conflictId: string,
+      resolution: ConflictBlock["resolution"],
+      manualContent?: string,
+    ) => {
+      setResolvedConflicts((prev) => ({
+        ...prev,
+        [conflictId]: {
+          ...mergeConflicts.find((c) => c.id === conflictId)!,
+          resolved: true,
+          resolution,
+          manualContent,
+        },
+      }));
+    },
+    [mergeConflicts],
+  );
 
   const mergeConflictsWithResolutions = useMemo(() => {
     return mergeConflicts.map((c) => resolvedConflicts[c.id] ?? c);

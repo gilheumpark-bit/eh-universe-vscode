@@ -1,17 +1,20 @@
-import React from 'react';
-import dynamic from 'next/dynamic';
-import { AppLanguage, StoryConfig, ChatSession } from '@/lib/studio-types';
+import React from "react";
+import dynamic from "next/dynamic";
+import { AppLanguage, StoryConfig, ChatSession } from "@/lib/studio-types";
 
-const WorldStudioView = dynamic(() => import('@/components/studio/WorldStudioView'), {
-  ssr: false,
-  loading: () => (
-    <div className="space-y-4 p-8 animate-pulse">
-      <div className="h-10 bg-bg-secondary rounded-2xl w-2/5" />
-      <div className="h-48 bg-bg-secondary rounded-2xl" />
-      <div className="h-32 bg-bg-secondary rounded-2xl" />
-    </div>
-  ),
-});
+const WorldStudioView = dynamic(
+  () => import("@/components/studio/WorldStudioView"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="space-y-4 p-8 animate-pulse">
+        <div className="h-10 bg-bg-secondary rounded-2xl w-2/5" />
+        <div className="h-48 bg-bg-secondary rounded-2xl" />
+        <div className="h-32 bg-bg-secondary rounded-2xl" />
+      </div>
+    ),
+  },
+);
 
 interface WorldTabProps {
   language: AppLanguage;
@@ -52,17 +55,32 @@ const WorldTab: React.FC<WorldTabProps> = ({
             ...config,
             worldSimData: {
               ...config.worldSimData,
-              civs: data.civs.map((c: { name: string; era: string; color: string; traits: string[] }) => ({
-                name: c.name,
-                era: c.era,
-                color: c.color,
-                traits: c.traits
-              })),
-              relations: data.relations.map((r: { from: string; to: string; type: string }) => {
-                const from = data.civs.find((c: { id: string; name: string }) => c.id === r.from)?.name || '';
-                const to = data.civs.find((c: { id: string; name: string }) => c.id === r.to)?.name || '';
-                return { fromName: from, toName: to, type: r.type };
-              }),
+              civs: data.civs.map(
+                (c: {
+                  name: string;
+                  era: string;
+                  color: string;
+                  traits: string[];
+                }) => ({
+                  name: c.name,
+                  era: c.era,
+                  color: c.color,
+                  traits: c.traits,
+                }),
+              ),
+              relations: data.relations.map(
+                (r: { from: string; to: string; type: string }) => {
+                  const from =
+                    data.civs.find(
+                      (c: { id: string; name: string }) => c.id === r.from,
+                    )?.name || "";
+                  const to =
+                    data.civs.find(
+                      (c: { id: string; name: string }) => c.id === r.to,
+                    )?.name || "";
+                  return { fromName: from, toName: to, type: r.type };
+                },
+              ),
               transitions: data.transitions,
               selectedGenre: data.selectedGenre,
               selectedLevel: data.selectedLevel,

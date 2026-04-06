@@ -32,21 +32,71 @@ interface DangerPattern {
 }
 
 const DANGER_PATTERNS: readonly DangerPattern[] = [
-  { pattern: /원금\s*보장/i, penalty: 15, domains: ["finance"], burnLabel: "불법 수익 보장" },
-  { pattern: /확정\s*수익/i, penalty: 12, domains: ["finance"], burnLabel: "사기 징후" },
-  { pattern: /부작용\s*(이\s*)?없/i, penalty: 18, domains: ["medical"], burnLabel: "임상 왜곡" },
-  { pattern: /100%\s*완치/i, penalty: 20, domains: ["medical"], burnLabel: "비과학적 서술" },
-  { pattern: /무조건\s*성공/i, penalty: 10, domains: ["general", "finance", "education"], burnLabel: "허위 광고" },
-  { pattern: /리스크\s*(가\s*)?없/i, penalty: 14, domains: ["finance", "medical"], burnLabel: "위험 은폐" },
-  { pattern: /판례[를가에]\s*(따르면|의하면)/i, penalty: 12, domains: ["legal"], burnLabel: "허위 판례 인용" },
-  { pattern: /처방[전을]?\s*없이/i, penalty: 16, domains: ["medical"], burnLabel: "무허가 처방" },
-  { pattern: /탈세|세금\s*회피/i, penalty: 15, domains: ["finance", "legal"], burnLabel: "탈세 조장" },
-  { pattern: /합법[적으로]*\s*(도박|마약|대출)/i, penalty: 18, domains: ["legal"], burnLabel: "합법 위장" },
+  {
+    pattern: /원금\s*보장/i,
+    penalty: 15,
+    domains: ["finance"],
+    burnLabel: "불법 수익 보장",
+  },
+  {
+    pattern: /확정\s*수익/i,
+    penalty: 12,
+    domains: ["finance"],
+    burnLabel: "사기 징후",
+  },
+  {
+    pattern: /부작용\s*(이\s*)?없/i,
+    penalty: 18,
+    domains: ["medical"],
+    burnLabel: "임상 왜곡",
+  },
+  {
+    pattern: /100%\s*완치/i,
+    penalty: 20,
+    domains: ["medical"],
+    burnLabel: "비과학적 서술",
+  },
+  {
+    pattern: /무조건\s*성공/i,
+    penalty: 10,
+    domains: ["general", "finance", "education"],
+    burnLabel: "허위 광고",
+  },
+  {
+    pattern: /리스크\s*(가\s*)?없/i,
+    penalty: 14,
+    domains: ["finance", "medical"],
+    burnLabel: "위험 은폐",
+  },
+  {
+    pattern: /판례[를가에]\s*(따르면|의하면)/i,
+    penalty: 12,
+    domains: ["legal"],
+    burnLabel: "허위 판례 인용",
+  },
+  {
+    pattern: /처방[전을]?\s*없이/i,
+    penalty: 16,
+    domains: ["medical"],
+    burnLabel: "무허가 처방",
+  },
+  {
+    pattern: /탈세|세금\s*회피/i,
+    penalty: 15,
+    domains: ["finance", "legal"],
+    burnLabel: "탈세 조장",
+  },
+  {
+    pattern: /합법[적으로]*\s*(도박|마약|대출)/i,
+    penalty: 18,
+    domains: ["legal"],
+    burnLabel: "합법 위장",
+  },
 ];
 
 function matchDangerPatterns(
   text: string,
-  domain: DomainType
+  domain: DomainType,
 ): { extraPenalty: number; burnLabels: string[] } {
   let extraPenalty = 0;
   const burnLabels: string[] = [];
@@ -68,7 +118,7 @@ export function runJudgment(
   trinityScore: number,
   domain: DomainType,
   sourceTier: SourceTier,
-  inputText?: string
+  inputText?: string,
 ): JudgmentResult {
   const domainMult = getDomainMultiplier(domain);
   const sourceMult = getSourceMultiplier(sourceTier);
@@ -79,7 +129,10 @@ export function runJudgment(
   // v35 패턴 매칭: 위험 표현 탐지 시 리스크 가산
   const burnLabels: string[] = [];
   if (inputText) {
-    const { extraPenalty, burnLabels: labels } = matchDangerPatterns(inputText, domain);
+    const { extraPenalty, burnLabels: labels } = matchDangerPatterns(
+      inputText,
+      domain,
+    );
     adjustedRisk += extraPenalty;
     burnLabels.push(...labels);
   } else if (trinityScore > 0.8) {
@@ -91,7 +144,8 @@ export function runJudgment(
   adjustedRisk = Math.max(0, Math.min(100, adjustedRisk));
   const grade = resolveGrade(adjustedRisk);
 
-  const burnSuffix = burnLabels.length > 0 ? ` | burn: ${burnLabels.join(", ")}` : "";
+  const burnSuffix =
+    burnLabels.length > 0 ? ` | burn: ${burnLabels.join(", ")}` : "";
 
   return {
     grade,

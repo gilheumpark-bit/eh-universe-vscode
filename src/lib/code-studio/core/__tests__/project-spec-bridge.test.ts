@@ -33,9 +33,10 @@ describe("project-spec-bridge", () => {
       answers: [{ questionId: "q2", answer: ["Express", "Zod"] }],
     });
     const seed = buildProjectSpecChatSeed(spec);
-    expect(seed).toContain("Use this Project Spec as the single source of truth.");
+    expect(seed).toContain(
+      "Use this Project Spec as the single source of truth.",
+    );
     expect(seed).toContain("Project: Orbit API");
     expect(seed).toContain("Tech Stack: Express, Zod");
   });
 });
-

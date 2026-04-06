@@ -54,7 +54,7 @@ export function simulateForceLayout(
   inputNodes: ForceNode[],
   edges: ForceEdge[],
   config: SimConfig,
-  iterations = 80
+  iterations = 80,
 ): ForceNode[] {
   const {
     width,
@@ -70,8 +70,8 @@ export function simulateForceLayout(
   const cy = height / 2;
 
   // Deep copy nodes to avoid mutation
-  const nodes = inputNodes.map(n => ({ ...n }));
-  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  const nodes = inputNodes.map((n) => ({ ...n }));
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 
   for (let iter = 0; iter < iterations; iter++) {
     // Temperature: decreases over iterations for convergence
@@ -113,8 +113,14 @@ export function simulateForceLayout(
       const fx = (dx / dist) * force;
       const fy = (dy / dist) * force;
 
-      if (!a.pinned) { a.vx += fx; a.vy += fy; }
-      if (!b.pinned) { b.vx -= fx; b.vy -= fy; }
+      if (!a.pinned) {
+        a.vx += fx;
+        a.vy += fy;
+      }
+      if (!b.pinned) {
+        b.vx -= fx;
+        b.vy -= fy;
+      }
     }
 
     // --- Center gravity ---
@@ -155,7 +161,7 @@ export function simulateForceLayout(
 export function tickForceLayout(
   nodes: ForceNode[],
   edges: ForceEdge[],
-  config: SimConfig
+  config: SimConfig,
 ): ForceNode[] {
   return simulateForceLayout(nodes, edges, config, 1);
 }
@@ -167,7 +173,7 @@ export function tickForceLayout(
 export function initializePositions(
   nodeIds: string[],
   width: number,
-  height: number
+  height: number,
 ): ForceNode[] {
   const cx = width / 2;
   const cy = height / 2;

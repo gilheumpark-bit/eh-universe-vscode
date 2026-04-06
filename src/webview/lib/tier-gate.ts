@@ -8,7 +8,7 @@
 export const OPEN_BETA = true;
 
 // ── Types ──
-export type UserTier = 'none' | 'free' | 'pro';
+export type UserTier = "none" | "free" | "pro";
 
 export interface TierLimits {
   // 소설 스튜디오
@@ -49,21 +49,66 @@ export interface TierLimits {
 // ── Tier Definitions ──
 
 const TIER_NONE: TierLimits = {
-  novel: { dailyGenerations: 0, maxRetries: 0, proactiveSuggestions: false, advancedModels: false },
-  code: { dailyVerifications: 0, verifyAgentCount: 0, crossValidation: false, autoRepair: false },
-  translation: { dailyChapters: 0, crossValidation: false, profileLearning: false, batchTranslation: false },
+  novel: {
+    dailyGenerations: 0,
+    maxRetries: 0,
+    proactiveSuggestions: false,
+    advancedModels: false,
+  },
+  code: {
+    dailyVerifications: 0,
+    verifyAgentCount: 0,
+    crossValidation: false,
+    autoRepair: false,
+  },
+  translation: {
+    dailyChapters: 0,
+    crossValidation: false,
+    profileLearning: false,
+    batchTranslation: false,
+  },
 };
 
 const TIER_FREE: TierLimits = {
-  novel: { dailyGenerations: 5, maxRetries: 1, proactiveSuggestions: false, advancedModels: false },
-  code: { dailyVerifications: 3, verifyAgentCount: 3, crossValidation: false, autoRepair: false },
-  translation: { dailyChapters: 2, crossValidation: false, profileLearning: false, batchTranslation: false },
+  novel: {
+    dailyGenerations: 5,
+    maxRetries: 1,
+    proactiveSuggestions: false,
+    advancedModels: false,
+  },
+  code: {
+    dailyVerifications: 3,
+    verifyAgentCount: 3,
+    crossValidation: false,
+    autoRepair: false,
+  },
+  translation: {
+    dailyChapters: 2,
+    crossValidation: false,
+    profileLearning: false,
+    batchTranslation: false,
+  },
 };
 
 const TIER_PRO: TierLimits = {
-  novel: { dailyGenerations: 0, maxRetries: 3, proactiveSuggestions: true, advancedModels: true },
-  code: { dailyVerifications: 0, verifyAgentCount: 8, crossValidation: true, autoRepair: true },
-  translation: { dailyChapters: 0, crossValidation: true, profileLearning: true, batchTranslation: true },
+  novel: {
+    dailyGenerations: 0,
+    maxRetries: 3,
+    proactiveSuggestions: true,
+    advancedModels: true,
+  },
+  code: {
+    dailyVerifications: 0,
+    verifyAgentCount: 8,
+    crossValidation: true,
+    autoRepair: true,
+  },
+  translation: {
+    dailyChapters: 0,
+    crossValidation: true,
+    profileLearning: true,
+    batchTranslation: true,
+  },
 };
 
 const TIERS: Record<UserTier, TierLimits> = {
@@ -81,7 +126,10 @@ export function getTierLimits(tier: UserTier): TierLimits {
 }
 
 /** 특정 기능이 현재 티어에서 사용 가능한지 체크 */
-export function canUse(tier: UserTier, check: (limits: TierLimits) => boolean): boolean {
+export function canUse(
+  tier: UserTier,
+  check: (limits: TierLimits) => boolean,
+): boolean {
   return check(getTierLimits(tier));
 }
 
@@ -96,7 +144,7 @@ export function isWithinDailyLimit(limit: number, used: number): boolean {
 /** BYOK 유저의 기능 상한 — Pro가 아니면 일부 기능 잠금 */
 export function getByokLimits(tier: UserTier): TierLimits {
   if (OPEN_BETA) return TIER_PRO;
-  if (tier === 'pro') return TIER_PRO;
+  if (tier === "pro") return TIER_PRO;
   // BYOK는 호출은 가능하지만 고급 기능은 Free 수준
   return {
     novel: { ...TIER_FREE.novel, dailyGenerations: 0 }, // 횟수 무제한 (자기 키)

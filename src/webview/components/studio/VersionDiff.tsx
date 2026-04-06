@@ -1,9 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, GitCompare, Copy, Check } from 'lucide-react';
-import { AppLanguage } from '@/lib/studio-types';
-import { createT } from '@/lib/i18n';
+import React, { useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  GitCompare,
+  Copy,
+  Check,
+} from "lucide-react";
+import { AppLanguage } from "@/lib/studio-types";
+import { createT } from "@/lib/i18n";
 
 interface VersionDiffProps {
   versions: string[];
@@ -17,17 +23,19 @@ interface VersionDiffProps {
 // ============================================================
 
 interface DiffLine {
-  type: 'same' | 'add' | 'remove';
+  type: "same" | "add" | "remove";
   text: string;
 }
 
 function computeDiff(oldText: string, newText: string): DiffLine[] {
-  const oldLines = oldText.split('\n');
-  const newLines = newText.split('\n');
+  const oldLines = oldText.split("\n");
+  const newLines = newText.split("\n");
   // LCS-based diff (O(n*m) but versions are short)
   const m = oldLines.length;
   const n = newLines.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  const dp: number[][] = Array.from({ length: m + 1 }, () =>
+    Array(n + 1).fill(0),
+  );
 
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
@@ -40,17 +48,19 @@ function computeDiff(oldText: string, newText: string): DiffLine[] {
   }
 
   // Backtrack
-  let i = m, j = n;
+  let i = m,
+    j = n;
   const stack: DiffLine[] = [];
   while (i > 0 || j > 0) {
     if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) {
-      stack.push({ type: 'same', text: oldLines[i - 1] });
-      i--; j--;
+      stack.push({ type: "same", text: oldLines[i - 1] });
+      i--;
+      j--;
     } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-      stack.push({ type: 'add', text: newLines[j - 1] });
+      stack.push({ type: "add", text: newLines[j - 1] });
       j--;
     } else {
-      stack.push({ type: 'remove', text: oldLines[i - 1] });
+      stack.push({ type: "remove", text: oldLines[i - 1] });
       i--;
     }
   }
@@ -62,7 +72,12 @@ function computeDiff(oldText: string, newText: string): DiffLine[] {
 // PART 2 — Component
 // ============================================================
 
-const VersionDiff: React.FC<VersionDiffProps> = ({ versions, currentIndex, language, onSwitch }) => {
+const VersionDiff: React.FC<VersionDiffProps> = ({
+  versions,
+  currentIndex,
+  language,
+  onSwitch,
+}) => {
   const [showDiff, setShowDiff] = useState(false);
   const [copied, setCopied] = useState(false);
   const t = createT(language);
@@ -108,12 +123,12 @@ const VersionDiff: React.FC<VersionDiffProps> = ({ versions, currentIndex, langu
             onClick={() => setShowDiff(!showDiff)}
             className={`flex items-center gap-1 px-2 py-0.5 rounded-md border transition-colors ${
               showDiff
-                ? 'bg-blue-600/10 border-blue-500/30 text-blue-400'
-                : 'border-border text-text-tertiary hover:text-text-secondary'
+                ? "bg-blue-600/10 border-blue-500/30 text-blue-400"
+                : "border-border text-text-tertiary hover:text-text-secondary"
             }`}
           >
             <GitCompare className="w-2.5 h-2.5" />
-            {t('versionDiff.diff')}
+            {t("versionDiff.diff")}
           </button>
         )}
 
@@ -122,7 +137,11 @@ const VersionDiff: React.FC<VersionDiffProps> = ({ versions, currentIndex, langu
           aria-label="버전 복사"
           className="p-1 rounded hover:bg-bg-tertiary text-text-tertiary hover:text-text-secondary transition-colors"
         >
-          {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+          {copied ? (
+            <Check className="w-3 h-3 text-green-400" />
+          ) : (
+            <Copy className="w-3 h-3" />
+          )}
         </button>
       </div>
 
@@ -132,23 +151,29 @@ const VersionDiff: React.FC<VersionDiffProps> = ({ versions, currentIndex, langu
           <div className="text-[10px] text-text-tertiary uppercase tracking-widest mb-2">
             v{currentIndex} → v{currentIndex + 1}
           </div>
-          {computeDiff(versions[currentIndex - 1], versions[currentIndex]).map((line, i) => (
-            <div
-              key={i}
-              className={`whitespace-pre-wrap ${
-                line.type === 'add'
-                  ? 'text-green-400/80 bg-green-900/10'
-                  : line.type === 'remove'
-                  ? 'text-red-400/60 bg-red-900/10 line-through'
-                  : 'text-text-tertiary'
-              }`}
-            >
-              <span className="inline-block w-4 text-text-tertiary select-none">
-                {line.type === 'add' ? '+' : line.type === 'remove' ? '-' : ' '}
-              </span>
-              {line.text || '\u00A0'}
-            </div>
-          ))}
+          {computeDiff(versions[currentIndex - 1], versions[currentIndex]).map(
+            (line, i) => (
+              <div
+                key={i}
+                className={`whitespace-pre-wrap ${
+                  line.type === "add"
+                    ? "text-green-400/80 bg-green-900/10"
+                    : line.type === "remove"
+                      ? "text-red-400/60 bg-red-900/10 line-through"
+                      : "text-text-tertiary"
+                }`}
+              >
+                <span className="inline-block w-4 text-text-tertiary select-none">
+                  {line.type === "add"
+                    ? "+"
+                    : line.type === "remove"
+                      ? "-"
+                      : " "}
+                </span>
+                {line.text || "\u00A0"}
+              </div>
+            ),
+          )}
         </div>
       )}
     </div>

@@ -42,7 +42,7 @@ function computeDiff(original: string, modified: string): DiffLine[] {
 
   // DP 테이블 구축 — LCS 길이
   const dp: number[][] = Array.from({ length: n + 1 }, () =>
-    new Array<number>(m + 1).fill(0)
+    new Array<number>(m + 1).fill(0),
   );
 
   for (let i = 1; i <= n; i++) {
@@ -107,7 +107,11 @@ function buildPanelRows(diff: DiffLine[]): {
         leftNum++;
         rightNum++;
         left.push({ lineNum: leftNum, content: entry.line, type: "unchanged" });
-        right.push({ lineNum: rightNum, content: entry.line, type: "unchanged" });
+        right.push({
+          lineNum: rightNum,
+          content: entry.line,
+          type: "unchanged",
+        });
         break;
       case "remove":
         leftNum++;
@@ -134,15 +138,15 @@ function buildPanelRows(diff: DiffLine[]): {
 // ============================================================
 
 const ROW_BG: Record<DiffLineType, { left: string; right: string }> = {
-  add:       { left: "bg-accent-green/5",  right: "bg-accent-green/15" },
-  remove:    { left: "bg-accent-red/15",   right: "bg-accent-red/5" },
-  unchanged: { left: "",                    right: "" },
+  add: { left: "bg-accent-green/5", right: "bg-accent-green/15" },
+  remove: { left: "bg-accent-red/15", right: "bg-accent-red/5" },
+  unchanged: { left: "", right: "" },
 };
 
 const GUTTER_TEXT: Record<DiffLineType, { left: string; right: string }> = {
-  add:       { left: "text-text-tertiary/40", right: "text-accent-green/60" },
-  remove:    { left: "text-accent-red/60",    right: "text-text-tertiary/40" },
-  unchanged: { left: "text-text-tertiary",    right: "text-text-tertiary" },
+  add: { left: "text-text-tertiary/40", right: "text-accent-green/60" },
+  remove: { left: "text-accent-red/60", right: "text-text-tertiary/40" },
+  unchanged: { left: "text-text-tertiary", right: "text-text-tertiary" },
 };
 
 export default function DiffViewer({
@@ -164,34 +168,36 @@ export default function DiffViewer({
   }, [original, modified]);
 
   // 스크롤 동기화
-  const handleScroll = useCallback(
-    (source: "left" | "right") => {
-      if (scrollingRef.current !== null && scrollingRef.current !== source) return;
-      scrollingRef.current = source;
+  const handleScroll = useCallback((source: "left" | "right") => {
+    if (scrollingRef.current !== null && scrollingRef.current !== source)
+      return;
+    scrollingRef.current = source;
 
-      const srcEl = source === "left" ? leftRef.current : rightRef.current;
-      const tgtEl = source === "left" ? rightRef.current : leftRef.current;
+    const srcEl = source === "left" ? leftRef.current : rightRef.current;
+    const tgtEl = source === "left" ? rightRef.current : leftRef.current;
 
-      if (srcEl && tgtEl) {
-        tgtEl.scrollTop = srcEl.scrollTop;
-        tgtEl.scrollLeft = srcEl.scrollLeft;
-      }
+    if (srcEl && tgtEl) {
+      tgtEl.scrollTop = srcEl.scrollTop;
+      tgtEl.scrollLeft = srcEl.scrollLeft;
+    }
 
-      // 프레임 끝에서 잠금 해제하여 무한 루프 방지
-      requestAnimationFrame(() => {
-        scrollingRef.current = null;
-      });
-    },
-    [],
-  );
+    // 프레임 끝에서 잠금 해제하여 무한 루프 방지
+    requestAnimationFrame(() => {
+      scrollingRef.current = null;
+    });
+  }, []);
 
   // 행 렌더링
   const renderRow = useCallback(
     (row: PanelRow, side: "left" | "right", idx: number) => {
       const bg = ROW_BG[row.type][side];
       const gutterColor = GUTTER_TEXT[row.type][side];
-      const prefix = row.type === "add" && side === "right" ? "+" :
-                     row.type === "remove" && side === "left" ? "-" : " ";
+      const prefix =
+        row.type === "add" && side === "right"
+          ? "+"
+          : row.type === "remove" && side === "left"
+            ? "-"
+            : " ";
 
       return (
         <div
@@ -208,9 +214,11 @@ export default function DiffViewer({
           {/* +/- 기호 */}
           <span
             className={`inline-block w-5 shrink-0 select-none text-center font-mono text-[11px] ${
-              prefix === "+" ? "text-accent-green" :
-              prefix === "-" ? "text-accent-red" :
-              "text-transparent"
+              prefix === "+"
+                ? "text-accent-green"
+                : prefix === "-"
+                  ? "text-accent-red"
+                  : "text-transparent"
             }`}
           >
             {prefix}
@@ -239,8 +247,7 @@ export default function DiffViewer({
             {language}
           </span>
           <span className="ml-2 font-mono text-[11px]">
-            <span className="text-accent-green">+{added}</span>
-            {" "}
+            <span className="text-accent-green">+{added}</span>{" "}
             <span className="text-accent-red">-{removed}</span>
           </span>
         </div>

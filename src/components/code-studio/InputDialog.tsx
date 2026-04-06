@@ -73,7 +73,10 @@ export function InputDialog({
         className="bg-[#0a0e17] border border-white/8 rounded-lg p-4 w-80 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <p id="input-dialog-title" className="text-xs font-semibold mb-1 text-text-primary">
+        <p
+          id="input-dialog-title"
+          className="text-xs font-semibold mb-1 text-text-primary"
+        >
           {title}
         </p>
         {description && (

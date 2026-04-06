@@ -130,14 +130,11 @@ export const EditorTabs = memo(function EditorTabs({
   }, [activeFileId, onCloseFile]);
 
   // Drag start
-  const handleDragStart = useCallback(
-    (e: React.DragEvent, fileId: string) => {
-      setDraggedFileId(fileId);
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", fileId);
-    },
-    [],
-  );
+  const handleDragStart = useCallback((e: React.DragEvent, fileId: string) => {
+    setDraggedFileId(fileId);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", fileId);
+  }, []);
 
   // Drag over a tab
   const handleDragOver = useCallback(

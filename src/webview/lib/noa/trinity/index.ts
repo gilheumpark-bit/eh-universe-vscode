@@ -34,7 +34,7 @@ import { evaluateScale } from "./scale";
  */
 export function runTrinity(
   text: string,
-  weights: TrinityWeights = DEFAULT_TRINITY_WEIGHTS
+  weights: TrinityWeights = DEFAULT_TRINITY_WEIGHTS,
 ): TrinityResult {
   const shield = evaluateShield(text);
   const sword = evaluateSword(text);
@@ -76,7 +76,12 @@ export function runTrinity(
     scale.vote === "HOLD"
   ) {
     finalVote = "HOLD";
-    const holdEgo = shield.vote === "HOLD" ? "shield" : sword.vote === "HOLD" ? "sword" : "scale";
+    const holdEgo =
+      shield.vote === "HOLD"
+        ? "shield"
+        : sword.vote === "HOLD"
+          ? "sword"
+          : "scale";
     consensusDetail = `TRINITY_EGO_HOLD(${holdEgo})`;
   }
   // 5. 가중 점수 기반 판정

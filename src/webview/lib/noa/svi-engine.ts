@@ -21,7 +21,7 @@ export interface TelemetryTick {
   ikiVariance: number;
 }
 
-export type SVIAction = 'NORMAL' | 'WARNING' | 'BACKPRESSURE';
+export type SVIAction = "NORMAL" | "WARNING" | "BACKPRESSURE";
 
 export interface SVIResult {
   svi: number;
@@ -85,14 +85,20 @@ class KeystrokeRingBuffer {
     }
 
     // WPM 계산: 최근 타임스탬프로 분당 타건 수 추정
-    const span = this.timestamps[this.timestamps.length - 1] - this.timestamps[0];
-    const currentWpm = span > 0 ? (this.timestamps.length / (span / 60000)) : baselineWpm;
-    const wpmVariance = Math.min(1.0, Math.abs(currentWpm - baselineWpm) / baselineWpm);
+    const span =
+      this.timestamps[this.timestamps.length - 1] - this.timestamps[0];
+    const currentWpm =
+      span > 0 ? this.timestamps.length / (span / 60000) : baselineWpm;
+    const wpmVariance = Math.min(
+      1.0,
+      Math.abs(currentWpm - baselineWpm) / baselineWpm,
+    );
 
     // 에러율: 백스페이스 비율
-    const errRate = this.totalKeyCount > 0
-      ? Math.min(1.0, this.backspaceCount / this.totalKeyCount)
-      : 0;
+    const errRate =
+      this.totalKeyCount > 0
+        ? Math.min(1.0, this.backspaceCount / this.totalKeyCount)
+        : 0;
 
     // IKI 편차: 키 입력 간격의 변동 계수(CV)
     const intervals: number[] = [];
@@ -100,7 +106,8 @@ class KeystrokeRingBuffer {
       intervals.push(this.timestamps[i] - this.timestamps[i - 1]);
     }
     const mean = intervals.reduce((s, v) => s + v, 0) / intervals.length;
-    const variance = intervals.reduce((s, v) => s + (v - mean) ** 2, 0) / intervals.length;
+    const variance =
+      intervals.reduce((s, v) => s + (v - mean) ** 2, 0) / intervals.length;
     const cv = mean > 0 ? Math.sqrt(variance) / mean : 0;
     const ikiVariance = Math.min(1.0, cv); // CV > 1.0 → 극심한 망설임
 
@@ -146,18 +153,21 @@ export class SVIEngine {
     const instantaneous = this.computeInstantaneous(tick);
 
     // EMA: SVI_t = α · I_t + (1 - α) · SVI_{t-1}
-    this.currentSvi = this.alpha * instantaneous + (1 - this.alpha) * this.currentSvi;
+    this.currentSvi =
+      this.alpha * instantaneous + (1 - this.alpha) * this.currentSvi;
 
     // 액션 결정
-    let action: SVIAction = 'NORMAL';
+    let action: SVIAction = "NORMAL";
     let recommendedDelayMs = 0;
 
     if (this.currentSvi >= THRESHOLD_BACKPRESSURE) {
-      action = 'BACKPRESSURE';
+      action = "BACKPRESSURE";
       // SVI 비례 지연: 0.7 → 50ms, 1.0 → 200ms
-      recommendedDelayMs = Math.round(50 + (this.currentSvi - THRESHOLD_BACKPRESSURE) * 500);
+      recommendedDelayMs = Math.round(
+        50 + (this.currentSvi - THRESHOLD_BACKPRESSURE) * 500,
+      );
     } else if (this.currentSvi >= THRESHOLD_WARNING) {
-      action = 'WARNING';
+      action = "WARNING";
     }
 
     return {
@@ -190,7 +200,7 @@ export class SVIEngine {
   onSVIUpdate(listener: (result: SVIResult) => void): () => void {
     this.listeners.push(listener);
     return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
+      this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 

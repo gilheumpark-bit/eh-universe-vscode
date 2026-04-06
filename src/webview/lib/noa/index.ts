@@ -72,7 +72,7 @@ export function getAuditManager(config: NoaConfig): AuditManager {
  */
 export async function runNoa(
   input: NoaInput,
-  config?: Partial<NoaConfig>
+  config?: Partial<NoaConfig>,
 ): Promise<NoaResult> {
   const startTime = performance.now();
   const fullConfig: NoaConfig = {
@@ -123,14 +123,27 @@ export async function runNoa(
     });
     layerDurations.audit = performance.now() - ta1;
 
-    return buildResult(true, sanitized.sanitized, fastTrack, null, null, {
-      selectedPath: "ALLOW",
-      config: fullConfig.tacticalConfigs.ALLOW,
-      reason: "FAST_TRACK_PASS",
-    }, auditEntry, {
-      allowed: true, budgetRemaining: riskBudgetManager!.getState().remaining,
-      hallucinationFlag: false, action: "proceed",
-    }, startTime, layerDurations);
+    return buildResult(
+      true,
+      sanitized.sanitized,
+      fastTrack,
+      null,
+      null,
+      {
+        selectedPath: "ALLOW",
+        config: fullConfig.tacticalConfigs.ALLOW,
+        reason: "FAST_TRACK_PASS",
+      },
+      auditEntry,
+      {
+        allowed: true,
+        budgetRemaining: riskBudgetManager!.getState().remaining,
+        hallucinationFlag: false,
+        action: "proceed",
+      },
+      startTime,
+      layerDurations,
+    );
   }
 
   // Fast BLOCK → 즉시 거부
@@ -153,14 +166,27 @@ export async function runNoa(
     });
     layerDurations.audit = performance.now() - ta2;
 
-    return buildResult(false, sanitized.sanitized, fastTrack, null, null, {
-      selectedPath: "BLOCK",
-      config: fullConfig.tacticalConfigs.BLOCK,
-      reason: "FAST_TRACK_BLOCK",
-    }, auditEntry, {
-      allowed: false, budgetRemaining: riskBudgetManager!.getState().remaining,
-      hallucinationFlag: false, action: "burn",
-    }, startTime, layerDurations);
+    return buildResult(
+      false,
+      sanitized.sanitized,
+      fastTrack,
+      null,
+      null,
+      {
+        selectedPath: "BLOCK",
+        config: fullConfig.tacticalConfigs.BLOCK,
+        reason: "FAST_TRACK_BLOCK",
+      },
+      auditEntry,
+      {
+        allowed: false,
+        budgetRemaining: riskBudgetManager!.getState().remaining,
+        hallucinationFlag: false,
+        action: "burn",
+      },
+      startTime,
+      layerDurations,
+    );
   }
 
   // --- Layer 3: Trinity ---
@@ -202,7 +228,14 @@ export async function runNoa(
     result: allowed ? "allowed" : "blocked",
     layer: "trinity",
     reason: `${judgment.grade.label} → ${tactical.selectedPath}`,
-    severity: judgment.adjustedRisk > 0.7 ? "critical" : judgment.adjustedRisk > 0.5 ? "high" : judgment.adjustedRisk > 0.3 ? "medium" : "low",
+    severity:
+      judgment.adjustedRisk > 0.7
+        ? "critical"
+        : judgment.adjustedRisk > 0.5
+          ? "high"
+          : judgment.adjustedRisk > 0.3
+            ? "medium"
+            : "low",
   });
 
   const auditEntry = await auditManager!.append({
@@ -215,8 +248,16 @@ export async function runNoa(
   layerDurations.audit = performance.now() - t7;
 
   return buildResult(
-    allowed, sanitized.sanitized, fastTrack, trinity, judgment,
-    tactical, auditEntry, availability, startTime, layerDurations
+    allowed,
+    sanitized.sanitized,
+    fastTrack,
+    trinity,
+    judgment,
+    tactical,
+    auditEntry,
+    availability,
+    startTime,
+    layerDurations,
   );
 }
 
@@ -234,7 +275,7 @@ function buildResult(
   auditEntry: AuditEntry,
   availability: NoaResult["availability"],
   startTime: number,
-  layerDurations: NoaResult["layerDurations"]
+  layerDurations: NoaResult["layerDurations"],
 ): NoaResult {
   return {
     allowed,
@@ -292,16 +333,64 @@ export { selectTacticalPath } from "./tactical";
 export { createAuditManager } from "./audit";
 export { createRiskBudgetManager } from "./availability";
 export { checkHallucination } from "./availability/hallucination";
-export { recordAuditEntry, generateAuditReport, getRecentThreats, formatAuditMarkdown, clearAuditLog } from "./audit-report";
+export {
+  recordAuditEntry,
+  generateAuditReport,
+  getRecentThreats,
+  formatAuditMarkdown,
+  clearAuditLog,
+} from "./audit-report";
 
 // ── NOA-SYS v2.1 Layers ──
 // L1: SVI Engine (Session Volatility Index — EMA 기반 인지 부하 추적)
-export { SVIEngine, getSVIEngine, type SVIResult, type SVIAction, type TelemetryTick } from "./svi-engine";
+export {
+  SVIEngine,
+  getSVIEngine,
+  type SVIResult,
+  type SVIAction,
+  type TelemetryTick,
+} from "./svi-engine";
 // L3.1: Constrained Decoder (좌뇌 Guillotine — JSON Schema 강제)
-export { validateConstrainedOutput, buildConstrainedSystemPrompt, runConstrainedPipeline, MATH_CALCULATION_SCHEMA, NOVEL_GENERATION_SCHEMA, type GuillotineResult, type GuillotineVerdict, type ConstraintSchema } from "./constrained-decoder";
+export {
+  validateConstrainedOutput,
+  buildConstrainedSystemPrompt,
+  runConstrainedPipeline,
+  MATH_CALCULATION_SCHEMA,
+  NOVEL_GENERATION_SCHEMA,
+  type GuillotineResult,
+  type GuillotineVerdict,
+  type ConstraintSchema,
+} from "./constrained-decoder";
 // L4: Saga Transaction + Atomic HITL + HSM 서명 (원자적 승인)
-export { SagaOrchestrator, createAIWorkSaga, HSMSigner, AtomicHITLGate, type SagaStep, type SagaResult, type SagaStatus, type OrbitType, type OrbitPayload, type SignedEnvelope, type HITLResult } from "./saga-transaction";
+export {
+  SagaOrchestrator,
+  createAIWorkSaga,
+  HSMSigner,
+  AtomicHITLGate,
+  type SagaStep,
+  type SagaResult,
+  type SagaStatus,
+  type OrbitType,
+  type OrbitPayload,
+  type SignedEnvelope,
+  type HITLResult,
+} from "./saga-transaction";
 // L2: Taint Tracker (데이터 격리 — 도메인 간 오염 방지)
-export { TaintTracker, getTaintTracker, type TaintDomain, type TaintedData, type DecontaminatedData } from "./taint-tracker";
+export {
+  TaintTracker,
+  getTaintTracker,
+  type TaintDomain,
+  type TaintedData,
+  type DecontaminatedData,
+} from "./taint-tracker";
 // L2: LoRA Hot-Swap Controller (동적 어댑터 교체)
-export { SwapController, getSwapController, VRAMManager, ADAPTER_REGISTRY, type AdapterMode, type AdapterManifest, type SwapResult, type SwapStatus } from "./lora-swap";
+export {
+  SwapController,
+  getSwapController,
+  VRAMManager,
+  ADAPTER_REGISTRY,
+  type AdapterMode,
+  type AdapterManifest,
+  type SwapResult,
+  type SwapStatus,
+} from "./lora-swap";

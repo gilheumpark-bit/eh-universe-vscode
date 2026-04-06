@@ -4,7 +4,13 @@
 // PART 1 — Imports & Types
 // ============================================================
 
-import { ChevronRight, FileCode, Folder, GitBranch, Circle } from "lucide-react";
+import {
+  ChevronRight,
+  FileCode,
+  Folder,
+  GitBranch,
+  Circle,
+} from "lucide-react";
 
 interface BreadcrumbProps {
   path: string[];

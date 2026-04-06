@@ -6,8 +6,15 @@
 
 import { useCallback, useRef, useState, useEffect, useMemo } from "react";
 import {
-  X, Columns, Rows, LayoutGrid, Maximize2, Minimize2,
-  SplitSquareHorizontal, SplitSquareVertical, FileCode,
+  X,
+  Columns,
+  Rows,
+  LayoutGrid,
+  Maximize2,
+  Minimize2,
+  SplitSquareHorizontal,
+  SplitSquareVertical,
+  FileCode,
 } from "lucide-react";
 import type { OpenFile } from "@/lib/code-studio/core/types";
 import { useLang } from "@/lib/LangContext";
@@ -49,7 +56,10 @@ function generatePaneId(): string {
   return `pane-${++paneIdCounter}-${Date.now()}`;
 }
 
-function createPane(files: OpenFile[] = [], activeFileId: string | null = null): EditorPane {
+function createPane(
+  files: OpenFile[] = [],
+  activeFileId: string | null = null,
+): EditorPane {
   return {
     id: generatePaneId(),
     files,
@@ -65,10 +75,17 @@ function createPane(files: OpenFile[] = [], activeFileId: string | null = null):
 // ============================================================
 
 function PaneTabBar({
-  pane, isFocused, onSelectFile, onCloseFile, onContextMenu, onDoubleClickTab,
-  onDragStart, onDrop,
+  pane,
+  isFocused,
+  onSelectFile,
+  onCloseFile,
+  onContextMenu,
+  onDoubleClickTab,
+  onDragStart,
+  onDrop,
 }: {
-  pane: EditorPane; isFocused: boolean;
+  pane: EditorPane;
+  isFocused: boolean;
   onSelectFile: (fileId: string) => void;
   onCloseFile: (fileId: string) => void;
   onContextMenu: (e: React.MouseEvent, fileId: string) => void;
@@ -81,7 +98,10 @@ function PaneTabBar({
       role="tablist"
       className={`flex items-center border-b overflow-x-auto
         ${isFocused ? "border-amber-700/45 bg-[#0a0e17]/80" : "border-white/8 bg-[#0a0e17]/50"}`}
-      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      }}
       onDrop={onDrop}
     >
       {pane.files.map((f) => (
@@ -93,16 +113,26 @@ function PaneTabBar({
           onDragStart={(e) => onDragStart(e, f.id)}
           onClick={() => onSelectFile(f.id)}
           onDoubleClick={onDoubleClickTab}
-          onContextMenu={(e) => { e.preventDefault(); onContextMenu(e, f.id); }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            onContextMenu(e, f.id);
+          }}
           className={`flex items-center gap-2 px-3 py-1.5 text-xs border-r border-white/8 whitespace-nowrap transition-colors cursor-grab active:cursor-grabbing
-            ${f.id === pane.activeFileId
-              ? "bg-white/5 text-text-primary"
-              : "text-text-tertiary hover:bg-white/5"}`}
+            ${
+              f.id === pane.activeFileId
+                ? "bg-white/5 text-text-primary"
+                : "text-text-tertiary hover:bg-white/5"
+            }`}
         >
           <span>{f.name}</span>
-          {f.isDirty && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />}
+          {f.isDirty && (
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+          )}
           <span
-            onClick={(e) => { e.stopPropagation(); onCloseFile(f.id); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onCloseFile(f.id);
+            }}
             className="hover:text-red-400 cursor-pointer"
           >
             <X size={12} />
@@ -120,7 +150,13 @@ function PaneTabBar({
 // ============================================================
 
 function PaneContextMenu({
-  state, onClose, onSplitRight, onSplitDown, onCloseGroup, onMoveToPane, availablePanes,
+  state,
+  onClose,
+  onSplitRight,
+  onSplitDown,
+  onCloseGroup,
+  onMoveToPane,
+  availablePanes,
 }: {
   state: { x: number; y: number; paneId: string; fileId: string };
   onClose: () => void;
@@ -134,7 +170,8 @@ function PaneContextMenu({
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) onClose();
+      if (menuRef.current && !menuRef.current.contains(e.target as Node))
+        onClose();
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -149,13 +186,19 @@ function PaneContextMenu({
       style={{ left: state.x, top: state.y }}
     >
       <button
-        onClick={() => { onSplitRight(state.paneId, state.fileId); onClose(); }}
+        onClick={() => {
+          onSplitRight(state.paneId, state.fileId);
+          onClose();
+        }}
         className="w-full text-left px-3 py-1.5 text-xs text-text-primary hover:bg-white/5 flex items-center gap-2"
       >
         <SplitSquareHorizontal size={12} /> Split Right
       </button>
       <button
-        onClick={() => { onSplitDown(state.paneId, state.fileId); onClose(); }}
+        onClick={() => {
+          onSplitDown(state.paneId, state.fileId);
+          onClose();
+        }}
         className="w-full text-left px-3 py-1.5 text-xs text-text-primary hover:bg-white/5 flex items-center gap-2"
       >
         <SplitSquareVertical size={12} /> Split Down
@@ -166,7 +209,10 @@ function PaneContextMenu({
           {otherPanes.map((pane) => (
             <button
               key={pane.id}
-              onClick={() => { onMoveToPane(state.paneId, state.fileId, pane.id); onClose(); }}
+              onClick={() => {
+                onMoveToPane(state.paneId, state.fileId, pane.id);
+                onClose();
+              }}
               className="w-full text-left px-3 py-1.5 text-xs text-text-primary hover:bg-white/5 flex items-center gap-2"
             >
               Move to Group {pane.id.slice(-5)}
@@ -176,7 +222,10 @@ function PaneContextMenu({
       )}
       <div className="h-px bg-white/8 my-1" />
       <button
-        onClick={() => { onCloseGroup(state.paneId); onClose(); }}
+        onClick={() => {
+          onCloseGroup(state.paneId);
+          onClose();
+        }}
         className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-white/5 flex items-center gap-2"
       >
         <X size={12} /> Close Group
@@ -192,7 +241,8 @@ function PaneContextMenu({
 // ============================================================
 
 function ResizeHandle({
-  direction, onResize,
+  direction,
+  onResize,
 }: {
   direction: "horizontal" | "vertical";
   onResize: (delta: number) => void;
@@ -234,7 +284,11 @@ function ResizeHandle({
 // ============================================================
 
 export function EditorGroup({
-  openFiles, activeFileId, onSelectFile, onCloseFile, renderEditor,
+  openFiles,
+  activeFileId,
+  onSelectFile,
+  onCloseFile,
+  renderEditor,
 }: Props) {
   const [state, setState] = useState<EditorGroupState>(() => ({
     panes: [createPane(openFiles, activeFileId)],
@@ -244,7 +298,12 @@ export function EditorGroup({
   }));
 
   const { lang } = useLang();
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; paneId: string; fileId: string } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    paneId: string;
+    fileId: string;
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Sync openFiles into first pane when single-pane mode
@@ -261,52 +320,74 @@ export function EditorGroup({
   }
 
   // Split right
-  const handleSplitRight = useCallback((paneId: string, fileId: string) => {
-    if (state.panes.length >= 4) return;
-    setState((prev) => {
-      const src = prev.panes.find((p) => p.id === paneId);
-      if (!src) return prev;
-      const file = src.files.find((f) => f.id === fileId);
-      if (!file) return prev;
+  const handleSplitRight = useCallback(
+    (paneId: string, fileId: string) => {
+      if (state.panes.length >= 4) return;
+      setState((prev) => {
+        const src = prev.panes.find((p) => p.id === paneId);
+        if (!src) return prev;
+        const file = src.files.find((f) => f.id === fileId);
+        if (!file) return prev;
 
-      const updSrc: EditorPane = {
-        ...src,
-        files: src.files.filter((f) => f.id !== fileId),
-        activeFileId: src.activeFileId === fileId
-          ? src.files.find((f) => f.id !== fileId)?.id ?? null
-          : src.activeFileId,
-      };
-      const newPane = createPane([file], file.id);
-      const panes = prev.panes.map((p) => (p.id === paneId ? updSrc : p)).filter((p) => p.files.length > 0);
-      panes.push(newPane);
-      const size = 100 / panes.length;
-      return { ...prev, panes: panes.map((p) => ({ ...p, size })), direction: prev.direction === "quad" ? "quad" : "horizontal", focusedPaneId: newPane.id };
-    });
-  }, [state.panes.length]);
+        const updSrc: EditorPane = {
+          ...src,
+          files: src.files.filter((f) => f.id !== fileId),
+          activeFileId:
+            src.activeFileId === fileId
+              ? (src.files.find((f) => f.id !== fileId)?.id ?? null)
+              : src.activeFileId,
+        };
+        const newPane = createPane([file], file.id);
+        const panes = prev.panes
+          .map((p) => (p.id === paneId ? updSrc : p))
+          .filter((p) => p.files.length > 0);
+        panes.push(newPane);
+        const size = 100 / panes.length;
+        return {
+          ...prev,
+          panes: panes.map((p) => ({ ...p, size })),
+          direction: prev.direction === "quad" ? "quad" : "horizontal",
+          focusedPaneId: newPane.id,
+        };
+      });
+    },
+    [state.panes.length],
+  );
 
   // Split down
-  const handleSplitDown = useCallback((paneId: string, fileId: string) => {
-    if (state.panes.length >= 4) return;
-    setState((prev) => {
-      const src = prev.panes.find((p) => p.id === paneId);
-      if (!src) return prev;
-      const file = src.files.find((f) => f.id === fileId);
-      if (!file) return prev;
+  const handleSplitDown = useCallback(
+    (paneId: string, fileId: string) => {
+      if (state.panes.length >= 4) return;
+      setState((prev) => {
+        const src = prev.panes.find((p) => p.id === paneId);
+        if (!src) return prev;
+        const file = src.files.find((f) => f.id === fileId);
+        if (!file) return prev;
 
-      const updSrc: EditorPane = {
-        ...src,
-        files: src.files.filter((f) => f.id !== fileId),
-        activeFileId: src.activeFileId === fileId
-          ? src.files.find((f) => f.id !== fileId)?.id ?? null
-          : src.activeFileId,
-      };
-      const newPane = createPane([file], file.id);
-      const panes = prev.panes.map((p) => (p.id === paneId ? updSrc : p)).filter((p) => p.files.length > 0);
-      panes.push(newPane);
-      const size = 100 / panes.length;
-      return { ...prev, panes: panes.map((p) => ({ ...p, size })), direction: prev.panes.length >= 2 ? "quad" : "vertical", focusedPaneId: newPane.id };
-    });
-  }, [state.panes.length]);
+        const updSrc: EditorPane = {
+          ...src,
+          files: src.files.filter((f) => f.id !== fileId),
+          activeFileId:
+            src.activeFileId === fileId
+              ? (src.files.find((f) => f.id !== fileId)?.id ?? null)
+              : src.activeFileId,
+        };
+        const newPane = createPane([file], file.id);
+        const panes = prev.panes
+          .map((p) => (p.id === paneId ? updSrc : p))
+          .filter((p) => p.files.length > 0);
+        panes.push(newPane);
+        const size = 100 / panes.length;
+        return {
+          ...prev,
+          panes: panes.map((p) => ({ ...p, size })),
+          direction: prev.panes.length >= 2 ? "quad" : "vertical",
+          focusedPaneId: newPane.id,
+        };
+      });
+    },
+    [state.panes.length],
+  );
 
   // Keyboard: Ctrl+1..4 focus pane
   useEffect(() => {
@@ -315,14 +396,18 @@ export function EditorGroup({
         const num = parseInt(e.key, 10);
         if (num >= 1 && num <= 4 && num <= state.panes.length) {
           e.preventDefault();
-          setState((prev) => ({ ...prev, focusedPaneId: prev.panes[num - 1].id }));
+          setState((prev) => ({
+            ...prev,
+            focusedPaneId: prev.panes[num - 1].id,
+          }));
           return;
         }
         if (e.key === "\\") {
           e.preventDefault();
           const focusId = state.focusedPaneId ?? state.panes[0]?.id;
           const focusPane = state.panes.find((p) => p.id === focusId);
-          if (focusPane?.activeFileId) handleSplitRight(focusId, focusPane.activeFileId);
+          if (focusPane?.activeFileId)
+            handleSplitRight(focusId, focusPane.activeFileId);
         }
       }
     };
@@ -334,64 +419,111 @@ export function EditorGroup({
   const handleCloseGroup = useCallback((paneId: string) => {
     setState((prev) => {
       const remaining = prev.panes.filter((p) => p.id !== paneId);
-      if (remaining.length === 0) return { ...prev, panes: [createPane()], direction: "horizontal" as SplitDirection, focusedPaneId: null };
+      if (remaining.length === 0)
+        return {
+          ...prev,
+          panes: [createPane()],
+          direction: "horizontal" as SplitDirection,
+          focusedPaneId: null,
+        };
       const size = 100 / remaining.length;
-      return { ...prev, panes: remaining.map((p) => ({ ...p, size })), focusedPaneId: remaining[0].id };
+      return {
+        ...prev,
+        panes: remaining.map((p) => ({ ...p, size })),
+        focusedPaneId: remaining[0].id,
+      };
     });
   }, []);
 
   // Move file between panes
-  const handleMoveToPane = useCallback((fromId: string, fileId: string, toId: string) => {
-    setState((prev) => {
-      const src = prev.panes.find((p) => p.id === fromId);
-      const tgt = prev.panes.find((p) => p.id === toId);
-      if (!src || !tgt) return prev;
-      const file = src.files.find((f) => f.id === fileId);
-      if (!file || tgt.files.some((f) => f.id === fileId)) return prev;
+  const handleMoveToPane = useCallback(
+    (fromId: string, fileId: string, toId: string) => {
+      setState((prev) => {
+        const src = prev.panes.find((p) => p.id === fromId);
+        const tgt = prev.panes.find((p) => p.id === toId);
+        if (!src || !tgt) return prev;
+        const file = src.files.find((f) => f.id === fileId);
+        if (!file || tgt.files.some((f) => f.id === fileId)) return prev;
 
-      const updSrc: EditorPane = {
-        ...src, files: src.files.filter((f) => f.id !== fileId),
-        activeFileId: src.activeFileId === fileId ? src.files.find((f) => f.id !== fileId)?.id ?? null : src.activeFileId,
-      };
-      const updTgt: EditorPane = { ...tgt, files: [...tgt.files, file], activeFileId: file.id };
+        const updSrc: EditorPane = {
+          ...src,
+          files: src.files.filter((f) => f.id !== fileId),
+          activeFileId:
+            src.activeFileId === fileId
+              ? (src.files.find((f) => f.id !== fileId)?.id ?? null)
+              : src.activeFileId,
+        };
+        const updTgt: EditorPane = {
+          ...tgt,
+          files: [...tgt.files, file],
+          activeFileId: file.id,
+        };
 
-      let panes = prev.panes.map((p) => {
-        if (p.id === fromId) return updSrc;
-        if (p.id === toId) return updTgt;
-        return p;
-      }).filter((p) => p.files.length > 0);
-      if (panes.length === 0) panes = [createPane()];
-      const size = 100 / panes.length;
-      return { ...prev, panes: panes.map((p) => ({ ...p, size })), focusedPaneId: toId };
-    });
-  }, []);
+        let panes = prev.panes
+          .map((p) => {
+            if (p.id === fromId) return updSrc;
+            if (p.id === toId) return updTgt;
+            return p;
+          })
+          .filter((p) => p.files.length > 0);
+        if (panes.length === 0) panes = [createPane()];
+        const size = 100 / panes.length;
+        return {
+          ...prev,
+          panes: panes.map((p) => ({ ...p, size })),
+          focusedPaneId: toId,
+        };
+      });
+    },
+    [],
+  );
 
   // Select/close file within pane
-  const handlePaneSelect = useCallback((paneId: string, fileId: string) => {
-    setState((prev) => ({
-      ...prev,
-      panes: prev.panes.map((p) => p.id === paneId ? { ...p, activeFileId: fileId } : p),
-      focusedPaneId: paneId,
-    }));
-    onSelectFile(fileId);
-  }, [onSelectFile]);
+  const handlePaneSelect = useCallback(
+    (paneId: string, fileId: string) => {
+      setState((prev) => ({
+        ...prev,
+        panes: prev.panes.map((p) =>
+          p.id === paneId ? { ...p, activeFileId: fileId } : p,
+        ),
+        focusedPaneId: paneId,
+      }));
+      onSelectFile(fileId);
+    },
+    [onSelectFile],
+  );
 
-  const handlePaneClose = useCallback((paneId: string, fileId: string) => {
-    setState((prev) => {
-      let panes = prev.panes.map((p) => {
-        if (p.id !== paneId) return p;
-        const files = p.files.filter((f) => f.id !== fileId);
-        return { ...p, files, activeFileId: p.activeFileId === fileId ? files[files.length - 1]?.id ?? null : p.activeFileId };
-      }).filter((p) => p.files.length > 0);
-      if (panes.length === 0) panes = [createPane()];
-      const size = 100 / panes.length;
-      return { ...prev, panes: panes.map((p) => ({ ...p, size })) };
-    });
-    onCloseFile(fileId);
-  }, [onCloseFile]);
+  const handlePaneClose = useCallback(
+    (paneId: string, fileId: string) => {
+      setState((prev) => {
+        let panes = prev.panes
+          .map((p) => {
+            if (p.id !== paneId) return p;
+            const files = p.files.filter((f) => f.id !== fileId);
+            return {
+              ...p,
+              files,
+              activeFileId:
+                p.activeFileId === fileId
+                  ? (files[files.length - 1]?.id ?? null)
+                  : p.activeFileId,
+            };
+          })
+          .filter((p) => p.files.length > 0);
+        if (panes.length === 0) panes = [createPane()];
+        const size = 100 / panes.length;
+        return { ...prev, panes: panes.map((p) => ({ ...p, size })) };
+      });
+      onCloseFile(fileId);
+    },
+    [onCloseFile],
+  );
 
   const handleToggleMaximize = useCallback((paneId: string) => {
-    setState((prev) => ({ ...prev, maximizedPaneId: prev.maximizedPaneId === paneId ? null : paneId }));
+    setState((prev) => ({
+      ...prev,
+      maximizedPaneId: prev.maximizedPaneId === paneId ? null : paneId,
+    }));
   }, []);
 
   // Resize
@@ -416,20 +548,28 @@ export function EditorGroup({
   }, []);
 
   // Drag & drop between panes
-  const handleDragStart = useCallback((paneId: string, e: React.DragEvent, fileId: string) => {
-    e.dataTransfer.setData("text/plain", JSON.stringify({ paneId, fileId }));
-    e.dataTransfer.effectAllowed = "move";
-  }, []);
+  const handleDragStart = useCallback(
+    (paneId: string, e: React.DragEvent, fileId: string) => {
+      e.dataTransfer.setData("text/plain", JSON.stringify({ paneId, fileId }));
+      e.dataTransfer.effectAllowed = "move";
+    },
+    [],
+  );
 
-  const handleDrop = useCallback((targetPaneId: string, e: React.DragEvent) => {
-    e.preventDefault();
-    try {
-      const data = JSON.parse(e.dataTransfer.getData("text/plain"));
-      if (data.paneId && data.fileId && data.paneId !== targetPaneId) {
-        handleMoveToPane(data.paneId, data.fileId, targetPaneId);
+  const handleDrop = useCallback(
+    (targetPaneId: string, e: React.DragEvent) => {
+      e.preventDefault();
+      try {
+        const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+        if (data.paneId && data.fileId && data.paneId !== targetPaneId) {
+          handleMoveToPane(data.paneId, data.fileId, targetPaneId);
+        }
+      } catch {
+        /* invalid */
       }
-    } catch { /* invalid */ }
-  }, [handleMoveToPane]);
+    },
+    [handleMoveToPane],
+  );
 
   const cycleDirection = useCallback(() => {
     setState((prev) => {
@@ -440,7 +580,8 @@ export function EditorGroup({
   }, []);
 
   const visiblePanes = useMemo(() => {
-    if (state.maximizedPaneId) return state.panes.filter((p) => p.id === state.maximizedPaneId);
+    if (state.maximizedPaneId)
+      return state.panes.filter((p) => p.id === state.maximizedPaneId);
     return state.panes;
   }, [state.panes, state.maximizedPaneId]);
 
@@ -450,24 +591,37 @@ export function EditorGroup({
     if (pane.files.length === 0) {
       return (
         <div className="flex-1 flex items-center justify-center text-text-tertiary text-xs">
-          <FileCode size={16} className="mr-2 opacity-40" /> {L4(lang, { ko: "열린 파일 없음", en: "No files open" })}
+          <FileCode size={16} className="mr-2 opacity-40" />{" "}
+          {L4(lang, { ko: "열린 파일 없음", en: "No files open" })}
         </div>
       );
     }
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
         <PaneTabBar
-          pane={pane} isFocused={true}
+          pane={pane}
+          isFocused={true}
           onSelectFile={(fid) => handlePaneSelect(pane.id, fid)}
           onCloseFile={(fid) => handlePaneClose(pane.id, fid)}
-          onContextMenu={(e, fid) => setContextMenu({ x: e.clientX, y: e.clientY, paneId: pane.id, fileId: fid })}
+          onContextMenu={(e, fid) =>
+            setContextMenu({
+              x: e.clientX,
+              y: e.clientY,
+              paneId: pane.id,
+              fileId: fid,
+            })
+          }
           onDoubleClickTab={() => {}}
           onDragStart={(e, fid) => handleDragStart(pane.id, e, fid)}
           onDrop={(e) => handleDrop(pane.id, e)}
         />
         <div className="flex-1 overflow-hidden">
-          {renderEditor ? renderEditor(pane, true) : (
-            <div className="h-full flex items-center justify-center text-text-tertiary text-xs">Editor placeholder</div>
+          {renderEditor ? (
+            renderEditor(pane, true)
+          ) : (
+            <div className="h-full flex items-center justify-center text-text-tertiary text-xs">
+              Editor placeholder
+            </div>
           )}
         </div>
       </div>
@@ -496,7 +650,9 @@ export function EditorGroup({
         </span>
         {state.maximizedPaneId && (
           <button
-            onClick={() => setState((prev) => ({ ...prev, maximizedPaneId: null }))}
+            onClick={() =>
+              setState((prev) => ({ ...prev, maximizedPaneId: null }))
+            }
             className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-amber-400 bg-white/5 rounded transition-colors ml-auto"
           >
             <Minimize2 size={10} /> Restore
@@ -505,9 +661,15 @@ export function EditorGroup({
       </div>
 
       {/* Pane layout */}
-      <div className={`flex-1 ${isQuad ? "grid grid-cols-2 grid-rows-2" : isVertical ? "flex flex-col" : "flex flex-row"} overflow-hidden`}>
+      <div
+        className={`flex-1 ${isQuad ? "grid grid-cols-2 grid-rows-2" : isVertical ? "flex flex-col" : "flex flex-row"} overflow-hidden`}
+      >
         {visiblePanes.map((pane, index) => (
-          <div key={pane.id} className="flex flex-col" style={{ flex: `${pane.size} 0 0%`, minWidth: 0, minHeight: 0 }}>
+          <div
+            key={pane.id}
+            className="flex flex-col"
+            style={{ flex: `${pane.size} 0 0%`, minWidth: 0, minHeight: 0 }}
+          >
             <div className="flex flex-col flex-1 overflow-hidden border border-white/5">
               <div className="flex items-center">
                 <div className="flex-1 overflow-hidden">
@@ -516,7 +678,14 @@ export function EditorGroup({
                     isFocused={state.focusedPaneId === pane.id}
                     onSelectFile={(fid) => handlePaneSelect(pane.id, fid)}
                     onCloseFile={(fid) => handlePaneClose(pane.id, fid)}
-                    onContextMenu={(e, fid) => setContextMenu({ x: e.clientX, y: e.clientY, paneId: pane.id, fileId: fid })}
+                    onContextMenu={(e, fid) =>
+                      setContextMenu({
+                        x: e.clientX,
+                        y: e.clientY,
+                        paneId: pane.id,
+                        fileId: fid,
+                      })
+                    }
                     onDoubleClickTab={() => handleToggleMaximize(pane.id)}
                     onDragStart={(e, fid) => handleDragStart(pane.id, e, fid)}
                     onDrop={(e) => handleDrop(pane.id, e)}
@@ -525,22 +694,37 @@ export function EditorGroup({
                 <button
                   onClick={() => handleToggleMaximize(pane.id)}
                   className="px-1.5 py-1 text-text-tertiary hover:text-text-primary transition-colors"
-                  title={state.maximizedPaneId === pane.id ? "Restore" : "Maximize"}
+                  title={
+                    state.maximizedPaneId === pane.id ? "Restore" : "Maximize"
+                  }
                 >
-                  {state.maximizedPaneId === pane.id ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+                  {state.maximizedPaneId === pane.id ? (
+                    <Minimize2 size={10} />
+                  ) : (
+                    <Maximize2 size={10} />
+                  )}
                 </button>
               </div>
               <div
                 className="flex-1 overflow-hidden"
-                onClick={() => setState((prev) => ({ ...prev, focusedPaneId: pane.id }))}
+                onClick={() =>
+                  setState((prev) => ({ ...prev, focusedPaneId: pane.id }))
+                }
               >
-                {renderEditor ? renderEditor(pane, state.focusedPaneId === pane.id) : (
-                  <div className="h-full flex items-center justify-center text-text-tertiary text-xs">Editor</div>
+                {renderEditor ? (
+                  renderEditor(pane, state.focusedPaneId === pane.id)
+                ) : (
+                  <div className="h-full flex items-center justify-center text-text-tertiary text-xs">
+                    Editor
+                  </div>
                 )}
               </div>
             </div>
             {index < visiblePanes.length - 1 && !isQuad && (
-              <ResizeHandle direction={isVertical ? "vertical" : "horizontal"} onResize={(d) => handleResize(index, d)} />
+              <ResizeHandle
+                direction={isVertical ? "vertical" : "horizontal"}
+                onResize={(d) => handleResize(index, d)}
+              />
             )}
           </div>
         ))}

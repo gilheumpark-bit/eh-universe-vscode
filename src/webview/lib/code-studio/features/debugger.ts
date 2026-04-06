@@ -42,7 +42,9 @@ export function startConsoleCapture(): void {
     const { type, level, message, source } = event.data;
     if (type !== "console") return;
 
-    const validLevel = (["log", "warn", "error"] as const).includes(level) ? level : "log";
+    const validLevel = (["log", "warn", "error"] as const).includes(level)
+      ? level
+      : "log";
 
     const entry: ConsoleEntry = {
       level: validLevel as ConsoleEntry["level"],
@@ -106,10 +108,14 @@ let nextBpId = 1;
  */
 export function addBreakpoint(file: string, line: number): Breakpoint {
   if (!file || line < 1) {
-    throw new Error("Invalid breakpoint: file and positive line number required");
+    throw new Error(
+      "Invalid breakpoint: file and positive line number required",
+    );
   }
 
-  const existing = breakpoints.find((bp) => bp.file === file && bp.line === line);
+  const existing = breakpoints.find(
+    (bp) => bp.file === file && bp.line === line,
+  );
   if (existing) return existing;
 
   const bp: Breakpoint = {
@@ -126,7 +132,9 @@ export function addBreakpoint(file: string, line: number): Breakpoint {
  * Remove a breakpoint at a specific file and line.
  */
 export function removeBreakpoint(file: string, line: number): void {
-  breakpoints = breakpoints.filter((bp) => !(bp.file === file && bp.line === line));
+  breakpoints = breakpoints.filter(
+    (bp) => !(bp.file === file && bp.line === line),
+  );
 }
 
 /**
@@ -171,7 +179,12 @@ export function clearBreakpoints(): void {
  * and a grey dot for disabled ones.
  */
 export function getBreakpointDecorations(file: string): Array<{
-  range: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number };
+  range: {
+    startLineNumber: number;
+    startColumn: number;
+    endLineNumber: number;
+    endColumn: number;
+  };
   options: {
     isWholeLine: boolean;
     glyphMarginClassName: string;

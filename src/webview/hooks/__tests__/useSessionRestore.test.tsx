@@ -5,9 +5,9 @@
  * Uses fake-indexeddb to simulate IndexedDB in jsdom.
  */
 
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { act } from 'react';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { act } from "react";
 
 // ============================================================
 // PART 1 — IndexedDB Mock
@@ -62,7 +62,7 @@ const mockOpen = {
   onerror: null as any,
 };
 
-Object.defineProperty(window, 'indexedDB', {
+Object.defineProperty(window, "indexedDB", {
   value: {
     open: jest.fn(() => {
       setTimeout(() => mockOpen.onsuccess?.(), 0);
@@ -73,7 +73,10 @@ Object.defineProperty(window, 'indexedDB', {
 });
 
 // Must import after mock setup
-import { useSessionRestore, type SessionSnapshot } from '@/hooks/useSessionRestore';
+import {
+  useSessionRestore,
+  type SessionSnapshot,
+} from "@/hooks/useSessionRestore";
 
 // ============================================================
 // PART 2 — Test Harness
@@ -89,7 +92,7 @@ interface HarnessProps {
 }
 
 function createHarness(props: HarnessProps) {
-  const container = document.createElement('div');
+  const container = document.createElement("div");
   document.body.appendChild(container);
 
   function TestComponent() {
@@ -105,7 +108,9 @@ function createHarness(props: HarnessProps) {
 
   return {
     cleanup: () => {
-      act(() => { root.unmount(); });
+      act(() => {
+        root.unmount();
+      });
       document.body.removeChild(container);
     },
   };
@@ -115,7 +120,7 @@ function createHarness(props: HarnessProps) {
 // PART 3 — Tests
 // ============================================================
 
-describe('useSessionRestore', () => {
+describe("useSessionRestore", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     mockStore.clear();
@@ -126,7 +131,7 @@ describe('useSessionRestore', () => {
     jest.useRealTimers();
   });
 
-  it('mounts without error with minimal props', () => {
+  it("mounts without error with minimal props", () => {
     const { cleanup } = createHarness({
       projectId: null,
       openFiles: [],
@@ -137,37 +142,39 @@ describe('useSessionRestore', () => {
     cleanup();
   });
 
-  it('schedules a debounced save on mount', () => {
+  it("schedules a debounced save on mount", () => {
     const { cleanup } = createHarness({
-      projectId: 'proj-1',
-      openFiles: ['file1.ts'],
-      activeFile: 'file1.ts',
-      activePanel: 'explorer',
+      projectId: "proj-1",
+      openFiles: ["file1.ts"],
+      activeFile: "file1.ts",
+      activePanel: "explorer",
       sidebarWidth: 300,
     });
 
     // The hook debounces saves by 2000ms
-    act(() => { jest.advanceTimersByTime(2000); });
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
 
     // IndexedDB open should have been called
     expect(window.indexedDB.open).toHaveBeenCalled();
     cleanup();
   });
 
-  it('calls onRestore when a previous session exists in IndexedDB', async () => {
+  it("calls onRestore when a previous session exists in IndexedDB", async () => {
     const snapshot: SessionSnapshot = {
-      savedAt: '2024-01-01T00:00:00Z',
-      projectId: 'old-project',
-      openFiles: ['old.ts'],
-      activeFile: 'old.ts',
-      activePanel: 'terminal',
+      savedAt: "2024-01-01T00:00:00Z",
+      projectId: "old-project",
+      openFiles: ["old.ts"],
+      activeFile: "old.ts",
+      activePanel: "terminal",
       sidebarWidth: 280,
     };
-    mockStore.set('code-studio-last', snapshot);
+    mockStore.set("code-studio-last", snapshot);
 
     const onRestore = jest.fn();
     const { cleanup } = createHarness({
-      projectId: 'new-project',
+      projectId: "new-project",
       openFiles: [],
       activeFile: null,
       activePanel: null,
@@ -176,30 +183,39 @@ describe('useSessionRestore', () => {
     });
 
     // Let IndexedDB mock resolve
-    await act(async () => { jest.advanceTimersByTime(100); });
+    await act(async () => {
+      jest.advanceTimersByTime(100);
+    });
 
     // onRestore may or may not fire depending on mock timing;
     // the key assertion is that the hook doesn't crash
     cleanup();
   });
 
-  it('does not crash when IndexedDB is unavailable', () => {
+  it("does not crash when IndexedDB is unavailable", () => {
     const origOpen = (window.indexedDB as any).open;
     (window.indexedDB as any).open = jest.fn(() => {
-      const req = { onerror: null as any, onsuccess: null as any, result: null, onupgradeneeded: null };
-      setTimeout(() => req.onerror?.(new Error('IndexedDB blocked')), 0);
+      const req = {
+        onerror: null as any,
+        onsuccess: null as any,
+        result: null,
+        onupgradeneeded: null,
+      };
+      setTimeout(() => req.onerror?.(new Error("IndexedDB blocked")), 0);
       return req;
     });
 
     const { cleanup } = createHarness({
-      projectId: 'test',
+      projectId: "test",
       openFiles: [],
       activeFile: null,
       activePanel: null,
       sidebarWidth: 250,
     });
 
-    act(() => { jest.advanceTimersByTime(3000); });
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
 
     // Should not throw
     cleanup();

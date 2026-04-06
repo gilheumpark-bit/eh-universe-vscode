@@ -3,8 +3,8 @@
 // Unified module consuming streamChat from @/lib/ai-providers
 // ============================================================
 
-import { streamChat, getActiveProvider, PROVIDERS } from '@/lib/ai-providers';
-import { logger } from '@/lib/logger';
+import { streamChat, getActiveProvider, PROVIDERS } from "@/lib/ai-providers";
+import { logger } from "@/lib/logger";
 
 // ============================================================
 // PART 1 — Types & Helpers
@@ -18,7 +18,7 @@ export interface ImportSuggestion {
 export interface LintResult {
   line: number;
   message: string;
-  severity: 'error' | 'warning' | 'info';
+  severity: "error" | "warning" | "info";
   fix?: string;
 }
 
@@ -39,19 +39,19 @@ async function callAI(
   signal?: AbortSignal,
   temperature = 0.3,
 ): Promise<string> {
-  let result = '';
+  let result = "";
   try {
     result = await streamChat({
       systemInstruction,
-      messages: [{ role: 'user', content: userMessage }],
+      messages: [{ role: "user", content: userMessage }],
       temperature,
       onChunk: () => {},
       signal,
     });
   } catch (err) {
-    if (err instanceof DOMException && err.name === 'AbortError') throw err;
-    logger.warn('ai-features', 'callAI failed:', err);
-    return '';
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    logger.warn("ai-features", "callAI failed:", err);
+    return "";
   }
   return result.trim();
 }
@@ -101,7 +101,8 @@ function validateSingleItem(
   item: unknown,
   requiredFields: Record<string, string>,
 ): boolean {
-  if (item === null || item === undefined || typeof item !== 'object') return false;
+  if (item === null || item === undefined || typeof item !== "object")
+    return false;
   const record = item as Record<string, unknown>;
   for (const [field, expectedType] of Object.entries(requiredFields)) {
     if (!(field in record)) return false;
@@ -149,7 +150,10 @@ async function safeAICall<T>(opts: SafeAICallOptions<T>): Promise<T> {
 
       if (!raw) {
         if (attempt < maxRetries) {
-          logger.warn('ai-features', `empty response, retry ${attempt + 1}/${maxRetries}`);
+          logger.warn(
+            "ai-features",
+            `empty response, retry ${attempt + 1}/${maxRetries}`,
+          );
           await delay(backoffMs[attempt]);
           continue;
         }
@@ -161,7 +165,11 @@ async function safeAICall<T>(opts: SafeAICallOptions<T>): Promise<T> {
       try {
         parsed = JSON.parse(jsonStr) as T;
       } catch {
-        logger.warn('ai-features', `JSON parse failed on attempt ${attempt + 1}`, jsonStr.slice(0, 200));
+        logger.warn(
+          "ai-features",
+          `JSON parse failed on attempt ${attempt + 1}`,
+          jsonStr.slice(0, 200),
+        );
         if (attempt < maxRetries) {
           await delay(backoffMs[attempt]);
           continue;
@@ -172,7 +180,10 @@ async function safeAICall<T>(opts: SafeAICallOptions<T>): Promise<T> {
       // Schema validation
       if (opts.schema) {
         if (!validateSchema(parsed, opts.schema)) {
-          logger.warn('ai-features', `schema validation failed on attempt ${attempt + 1}`);
+          logger.warn(
+            "ai-features",
+            `schema validation failed on attempt ${attempt + 1}`,
+          );
           if (attempt < maxRetries) {
             await delay(backoffMs[attempt]);
             continue;
@@ -189,8 +200,12 @@ async function safeAICall<T>(opts: SafeAICallOptions<T>): Promise<T> {
       return parsed;
     } catch (err) {
       // AbortError always propagates immediately
-      if (err instanceof DOMException && err.name === 'AbortError') throw err;
-      logger.warn('ai-features', `safeAICall error on attempt ${attempt + 1}:`, err);
+      if (err instanceof DOMException && err.name === "AbortError") throw err;
+      logger.warn(
+        "ai-features",
+        `safeAICall error on attempt ${attempt + 1}:`,
+        err,
+      );
       if (attempt < maxRetries) {
         await delay(backoffMs[attempt]);
         continue;
@@ -250,7 +265,7 @@ Output: []`,
     userMessage: code,
     fallback: [],
     signal,
-    schema: { module: 'string', importStatement: 'string' },
+    schema: { module: "string", importStatement: "string" },
   });
 }
 
@@ -263,14 +278,15 @@ export async function generateDocstring(
   language: string,
   signal?: AbortSignal,
 ): Promise<string> {
-  const formatHint = language === 'python'
-    ? 'Google-style Python docstring'
-    : language === 'typescript' || language === 'javascript'
-      ? 'JSDoc comment'
-      : 'standard documentation comment';
+  const formatHint =
+    language === "python"
+      ? "Google-style Python docstring"
+      : language === "typescript" || language === "javascript"
+        ? "JSDoc comment"
+        : "standard documentation comment";
   const system = `You are a documentation generator. Given a function in ${language}, generate a ${formatHint}. Include parameter descriptions, return type, and a brief summary. Return ONLY the documentation comment, nothing else.`;
   const result = await callAI(system, functionCode, signal);
-  return result || '/** No documentation generated. */';
+  return result || "/** No documentation generated. */";
 }
 
 /**
@@ -301,12 +317,12 @@ Output: []`,
     userMessage: code,
     fallback: [],
     signal,
-    schema: { line: 'number', message: 'string', severity: 'string' },
+    schema: { line: "number", message: "string", severity: "string" },
     postFilter: (item) => {
       const r = item as Record<string, unknown>;
-      if (typeof r.line !== 'number' || r.line < 1) return false;
+      if (typeof r.line !== "number" || r.line < 1) return false;
       if (totalLines !== undefined && r.line > totalLines) return false;
-      const validSeverities = ['error', 'warning', 'info'];
+      const validSeverities = ["error", "warning", "info"];
       if (!validSeverities.includes(r.severity as string)) return false;
       return true;
     },
@@ -335,7 +351,7 @@ export async function suggestRename(
     fallback: [],
     signal,
   });
-  return raw.filter((n) => typeof n === 'string' && n.length > 0);
+  return raw.filter((n) => typeof n === "string" && n.length > 0);
 }
 
 /**
@@ -353,7 +369,7 @@ export async function semanticSearchReplace(
     userMessage: `Code:\n\`\`\`${language}\n${code}\n\`\`\`\n\nRequested change: ${description}`,
     fallback: [],
     signal,
-    schema: { find: 'string', replace: 'string' },
+    schema: { find: "string", replace: "string" },
   });
 }
 
@@ -370,7 +386,7 @@ export async function predictNextEdit(
   const system = `You are a code edit predictor for ${language}. Given the current file and a description of recent changes, predict the most likely next edit the developer will make. Be specific — output only the predicted code change as a diff-like snippet (lines to add/remove). Keep it concise.`;
   const userMsg = `Current code:\n\`\`\`${language}\n${code}\n\`\`\`\n\nRecent changes:\n${recentChanges}`;
   const result = await callAI(system, userMsg, signal, 0.5);
-  return result || '';
+  return result || "";
 }
 
 /**
@@ -392,7 +408,7 @@ Output: [{"title":"Change variable type to string","edit":{"range":{"startLine":
     userMessage: `Error: ${errorMessage}\n\nCode:\n\`\`\`${language}\n${code}\n\`\`\``,
     fallback: [],
     signal,
-    schema: { title: 'string', edit: 'string' },
+    schema: { title: "string", edit: "string" },
   });
 }
 
@@ -419,10 +435,10 @@ Example:
 Input: "function save(data) { fetch('/api', {method:'POST', body: JSON.stringify(data)}); fetch('/api', {method:'POST', body: JSON.stringify(data)}); }"
 Output: {"suggestion":"Extract duplicate fetch call into a helper function","reasoning":"DRY principle — the identical fetch call is repeated, risking inconsistent changes"}`,
     userMessage: `Context: ${context}\n\nCode:\n\`\`\`${language}\n${code}\n\`\`\``,
-    fallback: { suggestion: 'No suggestion available.', reasoning: '' },
+    fallback: { suggestion: "No suggestion available.", reasoning: "" },
     signal,
     temperature: 0.4,
-    schema: { suggestion: 'string', reasoning: 'string' },
+    schema: { suggestion: "string", reasoning: "string" },
   });
 }
 
@@ -440,18 +456,18 @@ export async function generateDiffFromDescription(
 ): Promise<string> {
   const system = `You are a diff generator for ${language}. Given source code and a change description, output a unified diff (--- / +++ / @@ format) that applies the described change. Output ONLY the diff, no explanation.`;
   const userMsg = `Description: ${description}\n\nSource:\n\`\`\`${language}\n${code}\n\`\`\``;
-  let full = '';
+  let full = "";
   try {
     full = await streamChat({
       systemInstruction: system,
-      messages: [{ role: 'user', content: userMsg }],
+      messages: [{ role: "user", content: userMsg }],
       temperature: 0.2,
       onChunk,
       signal,
     });
   } catch (err) {
-    if (err instanceof DOMException && err.name === 'AbortError') throw err;
-    logger.warn('ai-features', 'generateDiffFromDescription failed:', err);
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    logger.warn("ai-features", "generateDiffFromDescription failed:", err);
   }
   return full.trim();
 }
@@ -468,7 +484,7 @@ export async function executeToolCall(
 ): Promise<string> {
   const argsStr = Object.entries(args)
     .map(([k, v]) => `${k}=${v}`)
-    .join(', ');
+    .join(", ");
   const system = `You are a code tool executor. The user invoked tool "${tool}" with arguments: ${argsStr}. Given the current code context, produce the tool's output. If the tool is "explain", explain the code. If "refactor", refactor it. If "test", generate a test. For unknown tools, describe what the tool would do. Output the result directly.`;
   const result = await callAI(system, code, signal, 0.3);
   return result || `Tool "${tool}" produced no output.`;
@@ -478,11 +494,14 @@ export async function executeToolCall(
  * Cost tier definitions per task type.
  * Maps task type to desired costTier priority.
  */
-const TASK_COST_MAP: Record<string, ('free' | 'cheap' | 'moderate' | 'expensive')[]> = {
-  completion: ['free', 'cheap', 'moderate', 'expensive'],
-  explanation: ['cheap', 'moderate', 'free', 'expensive'],
-  review: ['expensive', 'moderate', 'cheap', 'free'],
-  generation: ['expensive', 'moderate', 'cheap', 'free'],
+const TASK_COST_MAP: Record<
+  string,
+  ("free" | "cheap" | "moderate" | "expensive")[]
+> = {
+  completion: ["free", "cheap", "moderate", "expensive"],
+  explanation: ["cheap", "moderate", "free", "expensive"],
+  review: ["expensive", "moderate", "cheap", "free"],
+  generation: ["expensive", "moderate", "cheap", "free"],
 };
 
 /**
@@ -490,20 +509,25 @@ const TASK_COST_MAP: Record<string, ('free' | 'cheap' | 'moderate' | 'expensive'
  * Returns 'free' | 'cheap' | 'moderate' | 'expensive'.
  */
 export function estimateTaskCost(
-  task: 'completion' | 'review' | 'generation' | 'explanation',
-): 'free' | 'cheap' | 'moderate' | 'expensive' {
+  task: "completion" | "review" | "generation" | "explanation",
+): "free" | "cheap" | "moderate" | "expensive" {
   const provider = getActiveProvider();
   const def = PROVIDERS[provider];
-  if (!def) return 'moderate';
+  if (!def) return "moderate";
 
   const providerTier = def.capabilities.costTier;
 
   // If the task prefers cheap models and the provider has a fast/small model,
   // cost is effectively at most the provider's base tier
-  if (task === 'completion' || task === 'explanation') {
-    const hasFast = def.models.some((m) => /mini|flash|instant|nano|small|haiku/i.test(m));
-    if (hasFast && (providerTier === 'expensive' || providerTier === 'moderate')) {
-      return 'cheap';
+  if (task === "completion" || task === "explanation") {
+    const hasFast = def.models.some((m) =>
+      /mini|flash|instant|nano|small|haiku/i.test(m),
+    );
+    if (
+      hasFast &&
+      (providerTier === "expensive" || providerTier === "moderate")
+    ) {
+      return "cheap";
     }
   }
 
@@ -515,27 +539,29 @@ export function estimateTaskCost(
  * Selects the optimal model string based on task type, active provider, and cost awareness.
  */
 export function selectModel(
-  task: 'completion' | 'review' | 'generation' | 'explanation',
+  task: "completion" | "review" | "generation" | "explanation",
 ): string {
   const provider = getActiveProvider();
   const def = PROVIDERS[provider];
-  if (!def) return 'gpt-5.4';
+  if (!def) return "gpt-5.4";
 
   const models = def.models;
 
   // Cost-aware routing: completion -> cheapest, explanation -> mid-tier, review/generation -> best
-  if (task === 'completion') {
+  if (task === "completion") {
     // Prefer the smallest/cheapest model available
     const cheapPatterns = /mini|flash|instant|nano|small|haiku/i;
     const cheap = models.find((m) => cheapPatterns.test(m));
     return cheap ?? models[models.length - 1] ?? def.defaultModel;
   }
 
-  if (task === 'explanation') {
+  if (task === "explanation") {
     // Mid-tier: try to find something between default and cheapest
     const cheapPatterns = /mini|flash|instant|nano|small|haiku/i;
     const bestPatterns = /pro|large|gpt-5\.\d(?!-mini)|sonnet|opus/i;
-    const mid = models.find((m) => !cheapPatterns.test(m) && !bestPatterns.test(m));
+    const mid = models.find(
+      (m) => !cheapPatterns.test(m) && !bestPatterns.test(m),
+    );
     if (mid) return mid;
     // Fall through: pick cheapest if no mid-tier, but prefer faster than default
     const cheap = models.find((m) => cheapPatterns.test(m));
@@ -574,8 +600,8 @@ Example 3:
 Input: "-  const data = await fetch(url)\\n+  const data = await fetch(url, { cache: 'force-cache' })"
 Output: "perf(api): enable force-cache for static data fetches"`;
   const result = await callAI(system, diff, signal);
-  if (!result) return 'chore: update code';
-  return result.split('\n')[0].trim();
+  if (!result) return "chore: update code";
+  return result.split("\n")[0].trim();
 }
 
 /**
@@ -591,9 +617,9 @@ export async function generatePRDescription(
 - A "Changes" section with bullet points
 - A "Testing" section noting what should be tested
 Keep it professional and concise.`;
-  const userMsg = `Commits:\n${commits.map((c, i) => `${i + 1}. ${c}`).join('\n')}`;
+  const userMsg = `Commits:\n${commits.map((c, i) => `${i + 1}. ${c}`).join("\n")}`;
   const result = await callAI(system, userMsg, signal, 0.4);
-  return result || '## Summary\n\nNo description generated.';
+  return result || "## Summary\n\nNo description generated.";
 }
 
 /**
@@ -611,5 +637,5 @@ export async function explainCode(
 3. Key concepts or patterns used
 Use plain language. Assume the reader knows basic programming but may not know the specific library/framework.`;
   const result = await callAI(system, code, signal, 0.3);
-  return result || 'No explanation available.';
+  return result || "No explanation available.";
 }

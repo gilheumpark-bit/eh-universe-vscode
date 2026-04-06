@@ -202,12 +202,12 @@ export const REJECTED_PATTERNS = `
  * Inject alongside DESIGN_SYSTEM_SPEC for UI-generating agents.
  */
 export const DESIGN_LINTER_SPEC = [
-  '## Design Linter v8.0 (Hybrid) — Self-Verification Rules (mandatory)\n',
+  "## Design Linter v8.0 (Hybrid) — Self-Verification Rules (mandatory)\n",
   ANCHOR_CHECK,
   DESIGN_LINTER_10STEP,
   OUTPUT_SCHEMA,
   FEW_SHOT_EXAMPLES,
   REJECTED_PATTERNS,
-].join('\n\n');
+].join("\n\n");
 
 // IDENTITY_SEAL: PART-5 | role=design-linter-assembly | inputs=all-parts | outputs=DESIGN_LINTER_SPEC

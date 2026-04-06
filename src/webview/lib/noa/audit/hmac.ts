@@ -26,7 +26,7 @@ async function getCachedKey(secret: string): Promise<CryptoKey> {
     encoder.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false, // extractable = false (비추출)
-    ["sign"]
+    ["sign"],
   );
   // Limit cache size to prevent unbounded growth
   if (_keyCache.size >= 32) {
@@ -72,7 +72,7 @@ export async function signHmac(data: string, secret: string): Promise<string> {
 export async function verifyHmac(
   data: string,
   signature: string,
-  secret: string
+  secret: string,
 ): Promise<boolean> {
   const expected = await signHmac(data, secret);
   // Timing-safe comparison

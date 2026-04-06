@@ -38,7 +38,15 @@ interface GitGraphProps {
 // PART 2 — Graph Layout
 // ============================================================
 
-const BRANCH_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4", "#f97316"];
+const BRANCH_COLORS = [
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#8b5cf6",
+  "#ec4899",
+  "#06b6d4",
+  "#f97316",
+];
 const LANE_WIDTH = 24;
 const ROW_HEIGHT = 36;
 const NODE_RADIUS = 5;
@@ -49,9 +57,17 @@ interface LayoutNode {
   color: string;
 }
 
-function computeLayout(commits: GitCommitNode[], branches: GitBranchInfo[]): LayoutNode[] {
+function computeLayout(
+  commits: GitCommitNode[],
+  branches: GitBranchInfo[],
+): LayoutNode[] {
   const branchColorMap = new Map<string, string>();
-  branches.forEach((b, i) => branchColorMap.set(b.name, b.color || BRANCH_COLORS[i % BRANCH_COLORS.length]));
+  branches.forEach((b, i) =>
+    branchColorMap.set(
+      b.name,
+      b.color || BRANCH_COLORS[i % BRANCH_COLORS.length],
+    ),
+  );
 
   const branchLaneMap = new Map<string, number>();
   let nextLane = 0;
@@ -65,7 +81,9 @@ function computeLayout(commits: GitCommitNode[], branches: GitBranchInfo[]): Lay
     return {
       commit: c,
       lane,
-      color: branchColorMap.get(c.branch) ?? BRANCH_COLORS[lane % BRANCH_COLORS.length],
+      color:
+        branchColorMap.get(c.branch) ??
+        BRANCH_COLORS[lane % BRANCH_COLORS.length],
     };
   });
 }
@@ -107,9 +125,10 @@ function GraphSVG({
           return (
             <path
               key={`${node.commit.hash}-${parentHash}`}
-              d={node.lane === parent.lane
-                ? `M${x},${y} L${px},${py}`
-                : `M${x},${y} C${x},${(y + py) / 2} ${px},${(y + py) / 2} ${px},${py}`
+              d={
+                node.lane === parent.lane
+                  ? `M${x},${y} L${px},${py}`
+                  : `M${x},${y} C${x},${(y + py) / 2} ${px},${(y + py) / 2} ${px},${py}`
               }
               fill="none"
               stroke={node.color}
@@ -126,7 +145,11 @@ function GraphSVG({
         const y = i * ROW_HEIGHT + ROW_HEIGHT / 2 + 10;
         const isSelected = node.commit.hash === selectedHash;
         return (
-          <g key={node.commit.hash} onClick={() => onSelect(node.commit.hash)} className="cursor-pointer">
+          <g
+            key={node.commit.hash}
+            onClick={() => onSelect(node.commit.hash)}
+            className="cursor-pointer"
+          >
             <circle
               cx={x}
               cy={y}
@@ -164,7 +187,9 @@ function CommitDetail({
     <div className="border-t border-white/5 px-4 py-3">
       <div className="flex items-center gap-2 text-sm text-white">
         {commit.isMerge ? <GitMerge size={14} /> : <GitCommit size={14} />}
-        <span className="font-mono text-xs text-gray-400">{commit.shortHash}</span>
+        <span className="font-mono text-xs text-gray-400">
+          {commit.shortHash}
+        </span>
         {onCheckout && (
           <button
             onClick={() => onCheckout(commit.hash)}
@@ -196,7 +221,10 @@ export default function GitGraph({
   onBranchClick,
 }: GitGraphProps) {
   const [selectedHash, setSelectedHash] = useState<string | null>(null);
-  const layoutNodes = useMemo(() => computeLayout(commits, branches), [commits, branches]);
+  const layoutNodes = useMemo(
+    () => computeLayout(commits, branches),
+    [commits, branches],
+  );
   const selectedCommit = commits.find((c) => c.hash === selectedHash) ?? null;
 
   return (
@@ -214,7 +242,10 @@ export default function GitGraph({
                 : "text-gray-500 hover:text-gray-300"
             }`}
           >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: b.color || "#6b7280" }} />
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ backgroundColor: b.color || "#6b7280" }}
+            />
             {b.name}
           </button>
         ))}
@@ -223,20 +254,32 @@ export default function GitGraph({
       {/* Graph + commit list */}
       <div className="flex-1 overflow-y-auto">
         <div className="flex">
-          <GraphSVG layoutNodes={layoutNodes} selectedHash={selectedHash} onSelect={setSelectedHash} />
+          <GraphSVG
+            layoutNodes={layoutNodes}
+            selectedHash={selectedHash}
+            onSelect={setSelectedHash}
+          />
           <div className="flex-1 min-w-0">
             {layoutNodes.map((node, i) => (
               <div
                 key={node.commit.hash}
                 onClick={() => setSelectedHash(node.commit.hash)}
                 className={`flex items-center gap-3 px-3 cursor-pointer transition-colors ${
-                  node.commit.hash === selectedHash ? "bg-white/10" : "hover:bg-white/5"
+                  node.commit.hash === selectedHash
+                    ? "bg-white/10"
+                    : "hover:bg-white/5"
                 }`}
                 style={{ height: ROW_HEIGHT }}
               >
-                <span className="font-mono text-[10px] text-gray-600 shrink-0">{node.commit.shortHash}</span>
-                <span className="text-xs text-gray-300 truncate flex-1">{node.commit.message}</span>
-                <span className="text-[10px] text-gray-600 shrink-0">{node.commit.author}</span>
+                <span className="font-mono text-[10px] text-gray-600 shrink-0">
+                  {node.commit.shortHash}
+                </span>
+                <span className="text-xs text-gray-300 truncate flex-1">
+                  {node.commit.message}
+                </span>
+                <span className="text-[10px] text-gray-600 shrink-0">
+                  {node.commit.author}
+                </span>
               </div>
             ))}
           </div>

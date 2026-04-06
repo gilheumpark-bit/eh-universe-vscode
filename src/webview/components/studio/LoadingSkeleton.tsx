@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 // ============================================================
 // LoadingSkeleton — 재사용 로딩 스켈레톤
@@ -17,9 +17,9 @@ interface LoadingSkeletonProps {
 
 export default function LoadingSkeleton({
   height = 128,
-  rounded = 'rounded-xl',
+  rounded = "rounded-xl",
   lines = 0,
-  className = '',
+  className = "",
 }: LoadingSkeletonProps) {
   if (lines > 0) {
     return (

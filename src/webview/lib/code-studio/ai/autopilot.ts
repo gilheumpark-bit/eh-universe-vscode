@@ -2,8 +2,8 @@
 // PART 1 — Types & Constants
 // ============================================================
 
-import { streamChat, getApiKey, getActiveProvider } from '@/lib/ai-providers';
-import { DESIGN_SYSTEM_COMPACT } from '@/lib/code-studio/core/design-system-spec';
+import { streamChat, getApiKey, getActiveProvider } from "@/lib/ai-providers";
+import { DESIGN_SYSTEM_COMPACT } from "@/lib/code-studio/core/design-system-spec";
 
 export interface StepValidation {
   passed: boolean;
@@ -13,7 +13,7 @@ export interface StepValidation {
 export interface AutopilotStep {
   id: string;
   description: string;
-  status: 'pending' | 'running' | 'done' | 'error';
+  status: "pending" | "running" | "done" | "error";
   output?: string;
   validation?: StepValidation;
   retried?: boolean;
@@ -29,7 +29,7 @@ export interface AutopilotMetrics {
 export interface AutopilotPlan {
   task: string;
   steps: AutopilotStep[];
-  status: 'planning' | 'executing' | 'done' | 'error';
+  status: "planning" | "executing" | "done" | "error";
   metrics?: AutopilotMetrics;
 }
 
@@ -47,7 +47,9 @@ Use TypeScript. Include necessary imports.`;
 
 /** Detect if a step description involves UI/component generation. */
 function isUIStep(description: string): boolean {
-  return /component|button|modal|form|card|page|layout|panel|dialog|input|table|list|grid|sidebar|header|footer|nav|menu|tab|ui|디자인|컴포넌트|버튼|페이지|모달|폼/i.test(description);
+  return /component|button|modal|form|card|page|layout|panel|dialog|input|table|list|grid|sidebar|header|footer|nav|menu|tab|ui|디자인|컴포넌트|버튼|페이지|모달|폼/i.test(
+    description,
+  );
 }
 
 /** Build step prompt — injects design rules only for UI steps. */
@@ -74,10 +76,16 @@ function parseStepsFromResponse(raw: string): string[] {
   // JSON 배열 직접 파싱 시도
   try {
     const parsed = JSON.parse(trimmed);
-    if (Array.isArray(parsed) && parsed.length > 0 && parsed.every(s => typeof s === 'string')) {
+    if (
+      Array.isArray(parsed) &&
+      parsed.length > 0 &&
+      parsed.every((s) => typeof s === "string")
+    ) {
       return parsed.slice(0, 5);
     }
-  } catch { /* fallback below */ }
+  } catch {
+    /* fallback below */
+  }
 
   // JSON 블록이 마크다운 코드 펜스 안에 있을 경우
   const jsonMatch = trimmed.match(/\[[\s\S]*?\]/);
@@ -85,21 +93,25 @@ function parseStepsFromResponse(raw: string): string[] {
     try {
       const parsed = JSON.parse(jsonMatch[0]);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.filter((s): s is string => typeof s === 'string').slice(0, 5);
+        return parsed
+          .filter((s): s is string => typeof s === "string")
+          .slice(0, 5);
       }
-    } catch { /* fallback below */ }
+    } catch {
+      /* fallback below */
+    }
   }
 
   // 줄 단위 fallback — 숫자/불릿 접두어 제거
   const lines = trimmed
-    .split('\n')
-    .map(l => l.replace(/^[\s\-*\d.)\]]+/, '').trim())
-    .filter(l => l.length > 5);
+    .split("\n")
+    .map((l) => l.replace(/^[\s\-*\d.)\]]+/, "").trim())
+    .filter((l) => l.length > 5);
 
   if (lines.length >= 2) return lines.slice(0, 5);
 
   // 최소 1단계 보장
-  return ['Implement the requested task'];
+  return ["Implement the requested task"];
 }
 
 export async function createAutopilotPlan(
@@ -110,42 +122,46 @@ export async function createAutopilotPlan(
   const plan: AutopilotPlan = {
     task,
     steps: [],
-    status: 'planning',
+    status: "planning",
   };
 
-  let response = '';
+  let response = "";
 
   try {
     response = await streamChat({
       systemInstruction: PLAN_SYSTEM_PROMPT,
       messages: [
         {
-          role: 'user',
+          role: "user",
           content: `Task: ${task}\n\nProject context:\n${context}`,
         },
       ],
       temperature: 0.3,
       signal,
-      onChunk: () => { /* planning 단계는 스트림 노출 불필요 */ },
+      onChunk: () => {
+        /* planning 단계는 스트림 노출 불필요 */
+      },
     });
   } catch (err) {
-    plan.status = 'error';
-    plan.steps = [{
-      id: generateStepId(),
-      description: 'Planning failed',
-      status: 'error',
-      output: err instanceof Error ? err.message : String(err),
-    }];
+    plan.status = "error";
+    plan.steps = [
+      {
+        id: generateStepId(),
+        description: "Planning failed",
+        status: "error",
+        output: err instanceof Error ? err.message : String(err),
+      },
+    ];
     return plan;
   }
 
   const descriptions = parseStepsFromResponse(response);
-  plan.steps = descriptions.map(desc => ({
+  plan.steps = descriptions.map((desc) => ({
     id: generateStepId(),
     description: desc,
-    status: 'pending' as const,
+    status: "pending" as const,
   }));
-  plan.status = 'executing';
+  plan.status = "executing";
 
   return plan;
 }
@@ -169,7 +185,7 @@ function looksLikeCode(output: string): boolean {
  * 문자열 리터럴 내부는 무시하지 않으므로 완벽하지 않다.
  */
 function checkBalancedBrackets(code: string): StepValidation {
-  const pairs: Record<string, string> = { '{': '}', '(': ')', '[': ']' };
+  const pairs: Record<string, string> = { "{": "}", "(": ")", "[": "]" };
   const closers = new Set(Object.values(pairs));
   const stack: string[] = [];
 
@@ -185,7 +201,10 @@ function checkBalancedBrackets(code: string): StepValidation {
   }
 
   if (stack.length > 0) {
-    return { passed: false, reason: `Unclosed bracket — expected '${stack[stack.length - 1]}'` };
+    return {
+      passed: false,
+      reason: `Unclosed bracket — expected '${stack[stack.length - 1]}'`,
+    };
   }
   return { passed: true };
 }
@@ -198,7 +217,7 @@ function checkBalancedBrackets(code: string): StepValidation {
  */
 function validateStepOutput(output: string | undefined): StepValidation {
   if (output == null || output.trim().length < 10) {
-    return { passed: false, reason: 'Output too short or empty (< 10 chars)' };
+    return { passed: false, reason: "Output too short or empty (< 10 chars)" };
   }
 
   if (looksLikeCode(output)) {
@@ -217,15 +236,20 @@ function validateStepOutput(output: string | undefined): StepValidation {
 /**
  * 완료된 이전 스텝들의 출력을 하나의 컨텍스트 문자열로 합친다.
  */
-function buildPriorContext(steps: AutopilotStep[], currentIndex: number): string {
-  const completed = steps.slice(0, currentIndex).filter(s => s.status === 'done' && s.output);
-  if (completed.length === 0) return '';
+function buildPriorContext(
+  steps: AutopilotStep[],
+  currentIndex: number,
+): string {
+  const completed = steps
+    .slice(0, currentIndex)
+    .filter((s) => s.status === "done" && s.output);
+  if (completed.length === 0) return "";
 
-  const sections = completed.map((s, i) =>
-    `--- Step ${i + 1}: ${s.description} ---\n${s.output}`
+  const sections = completed.map(
+    (s, i) => `--- Step ${i + 1}: ${s.description} ---\n${s.output}`,
   );
 
-  return `\n\n## Prior Step Outputs\n${sections.join('\n\n')}`;
+  return `\n\n## Prior Step Outputs\n${sections.join("\n\n")}`;
 }
 
 // IDENTITY_SEAL: PART-4 | role=ContextAccumulation | inputs=steps,currentIndex | outputs=priorContextString
@@ -241,18 +265,16 @@ export async function executeAutopilotStep(
   onChunk?: (text: string) => void,
   priorContext?: string,
 ): Promise<string> {
-  const fullContext = priorContext
-    ? `${context}${priorContext}`
-    : context;
+  const fullContext = priorContext ? `${context}${priorContext}` : context;
 
-  let result = '';
+  let result = "";
 
   try {
     result = await streamChat({
       systemInstruction: buildStepSystemPrompt(step.description),
       messages: [
         {
-          role: 'user',
+          role: "user",
           content: `Step: ${step.description}\n\nProject context:\n${fullContext}`,
         },
       ],
@@ -263,7 +285,7 @@ export async function executeAutopilotStep(
       },
     });
   } catch (err) {
-    if (err instanceof DOMException && err.name === 'AbortError') throw err;
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
     throw new Error(
       `Step "${step.description}" failed: ${err instanceof Error ? err.message : String(err)}`,
     );
@@ -283,25 +305,23 @@ async function retryStep(
   onChunk?: (text: string) => void,
   priorContext?: string,
 ): Promise<string> {
-  const retryContext = priorContext
-    ? `${context}${priorContext}`
-    : context;
+  const retryContext = priorContext ? `${context}${priorContext}` : context;
 
   const retryPrompt = [
     `Step: ${step.description}`,
-    '',
+    "",
     `Previous attempt failed: ${errorReason}`,
-    'Please fix the issue and produce correct, complete output.',
-    '',
+    "Please fix the issue and produce correct, complete output.",
+    "",
     `Project context:\n${retryContext}`,
-  ].join('\n');
+  ].join("\n");
 
-  let result = '';
+  let result = "";
 
   try {
     result = await streamChat({
       systemInstruction: buildStepSystemPrompt(step.description),
-      messages: [{ role: 'user', content: retryPrompt }],
+      messages: [{ role: "user", content: retryPrompt }],
       temperature: 0.3,
       signal,
       onChunk: (text) => {
@@ -309,7 +329,7 @@ async function retryStep(
       },
     });
   } catch (err) {
-    if (err instanceof DOMException && err.name === 'AbortError') throw err;
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
     throw new Error(
       `Retry for "${step.description}" failed: ${err instanceof Error ? err.message : String(err)}`,
     );
@@ -351,7 +371,13 @@ async function executeAndValidateStep(
   const prior = buildPriorContext(plan.steps, stepIndex);
 
   // 1차 시도
-  const output = await executeAutopilotStep(step, context, signal, undefined, prior);
+  const output = await executeAutopilotStep(
+    step,
+    context,
+    signal,
+    undefined,
+    prior,
+  );
   step.output = output;
 
   const validation = validateStepOutput(output);
@@ -359,7 +385,7 @@ async function executeAndValidateStep(
 
   // 검증 통과
   if (validation.passed) {
-    step.status = 'done';
+    step.status = "done";
     return true;
   }
 
@@ -369,7 +395,12 @@ async function executeAndValidateStep(
 
   try {
     const retryOutput = await retryStep(
-      step, context, validation.reason ?? 'Validation failed', signal, undefined, prior,
+      step,
+      context,
+      validation.reason ?? "Validation failed",
+      signal,
+      undefined,
+      prior,
     );
     step.output = retryOutput;
 
@@ -377,16 +408,16 @@ async function executeAndValidateStep(
     step.validation = retryValidation;
 
     if (retryValidation.passed) {
-      step.status = 'done';
+      step.status = "done";
       return true;
     }
 
     // 재시도도 실패
-    step.status = 'error';
-    step.output = `Retry also failed: ${retryValidation.reason ?? 'Unknown'}`;
+    step.status = "error";
+    step.output = `Retry also failed: ${retryValidation.reason ?? "Unknown"}`;
     return false;
   } catch (err) {
-    step.status = 'error';
+    step.status = "error";
     step.output = err instanceof Error ? err.message : String(err);
     return false;
   }
@@ -405,42 +436,49 @@ export async function runAutopilot(
   plan.metrics = createEmptyMetrics();
   onProgress({ ...plan });
 
-  if (plan.status === 'error') return plan;
+  if (plan.status === "error") return plan;
 
   // Phase 2: Execute each step sequentially
   for (let i = 0; i < plan.steps.length; i++) {
     const step = plan.steps[i];
 
     if (signal?.aborted) {
-      step.status = 'error';
-      step.output = 'Aborted';
-      plan.status = 'error';
+      step.status = "error";
+      step.output = "Aborted";
+      plan.status = "error";
       onProgress({ ...plan, steps: [...plan.steps] });
       break;
     }
 
-    step.status = 'running';
+    step.status = "running";
     onProgress({ ...plan, steps: [...plan.steps] });
 
     try {
       const success = await executeAndValidateStep(
-        step, i, plan, context, onProgress, signal,
+        step,
+        i,
+        plan,
+        context,
+        onProgress,
+        signal,
       );
 
       if (success) {
         plan.metrics!.completedSteps++;
-        plan.metrics!.totalTokensEstimate += Math.ceil((step.output?.length ?? 0) / 4);
+        plan.metrics!.totalTokensEstimate += Math.ceil(
+          (step.output?.length ?? 0) / 4,
+        );
       } else {
         plan.metrics!.failedSteps++;
-        plan.status = 'error';
+        plan.status = "error";
         onProgress({ ...plan, steps: [...plan.steps] });
         break;
       }
     } catch (err) {
-      step.status = 'error';
+      step.status = "error";
       step.output = err instanceof Error ? err.message : String(err);
       plan.metrics!.failedSteps++;
-      plan.status = 'error';
+      plan.status = "error";
       onProgress({ ...plan, steps: [...plan.steps] });
       break;
     }
@@ -449,8 +487,8 @@ export async function runAutopilot(
   }
 
   // Finalize
-  if (plan.status === 'executing') {
-    plan.status = 'done';
+  if (plan.status === "executing") {
+    plan.status = "done";
   }
   plan.metrics!.totalDurationMs = Date.now() - startTime;
   onProgress({ ...plan, steps: [...plan.steps] });
@@ -487,7 +525,7 @@ export async function runAutopilotFromStep(
     plan.metrics = createEmptyMetrics();
   }
 
-  plan.status = 'executing';
+  plan.status = "executing";
 
   // fromIndex 이전 스텝의 메트릭 재집계
   plan.metrics.completedSteps = 0;
@@ -495,15 +533,17 @@ export async function runAutopilotFromStep(
   plan.metrics.totalTokensEstimate = 0;
   for (let i = 0; i < safeFrom; i++) {
     const s = plan.steps[i];
-    if (s.status === 'done') {
+    if (s.status === "done") {
       plan.metrics.completedSteps++;
-      plan.metrics.totalTokensEstimate += Math.ceil((s.output?.length ?? 0) / 4);
+      plan.metrics.totalTokensEstimate += Math.ceil(
+        (s.output?.length ?? 0) / 4,
+      );
     }
   }
 
   // 재개 대상 스텝을 pending으로 초기화
   for (let i = safeFrom; i < plan.steps.length; i++) {
-    plan.steps[i].status = 'pending';
+    plan.steps[i].status = "pending";
     plan.steps[i].output = undefined;
     plan.steps[i].validation = undefined;
     plan.steps[i].retried = undefined;
@@ -515,35 +555,42 @@ export async function runAutopilotFromStep(
     const step = plan.steps[i];
 
     if (signal?.aborted) {
-      step.status = 'error';
-      step.output = 'Aborted';
-      plan.status = 'error';
+      step.status = "error";
+      step.output = "Aborted";
+      plan.status = "error";
       onProgress({ ...plan, steps: [...plan.steps] });
       break;
     }
 
-    step.status = 'running';
+    step.status = "running";
     onProgress({ ...plan, steps: [...plan.steps] });
 
     try {
       const success = await executeAndValidateStep(
-        step, i, plan, context, onProgress, signal,
+        step,
+        i,
+        plan,
+        context,
+        onProgress,
+        signal,
       );
 
       if (success) {
         plan.metrics!.completedSteps++;
-        plan.metrics!.totalTokensEstimate += Math.ceil((step.output?.length ?? 0) / 4);
+        plan.metrics!.totalTokensEstimate += Math.ceil(
+          (step.output?.length ?? 0) / 4,
+        );
       } else {
         plan.metrics!.failedSteps++;
-        plan.status = 'error';
+        plan.status = "error";
         onProgress({ ...plan, steps: [...plan.steps] });
         break;
       }
     } catch (err) {
-      step.status = 'error';
+      step.status = "error";
       step.output = err instanceof Error ? err.message : String(err);
       plan.metrics!.failedSteps++;
-      plan.status = 'error';
+      plan.status = "error";
       onProgress({ ...plan, steps: [...plan.steps] });
       break;
     }
@@ -551,8 +598,8 @@ export async function runAutopilotFromStep(
     onProgress({ ...plan, steps: [...plan.steps] });
   }
 
-  if (plan.status === 'executing') {
-    plan.status = 'done';
+  if (plan.status === "executing") {
+    plan.status = "done";
   }
   plan.metrics!.totalDurationMs += Date.now() - startTime;
   onProgress({ ...plan, steps: [...plan.steps] });

@@ -4,7 +4,7 @@
 // 소설 특화 build-prompt.ts와 완전 분리.
 // 소설 파이프라인은 이 파일을 import하지 않음.
 
-import { GENERAL_DOMAIN_PRESETS, type GeneralDomain } from './general-domains';
+import { GENERAL_DOMAIN_PRESETS, type GeneralDomain } from "./general-domains";
 
 export interface GeneralTranslationParams {
   text: string;
@@ -19,14 +19,20 @@ export interface GeneralTranslationParams {
 }
 
 export function buildGeneralPrompt(params: GeneralTranslationParams): string {
-  const { text, from, to, domain, glossary, context, stage, sourceText } = params;
+  const { text, from, to, domain, glossary, context, stage, sourceText } =
+    params;
   const preset = GENERAL_DOMAIN_PRESETS[domain];
 
-  const glossaryBlock = glossary && Object.keys(glossary).length > 0
-    ? `[Terminology Glossary — apply consistently]:\n${Object.entries(glossary).map(([k, v]) => `  ${k} → ${v}`).join('\n')}\n`
-    : '';
+  const glossaryBlock =
+    glossary && Object.keys(glossary).length > 0
+      ? `[Terminology Glossary — apply consistently]:\n${Object.entries(
+          glossary,
+        )
+          .map(([k, v]) => `  ${k} → ${v}`)
+          .join("\n")}\n`
+      : "";
 
-  const contextBlock = context ? `[Additional Context]:\n${context}\n` : '';
+  const contextBlock = context ? `[Additional Context]:\n${context}\n` : "";
 
   const base = `[SYSTEM: DETERMINISTIC TRANSLATION ENGINE — MODE: GENERAL ACCURACY]
 You are a professional translation engine converting text from ${from} to ${to}.

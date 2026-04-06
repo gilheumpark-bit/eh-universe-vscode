@@ -7,72 +7,99 @@
 //       web.deepLink('line', 42);
 //       web.print('element-id');
 
-import { useCallback, useRef, useEffect, useState } from 'react';
+import { useCallback, useRef, useEffect, useState } from "react";
 
 export function useWebFeatures() {
   const modRef = useRef<{
-    browser: typeof import('@/lib/browser') | null;
-    web: typeof import('@/lib/web-features') | null;
+    browser: typeof import("@/lib/browser") | null;
+    web: typeof import("@/lib/web-features") | null;
   }>({ browser: null, web: null });
   const [isOffline, setIsOffline] = useState(false);
-  const [connectionQuality, setConnectionQuality] = useState<string>('fast');
+  const [connectionQuality, setConnectionQuality] = useState<string>("fast");
 
   // Lazy load modules on first use
   const ensureLoaded = useCallback(async () => {
     if (!modRef.current.browser) {
       const [browser, web] = await Promise.all([
-        import('@/lib/browser'),
-        import('@/lib/web-features'),
+        import("@/lib/browser"),
+        import("@/lib/web-features"),
       ]);
       modRef.current = { browser, web };
     }
-    return modRef.current as { browser: Awaited<typeof import('@/lib/browser')>; web: Awaited<typeof import('@/lib/web-features')> };
+    return modRef.current as {
+      browser: Awaited<typeof import("@/lib/browser")>;
+      web: Awaited<typeof import("@/lib/web-features")>;
+    };
   }, []);
 
   // 네트워크 상태 실시간 추적
   useEffect(() => {
     let cleanup: (() => void) | undefined;
-    import('@/lib/web-features').then(({ onConnectionChange, getConnectionQuality }) => {
-      setConnectionQuality(getConnectionQuality());
-      cleanup = onConnectionChange((q) => {
-        setConnectionQuality(q);
-        setIsOffline(q === 'offline');
-      });
-    }).catch(() => {});
+    import("@/lib/web-features")
+      .then(({ onConnectionChange, getConnectionQuality }) => {
+        setConnectionQuality(getConnectionQuality());
+        cleanup = onConnectionChange((q) => {
+          setConnectionQuality(q);
+          setIsOffline(q === "offline");
+        });
+      })
+      .catch(() => {});
     return () => cleanup?.();
   }, []);
 
   // ── 공유 ──
-  const share = useCallback(async (type: string, title: string, content: string) => {
-    const { web } = await ensureLoaded();
-    const result = await web.createShareLink({ type: type as 'novel', title, content });
-    await web.copyShareLink(result.url);
-    return result.url;
-  }, [ensureLoaded]);
+  const share = useCallback(
+    async (type: string, title: string, content: string) => {
+      const { web } = await ensureLoaded();
+      const result = await web.createShareLink({
+        type: type as "novel",
+        title,
+        content,
+      });
+      await web.copyShareLink(result.url);
+      return result.url;
+    },
+    [ensureLoaded],
+  );
 
   // ── 딥링크 ──
-  const copyDeepLink = useCallback(async (type: 'line' | 'segment' | 'paragraph' | 'chapter', index: number) => {
-    const { web } = await ensureLoaded();
-    return web.copyDeepLink({ type, index });
-  }, [ensureLoaded]);
+  const copyDeepLink = useCallback(
+    async (
+      type: "line" | "segment" | "paragraph" | "chapter",
+      index: number,
+    ) => {
+      const { web } = await ensureLoaded();
+      return web.copyDeepLink({ type, index });
+    },
+    [ensureLoaded],
+  );
 
   // ── 인쇄 ──
-  const print = useCallback(async (elementId?: string) => {
-    const { web } = await ensureLoaded();
-    web.printContent(elementId);
-  }, [ensureLoaded]);
+  const print = useCallback(
+    async (elementId?: string) => {
+      const { web } = await ensureLoaded();
+      web.printContent(elementId);
+    },
+    [ensureLoaded],
+  );
 
   // ── 입력 정제 ──
-  const sanitize = useCallback(async (input: string) => {
-    const { web } = await ensureLoaded();
-    return web.sanitizeInput(input);
-  }, [ensureLoaded]);
+  const sanitize = useCallback(
+    async (input: string) => {
+      const { web } = await ensureLoaded();
+      return web.sanitizeInput(input);
+    },
+    [ensureLoaded],
+  );
 
   // ── 임베드 코드 복사 ──
-  const copyEmbed = useCallback(async (type: string, id: string, theme?: 'light' | 'dark') => {
-    const { web } = await ensureLoaded();
-    return web.copyEmbedCode({ type: type as 'world-doc', id, theme });
-  }, [ensureLoaded]);
+  const copyEmbed = useCallback(
+    async (type: string, id: string, theme?: "light" | "dark") => {
+      const { web } = await ensureLoaded();
+      return web.copyEmbedCode({ type: type as "world-doc", id, theme });
+    },
+    [ensureLoaded],
+  );
 
   // ── 적응형 설정 ──
   const getAdaptive = useCallback(async () => {
@@ -93,22 +120,31 @@ export function useWebFeatures() {
   }, [ensureLoaded]);
 
   // ── 텍스트 분할 (Intl.Segmenter) ──
-  const segmentText = useCallback(async (text: string, locale?: string) => {
-    const { web } = await ensureLoaded();
-    return web.segmentSentences(text, locale);
-  }, [ensureLoaded]);
+  const segmentText = useCallback(
+    async (text: string, locale?: string) => {
+      const { web } = await ensureLoaded();
+      return web.segmentSentences(text, locale);
+    },
+    [ensureLoaded],
+  );
 
   // ── 날짜 포맷 ──
-  const formatDate = useCallback(async (date: Date | number, locale?: string) => {
-    const { web } = await ensureLoaded();
-    return web.formatDate(date, locale);
-  }, [ensureLoaded]);
+  const formatDate = useCallback(
+    async (date: Date | number, locale?: string) => {
+      const { web } = await ensureLoaded();
+      return web.formatDate(date, locale);
+    },
+    [ensureLoaded],
+  );
 
   // ── 상대 시간 ──
-  const formatRelative = useCallback(async (timestamp: number, locale?: string) => {
-    const { web } = await ensureLoaded();
-    return web.formatRelativeTime(timestamp, locale);
-  }, [ensureLoaded]);
+  const formatRelative = useCallback(
+    async (timestamp: number, locale?: string) => {
+      const { web } = await ensureLoaded();
+      return web.formatRelativeTime(timestamp, locale);
+    },
+    [ensureLoaded],
+  );
 
   return {
     share,
@@ -126,21 +162,43 @@ export function useWebFeatures() {
     connectionQuality,
     // ── Platform-exclusive (Chrome/Edge) ──
     /** 화면 색상 추출 (EyeDropper) */
-    pickColor: async () => { const { pickColorFromScreen } = await import('@/lib/browser'); return pickColorFromScreen(); },
+    pickColor: async () => {
+      const { pickColorFromScreen } = await import("@/lib/browser");
+      return pickColorFromScreen();
+    },
     /** 시스템 폰트 목록 */
-    getLocalFonts: async () => { const { getLocalFonts } = await import('@/lib/browser'); return getLocalFonts(); },
+    getLocalFonts: async () => {
+      const { getLocalFonts } = await import("@/lib/browser");
+      return getLocalFonts();
+    },
     /** Document PiP (떠있는 미니 창) */
-    openPiP: async (w?: number, h?: number) => { const { openDocumentPiP } = await import('@/lib/browser'); return openDocumentPiP(w, h); },
+    openPiP: async (w?: number, h?: number) => {
+      const { openDocumentPiP } = await import("@/lib/browser");
+      return openDocumentPiP(w, h);
+    },
     /** 듀얼 모니터 감지 */
-    isMultiScreen: async () => { const { isMultiScreen } = await import('@/lib/browser'); return isMultiScreen(); },
+    isMultiScreen: async () => {
+      const { isMultiScreen } = await import("@/lib/browser");
+      return isMultiScreen();
+    },
     /** 화면 녹화 시작/중지 */
-    startRecording: async () => { const { startScreenRecording } = await import('@/lib/browser'); return startScreenRecording(); },
-    stopRecording: async () => { const { stopScreenRecording } = await import('@/lib/browser'); return stopScreenRecording(); },
+    startRecording: async () => {
+      const { startScreenRecording } = await import("@/lib/browser");
+      return startScreenRecording();
+    },
+    stopRecording: async () => {
+      const { stopScreenRecording } = await import("@/lib/browser");
+      return stopScreenRecording();
+    },
     /** OCR (이미지→텍스트) */
-    detectText: async (img: ImageBitmapSource) => { const { detectTextFromImage } = await import('@/lib/browser'); return detectTextFromImage(img); },
+    detectText: async (img: ImageBitmapSource) => {
+      const { detectTextFromImage } = await import("@/lib/browser");
+      return detectTextFromImage(img);
+    },
     /** 브라우저 기능 지원 여부 */
     capabilities: async () => {
-      const [{ getBrowserCapabilities }, { getPlatformCapabilities }] = await Promise.all([import('@/lib/browser'), import('@/lib/browser')]);
+      const [{ getBrowserCapabilities }, { getPlatformCapabilities }] =
+        await Promise.all([import("@/lib/browser"), import("@/lib/browser")]);
       return { ...getBrowserCapabilities(), ...getPlatformCapabilities() };
     },
   };

@@ -27,7 +27,12 @@ export const REPORT_TYPES = [
 ] as const;
 export type ReportType = (typeof REPORT_TYPES)[number];
 
-export const PLANET_GOALS = ["maintain", "develop", "collapse", "experiment"] as const;
+export const PLANET_GOALS = [
+  "maintain",
+  "develop",
+  "collapse",
+  "experiment",
+] as const;
 export type PlanetGoal = (typeof PLANET_GOALS)[number];
 
 export const PLANET_STATUSES = [
@@ -43,7 +48,13 @@ export type PlanetStatus = (typeof PLANET_STATUSES)[number];
 export const VISIBILITIES = ["public", "members", "private"] as const;
 export type Visibility = (typeof VISIBILITIES)[number];
 
-export const OFFICIALITIES = ["official", "unofficial", "fan", "experimental", "pending"] as const;
+export const OFFICIALITIES = [
+  "official",
+  "unofficial",
+  "fan",
+  "experimental",
+  "pending",
+] as const;
 export type Officiality = (typeof OFFICIALITIES)[number];
 
 export const REPORT_TYPE_TO_BOARD_TYPE: Record<ReportType, BoardType> = {
@@ -162,7 +173,13 @@ export interface CommentRecord {
   updatedAt?: string;
 }
 
-export const REACTION_TYPES = ["like", "fire", "insight", "touching", "warning"] as const;
+export const REACTION_TYPES = [
+  "like",
+  "fire",
+  "insight",
+  "touching",
+  "warning",
+] as const;
 export type ReactionType = (typeof REACTION_TYPES)[number];
 
 export const REACTION_EMOJI: Record<ReactionType, string> = {
@@ -187,7 +204,12 @@ export interface BookmarkRecord {
   createdAt: string;
 }
 
-export const REPORT_REASONS = ["spam", "inappropriate", "copyright", "other"] as const;
+export const REPORT_REASONS = [
+  "spam",
+  "inappropriate",
+  "copyright",
+  "other",
+] as const;
 export type ReportReason = (typeof REPORT_REASONS)[number];
 
 export interface ReportRecord {
@@ -230,7 +252,13 @@ export interface FirstLogDraft {
   title: string;
   reportType: Extract<
     ReportType,
-    "observation" | "incident" | "testimony" | "recovered" | "settlement" | "manual" | "technical"
+    | "observation"
+    | "incident"
+    | "testimony"
+    | "recovered"
+    | "settlement"
+    | "manual"
+    | "technical"
   >;
   eventCategory: string;
   content: string;

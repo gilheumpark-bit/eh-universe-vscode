@@ -5,12 +5,7 @@
 // ============================================================
 
 import { useMemo } from "react";
-import {
-  XCircle,
-  AlertTriangle,
-  Info,
-  CheckCircle2,
-} from "lucide-react";
+import { XCircle, AlertTriangle, Info, CheckCircle2 } from "lucide-react";
 
 interface ProblemFinding {
   severity: "critical" | "major" | "minor" | "info";
@@ -36,11 +31,15 @@ function severityIcon(severity: ProblemFinding["severity"]) {
     case "critical":
       return <XCircle size={10} className="text-red-400 flex-shrink-0" />;
     case "major":
-      return <AlertTriangle size={10} className="text-accent-amber flex-shrink-0" />;
+      return (
+        <AlertTriangle size={10} className="text-accent-amber flex-shrink-0" />
+      );
     case "minor":
       return <Info size={10} className="text-blue-400 flex-shrink-0" />;
     case "info":
-      return <CheckCircle2 size={10} className="text-green-400 flex-shrink-0" />;
+      return (
+        <CheckCircle2 size={10} className="text-green-400 flex-shrink-0" />
+      );
   }
 }
 
@@ -78,7 +77,9 @@ export function ProblemsPanel({ findings }: ProblemsPanelProps) {
     <div className="h-40 border-t border-white/[0.08] bg-[#0d1220] flex flex-col overflow-hidden">
       {/* Header with count summary */}
       <div className="flex items-center gap-3 px-3 py-1.5 border-b border-white/[0.08] text-[10px]">
-        <span className="font-semibold text-xs text-text-primary">Problems</span>
+        <span className="font-semibold text-xs text-text-primary">
+          Problems
+        </span>
         {counts.critical > 0 && (
           <span className="flex items-center gap-0.5 text-red-400">
             <XCircle size={10} /> {counts.critical}

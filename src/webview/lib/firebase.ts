@@ -1,7 +1,7 @@
-import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import type { Auth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
-import { logger } from '@/lib/logger';
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import type { Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { logger } from "@/lib/logger";
 
 // ============================================================
 // PART 1 - ENVIRONMENT DETECTION
@@ -14,13 +14,13 @@ import { logger } from '@/lib/logger';
  *
  * Set this in .env.local or Vercel environment variables.
  */
-const FIREBASE_ENV = (
-  typeof process !== 'undefined'
+const FIREBASE_ENV =
+  (typeof process !== "undefined"
     ? process.env.NEXT_PUBLIC_FIREBASE_ENV
-    : undefined
-) ?? 'production';
+    : undefined) ?? "production";
 
-export const isTestEnvironment = FIREBASE_ENV === 'test' || FIREBASE_ENV === 'development';
+export const isTestEnvironment =
+  FIREBASE_ENV === "test" || FIREBASE_ENV === "development";
 
 // IDENTITY_SEAL: PART-1 | role=environment detection | inputs=env var | outputs=isTestEnvironment flag
 
@@ -32,22 +32,31 @@ export const isTestEnvironment = FIREBASE_ENV === 'test' || FIREBASE_ENV === 'de
 // NO hardcoded fallbacks. If env vars are missing, Firebase features are disabled.
 // This prevents env misconfiguration from silently connecting to a wrong project.
 const productionConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? '',
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? '',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? '',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
 };
 
 // Test environment config — same project but can be overridden via env vars.
 // To use a fully separate test project, set NEXT_PUBLIC_FIREBASE_TEST_* env vars.
 const testConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_TEST_API_KEY ?? productionConfig.apiKey,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_TEST_AUTH_DOMAIN ?? productionConfig.authDomain,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_TEST_PROJECT_ID ?? productionConfig.projectId,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_TEST_STORAGE_BUCKET ?? productionConfig.storageBucket,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_TEST_MESSAGING_SENDER_ID ?? productionConfig.messagingSenderId,
+  apiKey:
+    process.env.NEXT_PUBLIC_FIREBASE_TEST_API_KEY ?? productionConfig.apiKey,
+  authDomain:
+    process.env.NEXT_PUBLIC_FIREBASE_TEST_AUTH_DOMAIN ??
+    productionConfig.authDomain,
+  projectId:
+    process.env.NEXT_PUBLIC_FIREBASE_TEST_PROJECT_ID ??
+    productionConfig.projectId,
+  storageBucket:
+    process.env.NEXT_PUBLIC_FIREBASE_TEST_STORAGE_BUCKET ??
+    productionConfig.storageBucket,
+  messagingSenderId:
+    process.env.NEXT_PUBLIC_FIREBASE_TEST_MESSAGING_SENDER_ID ??
+    productionConfig.messagingSenderId,
   appId: process.env.NEXT_PUBLIC_FIREBASE_TEST_APP_ID ?? productionConfig.appId,
 };
 
@@ -58,21 +67,27 @@ let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 
-if (typeof window !== 'undefined' && firebaseConfig.apiKey) {
+if (typeof window !== "undefined" && firebaseConfig.apiKey) {
   const missing = (
-    ['apiKey', 'authDomain', 'projectId', 'appId'] as const
+    ["apiKey", "authDomain", "projectId", "appId"] as const
   ).filter((k) => !firebaseConfig[k]);
 
   if (missing.length > 0) {
-    logger.warn('EH Universe', `Firebase config incomplete — missing: ${missing.join(', ')}. Auth features disabled.`);
+    logger.warn(
+      "EH Universe",
+      `Firebase config incomplete — missing: ${missing.join(", ")}. Auth features disabled.`,
+    );
   } else {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-    
+
     // Auth is no longer eagerly initialized to save bundle size
     db = getFirestore(app);
 
     if (isTestEnvironment) {
-      logger.info('[EH Universe] Running in TEST environment. Firebase project:', firebaseConfig.projectId);
+      logger.info(
+        "[EH Universe] Running in TEST environment. Firebase project:",
+        firebaseConfig.projectId,
+      );
     }
   }
 }
@@ -83,7 +98,7 @@ export { auth, app, db };
 export async function lazyFirebaseAuth(): Promise<Auth | null> {
   if (auth) return auth;
   if (!app) return null;
-  const { getAuth } = await import('firebase/auth');
+  const { getAuth } = await import("firebase/auth");
   auth = getAuth(app);
   return auth;
 }
@@ -104,7 +119,7 @@ export function collectionName(name: string): string {
 
 /** Lazy Firebase loader — use when dynamic import('firebase/...') is preferred over top-level import */
 export async function lazyFirestore() {
-  const mod = await import('firebase/firestore');
+  const mod = await import("firebase/firestore");
   return { ...mod, db };
 }
 

@@ -26,7 +26,16 @@ export interface CollabState {
 }
 
 export interface CollabMessage {
-  type: "cursor" | "selection" | "edit" | "file-open" | "chat" | "join" | "leave" | "typing" | "activity";
+  type:
+    | "cursor"
+    | "selection"
+    | "edit"
+    | "file-open"
+    | "chat"
+    | "join"
+    | "leave"
+    | "typing"
+    | "activity";
   userId: string;
   payload: unknown;
   timestamp: number;
@@ -83,8 +92,18 @@ export class CRDTDocument {
       this.vectorClock[this.siteId] = this.clock;
       const position = this.generatePosition(index + i);
       const id: CRDTId = { site: this.siteId, clock: this.clock, position };
-      const afterId = index + i > 0 ? this.getVisibleCharAt(index + i - 1)?.id ?? null : null;
-      const op: CRDTOperation = { type: "insert", id, value: value[i], after: afterId, origin: this.siteId, timestamp: this.clock };
+      const afterId =
+        index + i > 0
+          ? (this.getVisibleCharAt(index + i - 1)?.id ?? null)
+          : null;
+      const op: CRDTOperation = {
+        type: "insert",
+        id,
+        value: value[i],
+        after: afterId,
+        origin: this.siteId,
+        timestamp: this.clock,
+      };
       this.applyInsert(op);
       ops.push(op);
       this.operationLog.push(op);
@@ -99,7 +118,12 @@ export class CRDTDocument {
       if (!char) break;
       this.clock++;
       this.vectorClock[this.siteId] = this.clock;
-      const op: CRDTOperation = { type: "delete", id: char.id, origin: this.siteId, timestamp: this.clock };
+      const op: CRDTOperation = {
+        type: "delete",
+        id: char.id,
+        origin: this.siteId,
+        timestamp: this.clock,
+      };
       this.applyDelete(op);
       ops.push(op);
       this.operationLog.push(op);
@@ -108,30 +132,47 @@ export class CRDTDocument {
   }
 
   applyRemote(op: CRDTOperation): boolean {
-    this.vectorClock[op.origin] = Math.max(this.vectorClock[op.origin] ?? 0, op.timestamp);
+    this.vectorClock[op.origin] = Math.max(
+      this.vectorClock[op.origin] ?? 0,
+      op.timestamp,
+    );
     this.clock = Math.max(this.clock, op.timestamp);
     return op.type === "insert" ? this.applyInsert(op) : this.applyDelete(op);
   }
 
   getText(): string {
-    return this.chars.filter((c) => !c.deleted).map((c) => c.value).join("");
+    return this.chars
+      .filter((c) => !c.deleted)
+      .map((c) => c.value)
+      .join("");
   }
 
   visibleLength(): number {
     return this.chars.filter((c) => !c.deleted).length;
   }
 
-  getVectorClock(): VectorClock { return { ...this.vectorClock }; }
+  getVectorClock(): VectorClock {
+    return { ...this.vectorClock };
+  }
 
   getOperationsSince(remoteClock: VectorClock): CRDTOperation[] {
-    return this.operationLog.filter((op) => op.timestamp > (remoteClock[op.origin] ?? 0));
+    return this.operationLog.filter(
+      (op) => op.timestamp > (remoteClock[op.origin] ?? 0),
+    );
   }
 
   serialize(): { chars: CRDTChar[]; clock: number; vectorClock: VectorClock } {
-    return { chars: this.chars.map((c) => ({ ...c })), clock: this.clock, vectorClock: { ...this.vectorClock } };
+    return {
+      chars: this.chars.map((c) => ({ ...c })),
+      clock: this.clock,
+      vectorClock: { ...this.vectorClock },
+    };
   }
 
-  static deserialize(siteId: string, data: { chars: CRDTChar[]; clock: number; vectorClock: VectorClock }): CRDTDocument {
+  static deserialize(
+    siteId: string,
+    data: { chars: CRDTChar[]; clock: number; vectorClock: VectorClock },
+  ): CRDTDocument {
     const doc = new CRDTDocument(siteId);
     doc.chars = data.chars.map((c) => ({ ...c }));
     doc.clock = Math.max(doc.clock, data.clock);
@@ -151,8 +192,15 @@ export class CRDTDocument {
       this.chars.splice(idx, 0, char);
     } else {
       const afterIdx = this.findCharById(op.after);
-      if (afterIdx === -1) { this.chars.push(char); }
-      else { this.chars.splice(this.findInsertPosition(afterIdx + 1, op.id), 0, char); }
+      if (afterIdx === -1) {
+        this.chars.push(char);
+      } else {
+        this.chars.splice(
+          this.findInsertPosition(afterIdx + 1, op.id),
+          0,
+          char,
+        );
+      }
     }
     this.rebuildCharIndex();
     return true;
@@ -166,12 +214,16 @@ export class CRDTDocument {
   }
 
   private generatePosition(visibleIndex: number): number[] {
-    const left = visibleIndex > 0
-      ? this.getVisibleCharAt(visibleIndex - 1)?.id.position ?? [0]
-      : [0];
-    const right = visibleIndex < this.visibleLength()
-      ? this.getVisibleCharAt(visibleIndex)?.id.position ?? [Number.MAX_SAFE_INTEGER]
-      : [Number.MAX_SAFE_INTEGER];
+    const left =
+      visibleIndex > 0
+        ? (this.getVisibleCharAt(visibleIndex - 1)?.id.position ?? [0])
+        : [0];
+    const right =
+      visibleIndex < this.visibleLength()
+        ? (this.getVisibleCharAt(visibleIndex)?.id.position ?? [
+            Number.MAX_SAFE_INTEGER,
+          ])
+        : [Number.MAX_SAFE_INTEGER];
     return this.allocateBetween(left, right);
   }
 
@@ -182,7 +234,9 @@ export class CRDTDocument {
       const l = left[i] ?? 0;
       const r = right[i] ?? Number.MAX_SAFE_INTEGER;
       if (l + 1 < r) {
-        result.push(l + 1 + Math.floor(Math.random() * Math.min(r - l - 1, 10)));
+        result.push(
+          l + 1 + Math.floor(Math.random() * Math.min(r - l - 1, 10)),
+        );
         return result;
       }
       result.push(l);
@@ -220,7 +274,8 @@ export class CRDTDocument {
     for (let i = 0; i < minLen; i++) {
       if (a.position[i] !== b.position[i]) return a.position[i] - b.position[i];
     }
-    if (a.position.length !== b.position.length) return a.position.length - b.position.length;
+    if (a.position.length !== b.position.length)
+      return a.position.length - b.position.length;
     return a.site < b.site ? -1 : a.site > b.site ? 1 : a.clock - b.clock;
   }
 
@@ -259,15 +314,20 @@ export class CursorTrailManager {
     if (!this.trails.has(userId)) this.trails.set(userId, []);
     const trail = this.trails.get(userId)!;
     trail.push({ file, line, column, timestamp: Date.now(), opacity: 1.0 });
-    if (trail.length > this.maxTrailLength) trail.splice(0, trail.length - this.maxTrailLength);
+    if (trail.length > this.maxTrailLength)
+      trail.splice(0, trail.length - this.maxTrailLength);
   }
 
   getTrail(userId: string): CursorTrailPoint[] {
     const trail = this.trails.get(userId);
     if (!trail) return [];
     const now = Date.now();
-    const active = trail.filter((pt) => now - pt.timestamp < this.fadeDurationMs)
-      .map((pt) => ({ ...pt, opacity: 1.0 - (now - pt.timestamp) / this.fadeDurationMs }));
+    const active = trail
+      .filter((pt) => now - pt.timestamp < this.fadeDurationMs)
+      .map((pt) => ({
+        ...pt,
+        opacity: 1.0 - (now - pt.timestamp) / this.fadeDurationMs,
+      }));
     this.trails.set(userId, active);
     return active;
   }
@@ -281,10 +341,18 @@ export class CursorTrailManager {
     return result;
   }
 
-  clearUser(userId: string): void { this.trails.delete(userId); }
+  clearUser(userId: string): void {
+    this.trails.delete(userId);
+  }
 }
 
-export type ActivityAction = "opened-file" | "made-edit" | "ran-pipeline" | "joined" | "left" | "chat-message";
+export type ActivityAction =
+  | "opened-file"
+  | "made-edit"
+  | "ran-pipeline"
+  | "joined"
+  | "left"
+  | "chat-message";
 
 export interface ActivityEntry {
   id: string;
@@ -300,29 +368,51 @@ export class ActivityFeed {
   private readonly maxEntries = 200;
   private listeners: Array<(entries: ActivityEntry[]) => void> = [];
 
-  log(userId: string, userName: string, action: ActivityAction, detail: string): void {
+  log(
+    userId: string,
+    userName: string,
+    action: ActivityAction,
+    detail: string,
+  ): void {
     this.entries.push({
       id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      userId, userName, action, detail, timestamp: Date.now(),
+      userId,
+      userName,
+      action,
+      detail,
+      timestamp: Date.now(),
     });
-    if (this.entries.length > this.maxEntries) this.entries.splice(0, this.entries.length - this.maxEntries);
+    if (this.entries.length > this.maxEntries)
+      this.entries.splice(0, this.entries.length - this.maxEntries);
     this.notifyListeners();
   }
 
-  getEntries(filter?: { action?: ActivityAction; userId?: string; limit?: number }): ActivityEntry[] {
+  getEntries(filter?: {
+    action?: ActivityAction;
+    userId?: string;
+    limit?: number;
+  }): ActivityEntry[] {
     let result: ActivityEntry[] = this.entries;
-    if (filter?.action) result = result.filter((e) => e.action === filter.action);
-    if (filter?.userId) result = result.filter((e) => e.userId === filter.userId);
+    if (filter?.action)
+      result = result.filter((e) => e.action === filter.action);
+    if (filter?.userId)
+      result = result.filter((e) => e.userId === filter.userId);
     if (filter?.limit) result = result.slice(-filter.limit);
     return [...result];
   }
 
   subscribe(listener: (entries: ActivityEntry[]) => void): () => void {
     this.listeners.push(listener);
-    return () => { const idx = this.listeners.indexOf(listener); if (idx >= 0) this.listeners.splice(idx, 1); };
+    return () => {
+      const idx = this.listeners.indexOf(listener);
+      if (idx >= 0) this.listeners.splice(idx, 1);
+    };
   }
 
-  clear(): void { this.entries = []; this.notifyListeners(); }
+  clear(): void {
+    this.entries = [];
+    this.notifyListeners();
+  }
 
   private notifyListeners(): void {
     const entries = [...this.entries];
@@ -344,7 +434,13 @@ export class TypingIndicatorManager {
   private listeners: Array<(typingUsers: TypingStatus[]) => void> = [];
 
   setTyping(userId: string, userName: string, file: string): void {
-    this.typingUsers.set(userId, { userId, userName, file, isTyping: true, lastTypedAt: Date.now() });
+    this.typingUsers.set(userId, {
+      userId,
+      userName,
+      file,
+      isTyping: true,
+      lastTypedAt: Date.now(),
+    });
     this.notifyListeners();
   }
 
@@ -366,7 +462,10 @@ export class TypingIndicatorManager {
 
   subscribe(listener: (typingUsers: TypingStatus[]) => void): () => void {
     this.listeners.push(listener);
-    return () => { const idx = this.listeners.indexOf(listener); if (idx >= 0) this.listeners.splice(idx, 1); };
+    return () => {
+      const idx = this.listeners.indexOf(listener);
+      if (idx >= 0) this.listeners.splice(idx, 1);
+    };
   }
 
   private notifyListeners(): void {
@@ -382,8 +481,14 @@ export class TypingIndicatorManager {
 // ============================================================
 
 const USER_COLORS = [
-  "#58a6ff", "#3fb950", "#f85149", "#d29922",
-  "#bc8cff", "#f778ba", "#79c0ff", "#7ee787",
+  "#58a6ff",
+  "#3fb950",
+  "#f85149",
+  "#d29922",
+  "#bc8cff",
+  "#f778ba",
+  "#79c0ff",
+  "#7ee787",
 ];
 const HEARTBEAT_INTERVAL = 2_000;
 const STALE_TIMEOUT = 10_000;
@@ -403,9 +508,14 @@ export class CollaborationManager {
 
   private onJoinCallbacks: Array<(user: CollabUser) => void> = [];
   private onLeaveCallbacks: Array<(userId: string) => void> = [];
-  private onCursorCallbacks: Array<(userId: string, cursor: CollabUser["cursor"]) => void> = [];
-  private onEditCallbacks: Array<(userId: string, file: string, content: string) => void> = [];
-  private onChatCallbacks: Array<(userId: string, message: string) => void> = [];
+  private onCursorCallbacks: Array<
+    (userId: string, cursor: CollabUser["cursor"]) => void
+  > = [];
+  private onEditCallbacks: Array<
+    (userId: string, file: string, content: string) => void
+  > = [];
+  private onChatCallbacks: Array<(userId: string, message: string) => void> =
+    [];
   private onTypingCallbacks: Array<(userId: string, file: string) => void> = [];
   private readonly roomId: string;
 
@@ -413,11 +523,17 @@ export class CollaborationManager {
     this.roomId = roomId;
     const color = USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)];
     const parts = userName.trim().split(/\s+/);
-    const initials = parts.length >= 2
-      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-      : userName.slice(0, 2).toUpperCase();
+    const initials =
+      parts.length >= 2
+        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+        : userName.slice(0, 2).toUpperCase();
     this.localUser = {
-      id: crypto.randomUUID(), name: userName, color, isOnline: true, lastSeen: Date.now(), avatar: initials,
+      id: crypto.randomUUID(),
+      name: userName,
+      color,
+      isOnline: true,
+      lastSeen: Date.now(),
+      avatar: initials,
     };
   }
 
@@ -425,24 +541,48 @@ export class CollaborationManager {
     if (this.connected) return;
     if (typeof BroadcastChannel === "undefined") return;
     this.channel = new BroadcastChannel(`eh-code-studio-collab-${this.roomId}`);
-    this.channel.onmessage = (event) => this.handleMessage(event.data as CollabMessage);
+    this.channel.onmessage = (event) =>
+      this.handleMessage(event.data as CollabMessage);
     this.connected = true;
-    this.broadcast({ type: "join", userId: this.localUser.id, payload: { name: this.localUser.name, color: this.localUser.color }, timestamp: Date.now() });
+    this.broadcast({
+      type: "join",
+      userId: this.localUser.id,
+      payload: { name: this.localUser.name, color: this.localUser.color },
+      timestamp: Date.now(),
+    });
     this.heartbeatTimer = setInterval(() => {
       this.localUser.lastSeen = Date.now();
-      this.broadcast({ type: "join", userId: this.localUser.id, payload: { name: this.localUser.name, color: this.localUser.color, cursor: this.localUser.cursor, selection: this.localUser.selection }, timestamp: Date.now() });
+      this.broadcast({
+        type: "join",
+        userId: this.localUser.id,
+        payload: {
+          name: this.localUser.name,
+          color: this.localUser.color,
+          cursor: this.localUser.cursor,
+          selection: this.localUser.selection,
+        },
+        timestamp: Date.now(),
+      });
     }, HEARTBEAT_INTERVAL);
     this.staleCheckTimer = setInterval(() => {
       const now = Date.now();
       for (const [id, user] of this.remoteUsers) {
-        if (now - user.lastSeen > STALE_TIMEOUT) { this.remoteUsers.delete(id); this.onLeaveCallbacks.forEach((cb) => cb(id)); }
+        if (now - user.lastSeen > STALE_TIMEOUT) {
+          this.remoteUsers.delete(id);
+          this.onLeaveCallbacks.forEach((cb) => cb(id));
+        }
       }
     }, STALE_CHECK_INTERVAL);
   }
 
   leave(): void {
     if (!this.connected) return;
-    this.broadcast({ type: "leave", userId: this.localUser.id, payload: null, timestamp: Date.now() });
+    this.broadcast({
+      type: "leave",
+      userId: this.localUser.id,
+      payload: null,
+      timestamp: Date.now(),
+    });
     if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
     if (this.staleCheckTimer) clearInterval(this.staleCheckTimer);
     this.heartbeatTimer = null;
@@ -455,62 +595,153 @@ export class CollaborationManager {
 
   broadcastCursor(file: string, line: number, column: number): void {
     this.localUser.cursor = { file, line, column };
-    this.broadcast({ type: "cursor", userId: this.localUser.id, payload: { file, line, column }, timestamp: Date.now() });
+    this.broadcast({
+      type: "cursor",
+      userId: this.localUser.id,
+      payload: { file, line, column },
+      timestamp: Date.now(),
+    });
   }
 
   broadcastEdit(file: string, content: string): void {
-    this.broadcast({ type: "edit", userId: this.localUser.id, payload: { file, content }, timestamp: Date.now() });
-    this.activityFeed.log(this.localUser.id, this.localUser.name, "made-edit", `Edited ${file}`);
+    this.broadcast({
+      type: "edit",
+      userId: this.localUser.id,
+      payload: { file, content },
+      timestamp: Date.now(),
+    });
+    this.activityFeed.log(
+      this.localUser.id,
+      this.localUser.name,
+      "made-edit",
+      `Edited ${file}`,
+    );
   }
 
   broadcastChat(message: string): void {
-    this.broadcast({ type: "chat", userId: this.localUser.id, payload: { message }, timestamp: Date.now() });
+    this.broadcast({
+      type: "chat",
+      userId: this.localUser.id,
+      payload: { message },
+      timestamp: Date.now(),
+    });
   }
 
   broadcastTyping(file: string): void {
-    this.typingIndicator.setTyping(this.localUser.id, this.localUser.name, file);
-    this.broadcast({ type: "typing", userId: this.localUser.id, payload: { file }, timestamp: Date.now() });
+    this.typingIndicator.setTyping(
+      this.localUser.id,
+      this.localUser.name,
+      file,
+    );
+    this.broadcast({
+      type: "typing",
+      userId: this.localUser.id,
+      payload: { file },
+      timestamp: Date.now(),
+    });
   }
 
   broadcastFileOpen(file: string): void {
     this.localUser.activeFile = file;
-    this.broadcast({ type: "file-open", userId: this.localUser.id, payload: { file }, timestamp: Date.now() });
-    this.activityFeed.log(this.localUser.id, this.localUser.name, "opened-file", `Opened ${file}`);
+    this.broadcast({
+      type: "file-open",
+      userId: this.localUser.id,
+      payload: { file },
+      timestamp: Date.now(),
+    });
+    this.activityFeed.log(
+      this.localUser.id,
+      this.localUser.name,
+      "opened-file",
+      `Opened ${file}`,
+    );
   }
 
   broadcastActivity(action: ActivityAction, detail: string): void {
-    this.activityFeed.log(this.localUser.id, this.localUser.name, action, detail);
-    this.broadcast({ type: "activity", userId: this.localUser.id, payload: { action, detail, userName: this.localUser.name }, timestamp: Date.now() });
+    this.activityFeed.log(
+      this.localUser.id,
+      this.localUser.name,
+      action,
+      detail,
+    );
+    this.broadcast({
+      type: "activity",
+      userId: this.localUser.id,
+      payload: { action, detail, userName: this.localUser.name },
+      timestamp: Date.now(),
+    });
   }
 
-  onUserJoin(cb: (user: CollabUser) => void): void { this.onJoinCallbacks.push(cb); }
-  onUserLeave(cb: (userId: string) => void): void { this.onLeaveCallbacks.push(cb); }
-  onCursorUpdate(cb: (userId: string, cursor: CollabUser["cursor"]) => void): void { this.onCursorCallbacks.push(cb); }
-  onEditReceived(cb: (userId: string, file: string, content: string) => void): void { this.onEditCallbacks.push(cb); }
-  onChatReceived(cb: (userId: string, message: string) => void): void { this.onChatCallbacks.push(cb); }
-  onTypingReceived(cb: (userId: string, file: string) => void): void { this.onTypingCallbacks.push(cb); }
+  onUserJoin(cb: (user: CollabUser) => void): void {
+    this.onJoinCallbacks.push(cb);
+  }
+  onUserLeave(cb: (userId: string) => void): void {
+    this.onLeaveCallbacks.push(cb);
+  }
+  onCursorUpdate(
+    cb: (userId: string, cursor: CollabUser["cursor"]) => void,
+  ): void {
+    this.onCursorCallbacks.push(cb);
+  }
+  onEditReceived(
+    cb: (userId: string, file: string, content: string) => void,
+  ): void {
+    this.onEditCallbacks.push(cb);
+  }
+  onChatReceived(cb: (userId: string, message: string) => void): void {
+    this.onChatCallbacks.push(cb);
+  }
+  onTypingReceived(cb: (userId: string, file: string) => void): void {
+    this.onTypingCallbacks.push(cb);
+  }
 
   getState(): CollabState {
-    return { roomId: this.roomId, users: Array.from(this.remoteUsers.values()), localUser: { ...this.localUser }, isConnected: this.connected, connectionType: "local" };
+    return {
+      roomId: this.roomId,
+      users: Array.from(this.remoteUsers.values()),
+      localUser: { ...this.localUser },
+      isConnected: this.connected,
+      connectionType: "local",
+    };
   }
 
   getRoomUrl(): string {
-    const base = typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
+    const base =
+      typeof window !== "undefined"
+        ? window.location.origin + window.location.pathname
+        : "";
     return `${base}#collab=${this.roomId}`;
   }
 
   private broadcast(message: CollabMessage): void {
     if (!this.channel || !this.connected) return;
-    try { this.channel.postMessage(message); } catch { /* channel closed */ }
+    try {
+      this.channel.postMessage(message);
+    } catch {
+      /* channel closed */
+    }
   }
 
   private handleMessage(msg: CollabMessage): void {
     if (msg.userId === this.localUser.id) return;
     switch (msg.type) {
       case "join": {
-        const p = msg.payload as { name: string; color: string; cursor?: CollabUser["cursor"]; selection?: CollabUser["selection"] };
+        const p = msg.payload as {
+          name: string;
+          color: string;
+          cursor?: CollabUser["cursor"];
+          selection?: CollabUser["selection"];
+        };
         const isNew = !this.remoteUsers.has(msg.userId);
-        const user: CollabUser = { id: msg.userId, name: p.name, color: p.color, cursor: p.cursor, selection: p.selection, isOnline: true, lastSeen: msg.timestamp };
+        const user: CollabUser = {
+          id: msg.userId,
+          name: p.name,
+          color: p.color,
+          cursor: p.cursor,
+          selection: p.selection,
+          isOnline: true,
+          lastSeen: msg.timestamp,
+        };
         this.remoteUsers.set(msg.userId, user);
         if (isNew) this.onJoinCallbacks.forEach((cb) => cb(user));
         break;
@@ -522,7 +753,10 @@ export class CollaborationManager {
       case "cursor": {
         const c = msg.payload as { file: string; line: number; column: number };
         const u = this.remoteUsers.get(msg.userId);
-        if (u) { u.cursor = c; u.lastSeen = msg.timestamp; }
+        if (u) {
+          u.cursor = c;
+          u.lastSeen = msg.timestamp;
+        }
         this.cursorTrails.addPoint(msg.userId, c.file, c.line, c.column);
         this.onCursorCallbacks.forEach((cb) => cb(msg.userId, c));
         break;
@@ -531,15 +765,28 @@ export class CollaborationManager {
         const e = msg.payload as { file: string; content: string };
         const u2 = this.remoteUsers.get(msg.userId);
         if (u2) u2.lastSeen = msg.timestamp;
-        this.activityFeed.log(msg.userId, u2?.name ?? msg.userId, "made-edit", `Edited ${e.file}`);
+        this.activityFeed.log(
+          msg.userId,
+          u2?.name ?? msg.userId,
+          "made-edit",
+          `Edited ${e.file}`,
+        );
         this.onEditCallbacks.forEach((cb) => cb(msg.userId, e.file, e.content));
         break;
       }
       case "file-open": {
         const fo = msg.payload as { file: string };
         const u3 = this.remoteUsers.get(msg.userId);
-        if (u3) { u3.activeFile = fo.file; u3.lastSeen = msg.timestamp; }
-        this.activityFeed.log(msg.userId, u3?.name ?? msg.userId, "opened-file", `Opened ${fo.file}`);
+        if (u3) {
+          u3.activeFile = fo.file;
+          u3.lastSeen = msg.timestamp;
+        }
+        this.activityFeed.log(
+          msg.userId,
+          u3?.name ?? msg.userId,
+          "opened-file",
+          `Opened ${fo.file}`,
+        );
         break;
       }
       case "chat": {
@@ -553,12 +800,20 @@ export class CollaborationManager {
         const t = msg.payload as { file: string };
         const u5 = this.remoteUsers.get(msg.userId);
         if (u5) u5.lastSeen = msg.timestamp;
-        this.typingIndicator.setTyping(msg.userId, u5?.name ?? msg.userId, t.file);
+        this.typingIndicator.setTyping(
+          msg.userId,
+          u5?.name ?? msg.userId,
+          t.file,
+        );
         this.onTypingCallbacks.forEach((cb) => cb(msg.userId, t.file));
         break;
       }
       case "activity": {
-        const a = msg.payload as { action: ActivityAction; detail: string; userName: string };
+        const a = msg.payload as {
+          action: ActivityAction;
+          detail: string;
+          userName: string;
+        };
         const u6 = this.remoteUsers.get(msg.userId);
         if (u6) u6.lastSeen = msg.timestamp;
         this.activityFeed.log(msg.userId, a.userName, a.action, a.detail);
@@ -578,7 +833,12 @@ const SESSION_ROOM_KEY = "eh-collab-room-id";
 const SESSION_USER_KEY = "eh-collab-user-name";
 
 export function persistSession(roomId: string, userName: string): void {
-  try { sessionStorage.setItem(SESSION_ROOM_KEY, roomId); sessionStorage.setItem(SESSION_USER_KEY, userName); } catch { /* */ }
+  try {
+    sessionStorage.setItem(SESSION_ROOM_KEY, roomId);
+    sessionStorage.setItem(SESSION_USER_KEY, userName);
+  } catch {
+    /* */
+  }
 }
 
 export function restoreSession(): { roomId: string; userName: string } | null {
@@ -586,24 +846,38 @@ export function restoreSession(): { roomId: string; userName: string } | null {
     const roomId = sessionStorage.getItem(SESSION_ROOM_KEY);
     const userName = sessionStorage.getItem(SESSION_USER_KEY);
     if (roomId && userName) return { roomId, userName };
-  } catch { /* */ }
+  } catch {
+    /* */
+  }
   return null;
 }
 
 export function clearSession(): void {
-  try { sessionStorage.removeItem(SESSION_ROOM_KEY); sessionStorage.removeItem(SESSION_USER_KEY); } catch { /* */ }
+  try {
+    sessionStorage.removeItem(SESSION_ROOM_KEY);
+    sessionStorage.removeItem(SESSION_USER_KEY);
+  } catch {
+    /* */
+  }
 }
 
-export function createCollaborationManager(roomId: string, userName: string): CollaborationManager {
+export function createCollaborationManager(
+  roomId: string,
+  userName: string,
+): CollaborationManager {
   persistSession(roomId, userName);
   return new CollaborationManager(roomId, userName);
 }
 
-export function generateUserAvatar(name: string, color: string): { initials: string; bgColor: string; textColor: string } {
+export function generateUserAvatar(
+  name: string,
+  color: string,
+): { initials: string; bgColor: string; textColor: string } {
   const parts = name.trim().split(/\s+/);
-  const initials = parts.length >= 2
-    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-    : name.slice(0, 2).toUpperCase();
+  const initials =
+    parts.length >= 2
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : name.slice(0, 2).toUpperCase();
   return { initials, bgColor: color + "33", textColor: color };
 }
 

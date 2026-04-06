@@ -47,7 +47,8 @@ function getScoreBadgeClasses(score: number): string {
 
 function getScoreIcon(score: number) {
   if (score >= 80) return <CheckCircle size={10} className="text-green-300" />;
-  if (score >= 50) return <AlertTriangle size={10} className="text-yellow-300" />;
+  if (score >= 50)
+    return <AlertTriangle size={10} className="text-yellow-300" />;
   return <XCircle size={10} className="text-red-300" />;
 }
 
@@ -64,7 +65,8 @@ function computeFileSize(content: string): string {
 // ============================================================
 
 const SEPARATOR = <span className="w-px h-3 bg-white/20" />;
-const CLICKABLE = "hover:bg-white/20 rounded px-1.5 py-0.5 transition-colors duration-150";
+const CLICKABLE =
+  "hover:bg-white/20 rounded px-1.5 py-0.5 transition-colors duration-150";
 
 export function StatusBar({
   activeFile,
@@ -84,7 +86,7 @@ export function StatusBar({
   return (
     <div
       className="hidden sm:flex items-center justify-between px-3 bg-accent-purple text-[11px] leading-[11px] select-none overflow-x-auto shrink-0"
-      style={{ height: 24, color: '#fff' }}
+      style={{ height: 24, color: "#fff" }}
     >
       {/* ---- Left Section ---- */}
       <div className="flex items-center gap-3 shrink-0">
@@ -99,14 +101,29 @@ export function StatusBar({
         <button
           onClick={onSwitchProvider}
           className={`flex items-center gap-1 ${CLICKABLE}`}
-          title={L4(lang || "ko", { ko: "AI 모델 변경", en: "Change AI Model", ja: "AIモデルを変更", zh: "更改 AI 模型" })}
-          aria-label={L4(lang || "ko", { ko: "AI 모델 변경", en: "Change AI Model", ja: "AIモデルを変更", zh: "更改 AI 模型" })}
+          title={L4(lang || "ko", {
+            ko: "AI 모델 변경",
+            en: "Change AI Model",
+            ja: "AIモデルを変更",
+            zh: "更改 AI 模型",
+          })}
+          aria-label={L4(lang || "ko", {
+            ko: "AI 모델 변경",
+            en: "Change AI Model",
+            ja: "AIモデルを変更",
+            zh: "更改 AI 模型",
+          })}
         >
           <Cpu size={10} />
           <span className="w-1.5 h-1.5 rounded-full bg-accent-purple shrink-0" />
           <span className="truncate max-w-[120px]">
             <Sparkles size={9} className="inline mr-0.5" />
-            {L4(lang || "ko", { ko: "AI 제공자", en: "AI Provider", ja: "AIプロバイダー", zh: "AI 提供方" })}
+            {L4(lang || "ko", {
+              ko: "AI 제공자",
+              en: "AI Provider",
+              ja: "AIプロバイダー",
+              zh: "AI 提供方",
+            })}
           </span>
         </button>
 
@@ -126,11 +143,23 @@ export function StatusBar({
 
         {/* Save indicator */}
         <div className="flex items-center gap-1">
-          <span className={`w-1.5 h-1.5 rounded-full ${isDirty ? 'bg-amber-400 animate-pulse' : 'bg-green-400'}`} />
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${isDirty ? "bg-amber-400 animate-pulse" : "bg-green-400"}`}
+          />
           <span className="text-[10px]">
             {isDirty
-              ? L4(lang || "ko", { ko: "미저장", en: "Unsaved", ja: "未保存", zh: "未保存" })
-              : L4(lang || "ko", { ko: "저장됨", en: "Saved", ja: "保存済み", zh: "已保存" })}
+              ? L4(lang || "ko", {
+                  ko: "미저장",
+                  en: "Unsaved",
+                  ja: "未保存",
+                  zh: "未保存",
+                })
+              : L4(lang || "ko", {
+                  ko: "저장됨",
+                  en: "Saved",
+                  ja: "保存済み",
+                  zh: "已保存",
+                })}
           </span>
         </div>
 
@@ -138,11 +167,15 @@ export function StatusBar({
         {verificationScore != null && (
           <>
             {SEPARATOR}
-            <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${
-              verificationScore >= 77 ? 'bg-green-500/15 text-green-300' :
-              verificationScore >= 60 ? 'bg-amber-500/15 text-amber-300' :
-              'bg-red-500/15 text-red-300'
-            }`}>
+            <div
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                verificationScore >= 77
+                  ? "bg-green-500/15 text-green-300"
+                  : verificationScore >= 60
+                    ? "bg-amber-500/15 text-amber-300"
+                    : "bg-red-500/15 text-red-300"
+              }`}
+            >
               {verificationScore}/100
             </div>
           </>
@@ -201,13 +234,29 @@ export function StatusBar({
             </span>
 
             {/* Line count */}
-            <span className="hidden md:inline" title={L4(lang || "ko", { ko: "총 줄 수", en: "Total Lines", ja: "総行数", zh: "总行数" })}>
+            <span
+              className="hidden md:inline"
+              title={L4(lang || "ko", {
+                ko: "총 줄 수",
+                en: "Total Lines",
+                ja: "総行数",
+                zh: "总行数",
+              })}
+            >
               {activeFile.content.split("\n").length}{" "}
               {L4(lang || "ko", { ko: "줄", en: "lines", ja: "行", zh: "行" })}
             </span>
 
             {/* File size */}
-            <span className="hidden md:inline" title={L4(lang || "ko", { ko: "파일 크기", en: "File Size", ja: "ファイルサイズ", zh: "文件大小" })}>
+            <span
+              className="hidden md:inline"
+              title={L4(lang || "ko", {
+                ko: "파일 크기",
+                en: "File Size",
+                ja: "ファイルサイズ",
+                zh: "文件大小",
+              })}
+            >
               {computeFileSize(activeFile.content)}
             </span>
           </>
@@ -216,9 +265,7 @@ export function StatusBar({
         {SEPARATOR}
 
         {/* Font size indicator */}
-        {fontSize != null && (
-          <span className="opacity-70">{fontSize}px</span>
-        )}
+        {fontSize != null && <span className="opacity-70">{fontSize}px</span>}
 
         <span className="opacity-60">EH Studio</span>
       </div>

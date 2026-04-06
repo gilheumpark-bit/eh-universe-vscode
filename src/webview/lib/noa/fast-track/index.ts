@@ -133,7 +133,10 @@ function countOccurrences(text: string, keyword: string): number {
   return count;
 }
 
-function countDistinctMatches(text: string, keywords: readonly string[]): number {
+function countDistinctMatches(
+  text: string,
+  keywords: readonly string[],
+): number {
   let distinct = 0;
   for (const kw of keywords) {
     if (text.includes(kw)) distinct++;

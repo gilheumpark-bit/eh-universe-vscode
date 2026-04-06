@@ -2,21 +2,26 @@
 // Code Studio — Code Sandbox (isolated execution)
 // ============================================================
 
-import type { FileNode } from '../core/types';
-import { streamChat } from '@/lib/ai-providers';
+import type { FileNode } from "../core/types";
+import { streamChat } from "@/lib/ai-providers";
 
 // ============================================================
 // PART 1 — Types
 // ============================================================
 
-export type SandboxStatus = 'draft' | 'reviewing' | 'approved' | 'rejected' | 'merged';
+export type SandboxStatus =
+  | "draft"
+  | "reviewing"
+  | "approved"
+  | "rejected"
+  | "merged";
 
 export interface SandboxFile {
   path: string;
   content: string;
   isNew: boolean;
   originalContent?: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
 }
 
 export interface Sandbox {
@@ -33,7 +38,7 @@ export interface Sandbox {
 export interface SandboxReview {
   reviewerId: string;
   score: number;
-  status: 'pass' | 'warn' | 'fail';
+  status: "pass" | "warn" | "fail";
   comments: string[];
   timestamp: number;
 }
@@ -51,10 +56,10 @@ export interface SandboxExecResult {
 // PART 2 — Storage
 // ============================================================
 
-const STORAGE_KEY = 'eh_sandboxes';
+const STORAGE_KEY = "eh_sandboxes";
 
 function loadSandboxes(): Sandbox[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? (JSON.parse(raw) as Sandbox[]) : [];
@@ -64,7 +69,7 @@ function loadSandboxes(): Sandbox[] {
 }
 
 function saveSandboxes(boxes: Sandbox[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(boxes));
 }
 
@@ -80,8 +85,14 @@ function uid(): string {
 
 export function createSandbox(name: string, description: string): Sandbox {
   const sb: Sandbox = {
-    id: uid(), name, description, status: 'draft',
-    files: [], createdAt: Date.now(), updatedAt: Date.now(), reviews: [],
+    id: uid(),
+    name,
+    description,
+    status: "draft",
+    files: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    reviews: [],
   };
   const boxes = loadSandboxes();
   boxes.push(sb);
@@ -101,10 +112,7 @@ export function deleteSandbox(id: string): void {
   saveSandboxes(loadSandboxes().filter((s) => s.id !== id));
 }
 
-export function addSandboxFile(
-  sandboxId: string,
-  file: SandboxFile,
-): void {
+export function addSandboxFile(sandboxId: string, file: SandboxFile): void {
   const boxes = loadSandboxes();
   const sb = boxes.find((s) => s.id === sandboxId);
   if (sb) {
@@ -130,27 +138,40 @@ export function updateSandboxStatus(id: string, status: SandboxStatus): void {
 // PART 4 — Isolated Execution
 // ============================================================
 
-export function executeInIframe(code: string, timeoutMs = 5000): Promise<SandboxExecResult> {
+export function executeInIframe(
+  code: string,
+  timeoutMs = 5000,
+): Promise<SandboxExecResult> {
   return new Promise((resolve) => {
     const start = Date.now();
-    if (typeof document === 'undefined') {
-      resolve({ output: '', error: 'No DOM available', exitCode: 1, durationMs: 0 });
+    if (typeof document === "undefined") {
+      resolve({
+        output: "",
+        error: "No DOM available",
+        exitCode: 1,
+        durationMs: 0,
+      });
       return;
     }
 
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.sandbox.add('allow-scripts');
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.sandbox.add("allow-scripts");
     document.body.appendChild(iframe);
 
     const timer = setTimeout(() => {
       cleanup();
-      resolve({ output: '', error: 'Execution timeout', exitCode: 1, durationMs: timeoutMs });
+      resolve({
+        output: "",
+        error: "Execution timeout",
+        exitCode: 1,
+        durationMs: timeoutMs,
+      });
     }, timeoutMs);
 
     function cleanup() {
       clearTimeout(timer);
-      window.removeEventListener('message', handler);
+      window.removeEventListener("message", handler);
       document.body.removeChild(iframe);
     }
 
@@ -158,17 +179,17 @@ export function executeInIframe(code: string, timeoutMs = 5000): Promise<Sandbox
       if (e.source !== iframe.contentWindow) return;
       cleanup();
       resolve({
-        output: e.data?.output ?? '',
+        output: e.data?.output ?? "",
         error: e.data?.error,
         exitCode: e.data?.error ? 1 : 0,
         durationMs: Date.now() - start,
       });
     }
 
-    window.addEventListener('message', handler);
+    window.addEventListener("message", handler);
 
     // 코드 인젝션 방지: script 태그 탈출 차단 + base64 인코딩으로 격리
-    const safeCode = code.replace(/<\/script/gi, '<\\/script');
+    const safeCode = code.replace(/<\/script/gi, "<\\/script");
     const encoded = btoa(unescape(encodeURIComponent(safeCode)));
     const html = `<!doctype html><html><body><script>
       try {
@@ -198,22 +219,42 @@ export async function reviewSandbox(
   signal?: AbortSignal,
 ): Promise<SandboxReview> {
   const filesContext = sandbox.files
-    .map((f) => `--- ${f.path} (${f.isNew ? 'new' : 'modified'}) ---\n${f.content.slice(0, 1000)}`)
-    .join('\n\n');
+    .map(
+      (f) =>
+        `--- ${f.path} (${f.isNew ? "new" : "modified"}) ---\n${f.content.slice(0, 1000)}`,
+    )
+    .join("\n\n");
 
-  let raw = '';
+  let raw = "";
   await streamChat({
-    systemInstruction: 'Review the sandbox code changes. Respond with JSON: {"score":0-100,"status":"pass"|"warn"|"fail","comments":["..."]}',
-    messages: [{ role: 'user', content: `Sandbox: ${sandbox.name}\n\n${filesContext}` }],
-    onChunk: (t) => { raw += t; },
+    systemInstruction:
+      'Review the sandbox code changes. Respond with JSON: {"score":0-100,"status":"pass"|"warn"|"fail","comments":["..."]}',
+    messages: [
+      { role: "user", content: `Sandbox: ${sandbox.name}\n\n${filesContext}` },
+    ],
+    onChunk: (t) => {
+      raw += t;
+    },
     signal,
   });
 
   try {
     const p = JSON.parse(raw.trim());
-    return { reviewerId: 'ai', score: p.score ?? 50, status: p.status ?? 'warn', comments: p.comments ?? [], timestamp: Date.now() };
+    return {
+      reviewerId: "ai",
+      score: p.score ?? 50,
+      status: p.status ?? "warn",
+      comments: p.comments ?? [],
+      timestamp: Date.now(),
+    };
   } catch {
-    return { reviewerId: 'ai', score: 50, status: 'warn', comments: ['Review parsing failed'], timestamp: Date.now() };
+    return {
+      reviewerId: "ai",
+      score: 50,
+      status: "warn",
+      comments: ["Review parsing failed"],
+      timestamp: Date.now(),
+    };
   }
 }
 

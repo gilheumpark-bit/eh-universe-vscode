@@ -4,11 +4,11 @@
 // Terminal AI: analyze command errors via streamChat,
 // suggest fixes, explain error messages, auto-retry.
 
-import { streamChat } from '@/lib/ai-providers';
-import { logger } from '@/lib/logger';
+import { streamChat } from "@/lib/ai-providers";
+import { logger } from "@/lib/logger";
 
 export interface TerminalAISuggestion {
-  type: 'command' | 'code-fix' | 'explanation';
+  type: "command" | "code-fix" | "explanation";
   summary: string;
   suggestion: string;
   confidence: number;
@@ -41,27 +41,34 @@ Prefer actionable suggestions over generic explanations.`;
 // PART 2 — Error Analysis
 // ============================================================
 
-function buildUserPrompt(command: string, output: string, exitCode: number): string {
+function buildUserPrompt(
+  command: string,
+  output: string,
+  exitCode: number,
+): string {
   const maxLen = 3000;
-  const truncated = output.length > maxLen
-    ? output.slice(0, maxLen) + '\n... (truncated)'
-    : output;
+  const truncated =
+    output.length > maxLen
+      ? output.slice(0, maxLen) + "\n... (truncated)"
+      : output;
   return `Failed command: ${command}\nExit code: ${exitCode}\n\nTerminal output:\n${truncated}`;
 }
 
 function parseSuggestion(raw: string): TerminalAISuggestion | null {
   try {
     let cleaned = raw.trim();
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned
+        .replace(/^```(?:json)?\s*\n?/, "")
+        .replace(/\n?```\s*$/, "");
     }
     const parsed = JSON.parse(cleaned);
     if (
       !parsed.type ||
-      !['command', 'code-fix', 'explanation'].includes(parsed.type) ||
-      typeof parsed.summary !== 'string' ||
-      typeof parsed.suggestion !== 'string' ||
-      typeof parsed.confidence !== 'number'
+      !["command", "code-fix", "explanation"].includes(parsed.type) ||
+      typeof parsed.summary !== "string" ||
+      typeof parsed.suggestion !== "string" ||
+      typeof parsed.confidence !== "number"
     ) {
       return null;
     }
@@ -84,18 +91,22 @@ export async function analyzeTerminalError(
 ): Promise<TerminalAISuggestion | null> {
   if (exitCode === 0 && !output.trim()) return null;
 
-  let accumulated = '';
+  let accumulated = "";
   try {
     await streamChat({
       systemInstruction: TERMINAL_AI_SYSTEM,
-      messages: [{ role: 'user', content: buildUserPrompt(command, output, exitCode) }],
+      messages: [
+        { role: "user", content: buildUserPrompt(command, output, exitCode) },
+      ],
       temperature: 0.3,
       signal,
-      onChunk: (text: string) => { accumulated += text; },
+      onChunk: (text: string) => {
+        accumulated += text;
+      },
     });
   } catch (err) {
-    if (err instanceof DOMException && err.name === 'AbortError') return null;
-    logger.warn('terminal-ai', 'Analysis failed:', err);
+    if (err instanceof DOMException && err.name === "AbortError") return null;
+    logger.warn("terminal-ai", "Analysis failed:", err);
     return null;
   }
 
@@ -117,18 +128,25 @@ export async function explainTerminalError(
   errorOutput: string,
   signal?: AbortSignal,
 ): Promise<string> {
-  let accumulated = '';
+  let accumulated = "";
   try {
     await streamChat({
       systemInstruction: EXPLAIN_SYSTEM,
-      messages: [{ role: 'user', content: `Explain this error:\n${errorOutput.slice(0, 2000)}` }],
+      messages: [
+        {
+          role: "user",
+          content: `Explain this error:\n${errorOutput.slice(0, 2000)}`,
+        },
+      ],
       temperature: 0.3,
       signal,
-      onChunk: (text: string) => { accumulated += text; },
+      onChunk: (text: string) => {
+        accumulated += text;
+      },
     });
-    return accumulated.trim() || 'Unable to explain this error.';
+    return accumulated.trim() || "Unable to explain this error.";
   } catch {
-    return 'Failed to analyze the error.';
+    return "Failed to analyze the error.";
   }
 }
 
@@ -155,7 +173,8 @@ export async function analyzeAndSuggestRetry(
   ]);
 
   const retryCommand =
-    suggestion?.type === 'command' && suggestion.confidence >= confidenceThreshold
+    suggestion?.type === "command" &&
+    suggestion.confidence >= confidenceThreshold
       ? suggestion.suggestion
       : null;
 

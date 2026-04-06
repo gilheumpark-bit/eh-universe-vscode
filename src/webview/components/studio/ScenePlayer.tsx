@@ -9,16 +9,39 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import {
-  Play, Pause, SkipForward, SkipBack, Volume2, VolumeX,
-  Maximize2, Minimize2, BarChart3, X, ChevronLeft, ChevronRight,
-  Headphones, Film,
+  Play,
+  Pause,
+  SkipForward,
+  SkipBack,
+  Volume2,
+  VolumeX,
+  Maximize2,
+  Minimize2,
+  BarChart3,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Headphones,
+  Film,
 } from "lucide-react";
 import type {
-  ParsedScene, SceneBeat, VoiceMapping, ParticleType,
-  TTSController, Emotion,
+  ParsedScene,
+  SceneBeat,
+  VoiceMapping,
+  ParticleType,
+  TTSController,
+  Emotion,
 } from "@/engine/scene-parser";
-import { createTTSController, adjustVoiceForEmotion } from "@/engine/scene-parser";
-import { createAudioEngine, detectAmbient, detectSFX, getDominantEmotion } from "@/engine/scene-audio";
+import {
+  createTTSController,
+  adjustVoiceForEmotion,
+} from "@/engine/scene-parser";
+import {
+  createAudioEngine,
+  detectAmbient,
+  detectSFX,
+  getDominantEmotion,
+} from "@/engine/scene-audio";
 import type { AudioEngine } from "@/engine/scene-audio";
 import type { AppLanguage } from "@/lib/studio-types";
 import { L4 } from "@/lib/i18n";
@@ -28,15 +51,15 @@ import { L4 } from "@/lib/i18n";
 // ============================================================
 
 /** 프리뷰 모드: radio(라디오 드라마) | visual(비주얼 노벨) */
-export type PreviewMode = 'radio' | 'visual';
+export type PreviewMode = "radio" | "visual";
 
 interface ScenePlayerProps {
   scenes: ParsedScene[];
   voiceMappings: VoiceMapping[];
   language: AppLanguage;
-  mode?: PreviewMode;           // 기본: 'visual'
+  mode?: PreviewMode; // 기본: 'visual'
   onClose?: () => void;
-  showMetrics?: boolean;        // 텐션/EOS 오버레이
+  showMetrics?: boolean; // 텐션/EOS 오버레이
   autoPlay?: boolean;
   backgroundUrls?: Map<string, string>; // sceneId → image URL
   characterImages?: Map<string, Map<string, string>>; // name → emotion → url
@@ -47,10 +70,10 @@ interface PlaybackState {
   beatIndex: number;
   isPlaying: boolean;
   isPaused: boolean;
-  speed: number;            // 0.5 | 0.75 | 1 | 1.5 | 2
+  speed: number; // 0.5 | 0.75 | 1 | 1.5 | 2
   voiceEnabled: boolean;
   fullscreen: boolean;
-  showOverlay: boolean;     // 메트릭 오버레이
+  showOverlay: boolean; // 메트릭 오버레이
 }
 
 // IDENTITY_SEAL: PART-1 | role=types | inputs=none | outputs=ScenePlayerProps,PlaybackState
@@ -61,28 +84,50 @@ interface PlaybackState {
 
 function getMoodFilter(mood?: string): string {
   switch (mood) {
-    case "dark": return "brightness(0.6) contrast(1.1)";
-    case "bright": return "brightness(1.1) saturate(1.2)";
-    case "rainy": return "brightness(0.7) saturate(0.8) hue-rotate(10deg)";
-    case "snowy": return "brightness(1.15) saturate(0.6)";
-    case "misty": return "brightness(0.85) contrast(0.85) blur(1px)";
-    case "eerie": return "brightness(0.5) saturate(0.4) hue-rotate(20deg)";
-    case "warm": return "brightness(1.05) saturate(1.1) sepia(0.15)";
-    case "cold": return "brightness(0.9) saturate(0.7) hue-rotate(-10deg)";
-    case "peaceful": return "brightness(1.05) saturate(1.1)";
-    default: return "none";
+    case "dark":
+      return "brightness(0.6) contrast(1.1)";
+    case "bright":
+      return "brightness(1.1) saturate(1.2)";
+    case "rainy":
+      return "brightness(0.7) saturate(0.8) hue-rotate(10deg)";
+    case "snowy":
+      return "brightness(1.15) saturate(0.6)";
+    case "misty":
+      return "brightness(0.85) contrast(0.85) blur(1px)";
+    case "eerie":
+      return "brightness(0.5) saturate(0.4) hue-rotate(20deg)";
+    case "warm":
+      return "brightness(1.05) saturate(1.1) sepia(0.15)";
+    case "cold":
+      return "brightness(0.9) saturate(0.7) hue-rotate(-10deg)";
+    case "peaceful":
+      return "brightness(1.05) saturate(1.1)";
+    default:
+      return "none";
   }
 }
 
 function getMoodGradient(mood?: string, timeOfDay?: string): string {
-  if (timeOfDay === "밤" || timeOfDay === "night") return "linear-gradient(180deg, #0a0e1a 0%, #1a1f3a 50%, #0d1220 100%)";
-  if (timeOfDay === "새벽" || timeOfDay === "dawn") return "linear-gradient(180deg, #1a1040 0%, #4a2060 30%, #d45050 70%, #f0a050 100%)";
-  if (timeOfDay === "저녁" || timeOfDay === "evening" || timeOfDay === "해질녘" || timeOfDay === "dusk") return "linear-gradient(180deg, #2a1a3a 0%, #c04040 40%, #f09040 80%, #f0d080 100%)";
+  if (timeOfDay === "밤" || timeOfDay === "night")
+    return "linear-gradient(180deg, #0a0e1a 0%, #1a1f3a 50%, #0d1220 100%)";
+  if (timeOfDay === "새벽" || timeOfDay === "dawn")
+    return "linear-gradient(180deg, #1a1040 0%, #4a2060 30%, #d45050 70%, #f0a050 100%)";
+  if (
+    timeOfDay === "저녁" ||
+    timeOfDay === "evening" ||
+    timeOfDay === "해질녘" ||
+    timeOfDay === "dusk"
+  )
+    return "linear-gradient(180deg, #2a1a3a 0%, #c04040 40%, #f09040 80%, #f0d080 100%)";
   switch (mood) {
-    case "dark": return "linear-gradient(180deg, #0a0a14 0%, #1a1a28 100%)";
-    case "eerie": return "linear-gradient(180deg, #0a1018 0%, #1a2030 100%)";
-    case "peaceful": return "linear-gradient(180deg, #1a2a3a 0%, #2a4a5a 50%, #3a6a7a 100%)";
-    default: return "linear-gradient(180deg, #0d1117 0%, #161b22 50%, #21262d 100%)";
+    case "dark":
+      return "linear-gradient(180deg, #0a0a14 0%, #1a1a28 100%)";
+    case "eerie":
+      return "linear-gradient(180deg, #0a1018 0%, #1a2030 100%)";
+    case "peaceful":
+      return "linear-gradient(180deg, #1a2a3a 0%, #2a4a5a 50%, #3a6a7a 100%)";
+    default:
+      return "linear-gradient(180deg, #0d1117 0%, #161b22 50%, #21262d 100%)";
   }
 }
 
@@ -108,15 +153,33 @@ function ParticleLayer({ type }: { type: ParticleType }) {
 
     const W = canvas.offsetWidth;
     const H = canvas.offsetHeight;
-    const particles: { x: number; y: number; speed: number; size: number; opacity: number }[] = [];
-    const count = type === "rain" ? 120 : type === "snow" ? 80 : type === "petals" ? 30 : 50;
+    const particles: {
+      x: number;
+      y: number;
+      speed: number;
+      size: number;
+      opacity: number;
+    }[] = [];
+    const count =
+      type === "rain"
+        ? 120
+        : type === "snow"
+          ? 80
+          : type === "petals"
+            ? 30
+            : 50;
 
     for (let i = 0; i < count; i++) {
       particles.push({
         x: Math.random() * W,
         y: Math.random() * H,
         speed: 1 + Math.random() * 3,
-        size: type === "rain" ? 1.5 : type === "snow" ? 2 + Math.random() * 2 : 3 + Math.random() * 3,
+        size:
+          type === "rain"
+            ? 1.5
+            : type === "snow"
+              ? 2 + Math.random() * 2
+              : 3 + Math.random() * 3,
         opacity: 0.3 + Math.random() * 0.5,
       });
     }
@@ -148,13 +211,29 @@ function ParticleLayer({ type }: { type: ParticleType }) {
         }
 
         // 이동
-        if (type === "rain") { p.y += p.speed * 4; p.x -= p.speed * 0.5; }
-        else if (type === "snow") { p.y += p.speed * 0.8; p.x += Math.sin(p.y * 0.01) * 0.5; }
-        else if (type === "petals") { p.y += p.speed * 0.5; p.x += Math.sin(p.y * 0.02) * 1.5; }
-        else if (type === "sparks") { p.y -= p.speed * 2; p.x += (Math.random() - 0.5) * 2; p.opacity -= 0.005; }
-        else { p.y += p.speed * 0.3; p.x += (Math.random() - 0.5) * 0.5; }
+        if (type === "rain") {
+          p.y += p.speed * 4;
+          p.x -= p.speed * 0.5;
+        } else if (type === "snow") {
+          p.y += p.speed * 0.8;
+          p.x += Math.sin(p.y * 0.01) * 0.5;
+        } else if (type === "petals") {
+          p.y += p.speed * 0.5;
+          p.x += Math.sin(p.y * 0.02) * 1.5;
+        } else if (type === "sparks") {
+          p.y -= p.speed * 2;
+          p.x += (Math.random() - 0.5) * 2;
+          p.opacity -= 0.005;
+        } else {
+          p.y += p.speed * 0.3;
+          p.x += (Math.random() - 0.5) * 0.5;
+        }
 
-        if (p.y > H || p.y < 0 || p.opacity <= 0) { p.y = type === "sparks" ? H : 0; p.x = Math.random() * W; p.opacity = 0.3 + Math.random() * 0.5; }
+        if (p.y > H || p.y < 0 || p.opacity <= 0) {
+          p.y = type === "sparks" ? H : 0;
+          p.x = Math.random() * W;
+          p.opacity = 0.3 + Math.random() * 0.5;
+        }
       }
       animRef.current = requestAnimationFrame(draw);
     }
@@ -164,7 +243,13 @@ function ParticleLayer({ type }: { type: ParticleType }) {
   }, [type]);
 
   if (type === "none") return null;
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden="true" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      aria-hidden="true"
+    />
+  );
 }
 
 // IDENTITY_SEAL: PART-3 | role=particles | inputs=ParticleType | outputs=Canvas-animation
@@ -173,7 +258,15 @@ function ParticleLayer({ type }: { type: ParticleType }) {
 // PART 4 — 타이핑 이펙트
 // ============================================================
 
-function TypingText({ text, speed = 40, onDone }: { text: string; speed?: number; onDone?: () => void }) {
+function TypingText({
+  text,
+  speed = 40,
+  onDone,
+}: {
+  text: string;
+  speed?: number;
+  onDone?: () => void;
+}) {
   const [displayed, setDisplayed] = useState("");
   const [done, setDone] = useState(false);
   const onDoneRef = useRef(onDone);
@@ -186,7 +279,11 @@ function TypingText({ text, speed = 40, onDone }: { text: string; speed?: number
     const interval = setInterval(() => {
       i++;
       setDisplayed(text.slice(0, i));
-      if (i >= text.length) { clearInterval(interval); setDone(true); onDoneRef.current?.(); }
+      if (i >= text.length) {
+        clearInterval(interval);
+        setDone(true);
+        onDoneRef.current?.();
+      }
     }, speed);
     return () => clearInterval(interval);
   }, [text, speed]);
@@ -211,17 +308,32 @@ function getEmotionEmoji(emotion?: Emotion): string {
   const dominant = entries.sort((a, b) => b[1] - a[1])[0];
   if (!dominant || dominant[1] < 0.2) return "😐";
   switch (dominant[0]) {
-    case "joy": return "😊";
-    case "sadness": return "😢";
-    case "anger": return "😠";
-    case "fear": return "😨";
-    case "surprise": return "😲";
+    case "joy":
+      return "😊";
+    case "sadness":
+      return "😢";
+    case "anger":
+      return "😠";
+    case "fear":
+      return "😨";
+    case "surprise":
+      return "😲";
   }
 }
 
-function CharacterDisplay({ name, emotion, side }: { name: string; emotion?: Emotion; side: "left" | "right" }) {
+function CharacterDisplay({
+  name,
+  emotion,
+  side,
+}: {
+  name: string;
+  emotion?: Emotion;
+  side: "left" | "right";
+}) {
   return (
-    <div className={`absolute bottom-32 ${side === "left" ? "left-8" : "right-8"} flex flex-col items-center gap-1 transition-all duration-300`}>
+    <div
+      className={`absolute bottom-32 ${side === "left" ? "left-8" : "right-8"} flex flex-col items-center gap-1 transition-all duration-300`}
+    >
       <div className="text-3xl">{getEmotionEmoji(emotion)}</div>
       <div className="bg-bg-secondary/80 backdrop-blur-sm rounded-lg px-3 py-1 border border-border/30">
         <span className="text-xs font-mono text-accent-purple">{name}</span>
@@ -281,7 +393,9 @@ function DialogueBox({
         )}
 
         {/* 내용 */}
-        <div className={`text-text-primary leading-relaxed ${beat.type === "thought" ? "italic text-text-secondary" : ""} ${beat.type === "description" ? "text-text-secondary text-sm" : "text-base"}`}>
+        <div
+          className={`text-text-primary leading-relaxed ${beat.type === "thought" ? "italic text-text-secondary" : ""} ${beat.type === "description" ? "text-text-secondary text-sm" : "text-base"}`}
+        >
           <TypingText text={beat.text} speed={typingSpeed} />
         </div>
 
@@ -289,18 +403,51 @@ function DialogueBox({
         <div className="mt-3 flex items-center justify-between">
           {showMetrics ? (
             <div className="flex items-center gap-3 text-[10px] text-text-tertiary">
-              <span>{L4(language, { ko: '텐션', en: 'Tension' })} <span className={tension > 70 ? "text-accent-red" : tension > 40 ? "text-accent-amber" : "text-accent-green"}>{tension}</span></span>
-              <span>{L4(language, { ko: '템포', en: 'Tempo' })} {beat.tempo === "fast" ? "⚡" : beat.tempo === "slow" ? "🐌" : "▶"}</span>
-              <span>{L4(language, { ko: '카메라', en: 'Camera' })} {beat.camera}</span>
+              <span>
+                {L4(language, { ko: "텐션", en: "Tension" })}{" "}
+                <span
+                  className={
+                    tension > 70
+                      ? "text-accent-red"
+                      : tension > 40
+                        ? "text-accent-amber"
+                        : "text-accent-green"
+                  }
+                >
+                  {tension}
+                </span>
+              </span>
+              <span>
+                {L4(language, { ko: "템포", en: "Tempo" })}{" "}
+                {beat.tempo === "fast"
+                  ? "⚡"
+                  : beat.tempo === "slow"
+                    ? "🐌"
+                    : "▶"}
+              </span>
+              <span>
+                {L4(language, { ko: "카메라", en: "Camera" })} {beat.camera}
+              </span>
             </div>
-          ) : <div />}
+          ) : (
+            <div />
+          )}
 
           <div className="flex items-center gap-2">
-            <button onClick={onPrev} disabled={!canPrev} className="p-1.5 rounded-lg hover:bg-white/5 disabled:opacity-40 transition-colors" aria-label={L4(language, { ko: '이전', en: 'Previous' })}>
+            <button
+              onClick={onPrev}
+              disabled={!canPrev}
+              className="p-1.5 rounded-lg hover:bg-white/5 disabled:opacity-40 transition-colors"
+              aria-label={L4(language, { ko: "이전", en: "Previous" })}
+            >
               <ChevronLeft className="h-4 w-4 text-text-secondary" />
             </button>
-            <button onClick={onNext} className="px-4 py-1.5 bg-accent-purple/20 hover:bg-accent-purple/30 text-accent-purple rounded-lg text-xs font-mono transition-colors" aria-label={L4(language, { ko: '다음', en: 'Next' })}>
-              {L4(language, { ko: '다음', en: 'Next' })} ▶
+            <button
+              onClick={onNext}
+              className="px-4 py-1.5 bg-accent-purple/20 hover:bg-accent-purple/30 text-accent-purple rounded-lg text-xs font-mono transition-colors"
+              aria-label={L4(language, { ko: "다음", en: "Next" })}
+            >
+              {L4(language, { ko: "다음", en: "Next" })} ▶
             </button>
           </div>
         </div>
@@ -319,14 +466,14 @@ export default function ScenePlayer({
   scenes,
   voiceMappings,
   language,
-  mode = 'visual',
+  mode = "visual",
   onClose,
   showMetrics = false,
   autoPlay = false,
   backgroundUrls,
   characterImages,
 }: ScenePlayerProps) {
-  const isRadio = mode === 'radio';
+  const isRadio = mode === "radio";
   const [state, setState] = useState<PlaybackState>({
     sceneIndex: 0,
     beatIndex: 0,
@@ -348,7 +495,10 @@ export default function ScenePlayer({
   const currentScene = scenes[state.sceneIndex];
   const currentBeat = currentScene?.beats[state.beatIndex];
 
-  const totalBeats = useMemo(() => scenes.reduce((s, sc) => s + sc.beats.length, 0), [scenes]);
+  const totalBeats = useMemo(
+    () => scenes.reduce((s, sc) => s + sc.beats.length, 0),
+    [scenes],
+  );
   const currentGlobalBeat = useMemo(() => {
     let count = 0;
     for (let i = 0; i < state.sceneIndex; i++) count += scenes[i].beats.length;
@@ -359,7 +509,10 @@ export default function ScenePlayer({
   useEffect(() => {
     ttsRef.current = createTTSController();
     audioRef.current = createAudioEngine();
-    return () => { ttsRef.current?.stop(); audioRef.current?.dispose(); };
+    return () => {
+      ttsRef.current?.stop();
+      audioRef.current?.dispose();
+    };
   }, []);
 
   // 장면 전환 시 환경음 변경
@@ -382,11 +535,15 @@ export default function ScenePlayer({
     if (!currentBeat || !state.voiceEnabled || !ttsRef.current) return;
     if (state.isPaused) return;
 
-    const voice = voiceMappings.find((v) => v.characterName === (currentBeat.speaker ?? "__narrator__"))
-      ?? voiceMappings.find((v) => v.characterName === "__narrator__");
+    const voice =
+      voiceMappings.find(
+        (v) => v.characterName === (currentBeat.speaker ?? "__narrator__"),
+      ) ?? voiceMappings.find((v) => v.characterName === "__narrator__");
 
     if (!voice) return; // P0#3: voice가 없으면 무시
-    ttsRef.current.speak(currentBeat.text, voice, currentBeat.emotion).catch(() => {});
+    ttsRef.current
+      .speak(currentBeat.text, voice, currentBeat.emotion)
+      .catch(() => {});
   }, [currentBeat, state.voiceEnabled, state.isPaused, voiceMappings]);
 
   // P0#2 + P1#10 fix: currentBeat + goNext 의존성 추가
@@ -409,10 +566,19 @@ export default function ScenePlayer({
   useEffect(() => {
     if (!state.isPlaying || state.isPaused || !currentBeat) return;
 
-    const duration = (currentBeat.text.length / 8) * 1000 / state.speed + 1500;
+    const duration =
+      ((currentBeat.text.length / 8) * 1000) / state.speed + 1500;
     autoPlayRef.current = setTimeout(() => goNext(), duration);
     return () => clearTimeout(autoPlayRef.current);
-  }, [state.isPlaying, state.isPaused, state.sceneIndex, state.beatIndex, state.speed, currentBeat, goNext]);
+  }, [
+    state.isPlaying,
+    state.isPaused,
+    state.sceneIndex,
+    state.beatIndex,
+    state.speed,
+    currentBeat,
+    goNext,
+  ]);
 
   const goPrev = useCallback(() => {
     ttsRef.current?.stop();
@@ -422,7 +588,11 @@ export default function ScenePlayer({
       }
       if (prev.sceneIndex > 0) {
         const prevScene = scenes[prev.sceneIndex - 1];
-        return { ...prev, sceneIndex: prev.sceneIndex - 1, beatIndex: prevScene.beats.length - 1 };
+        return {
+          ...prev,
+          sceneIndex: prev.sceneIndex - 1,
+          beatIndex: prevScene.beats.length - 1,
+        };
       }
       return prev;
     });
@@ -445,14 +615,24 @@ export default function ScenePlayer({
 
   const canPrev = state.sceneIndex > 0 || state.beatIndex > 0;
   const particles = currentScene?.mood
-    ? (currentScene.mood === "rainy" ? "rain" : currentScene.mood === "snowy" ? "snow" : "none") as ParticleType
+    ? ((currentScene.mood === "rainy"
+        ? "rain"
+        : currentScene.mood === "snowy"
+          ? "snow"
+          : "none") as ParticleType)
     : "none";
 
   // 키보드
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); goNext(); }
-      if (e.key === "ArrowLeft") { e.preventDefault(); goPrev(); }
+      if (e.key === "ArrowRight" || e.key === " ") {
+        e.preventDefault();
+        goNext();
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goPrev();
+      }
       if (e.key === "Escape" && onClose) onClose();
       if (e.key === "p") togglePlay();
     };
@@ -472,27 +652,45 @@ export default function ScenePlayer({
   const bgGradient = getMoodGradient(currentScene.mood, currentScene.timeOfDay);
 
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-hidden select-none" style={{ background: bgGradient }}>
+    <div
+      ref={containerRef}
+      className="relative w-full h-full overflow-hidden select-none"
+      style={{ background: bgGradient }}
+    >
       {/* ── 라디오 모드: 어둠 + 최소 비주얼 ── */}
       {isRadio && (
         <>
           <div className="absolute inset-0 bg-black" />
           {/* 중앙 파동 이펙트 */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className={`rounded-full border border-accent-purple/20 ${state.isPlaying && !state.isPaused ? 'animate-ping' : ''}`} style={{ width: 120, height: 120 }} />
-            <div className="absolute rounded-full border border-accent-purple/10" style={{ width: 200, height: 200 }} />
+            <div
+              className={`rounded-full border border-accent-purple/20 ${state.isPlaying && !state.isPaused ? "animate-ping" : ""}`}
+              style={{ width: 120, height: 120 }}
+            />
+            <div
+              className="absolute rounded-full border border-accent-purple/10"
+              style={{ width: 200, height: 200 }}
+            />
             <Headphones className="absolute h-8 w-8 text-accent-purple/40" />
           </div>
           {/* 라디오 모드에서도 비트 텍스트 페이드인 */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-16">
-            <p className={`text-center leading-loose transition-opacity duration-1000 max-w-xl ${
-              currentBeat.type === 'dialogue' ? 'text-lg text-text-primary font-medium' :
-              currentBeat.type === 'thought' ? 'text-base text-accent-purple/80 italic' :
-              currentBeat.type === 'description' ? 'text-sm text-text-tertiary' :
-              'text-base text-text-secondary'
-            }`} style={{ opacity: 0.8 }}>
-              {currentBeat.speaker && currentBeat.type === 'dialogue' && (
-                <span className="block text-xs text-accent-green/60 font-mono mb-2">{currentBeat.speaker}</span>
+            <p
+              className={`text-center leading-loose transition-opacity duration-1000 max-w-xl ${
+                currentBeat.type === "dialogue"
+                  ? "text-lg text-text-primary font-medium"
+                  : currentBeat.type === "thought"
+                    ? "text-base text-accent-purple/80 italic"
+                    : currentBeat.type === "description"
+                      ? "text-sm text-text-tertiary"
+                      : "text-base text-text-secondary"
+              }`}
+              style={{ opacity: 0.8 }}
+            >
+              {currentBeat.speaker && currentBeat.type === "dialogue" && (
+                <span className="block text-xs text-accent-green/60 font-mono mb-2">
+                  {currentBeat.speaker}
+                </span>
               )}
               {currentBeat.text}
             </p>
@@ -507,7 +705,11 @@ export default function ScenePlayer({
           {bgUrl && (
             <div
               className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
-              style={{ backgroundImage: `url(${bgUrl})`, filter: getMoodFilter(currentScene.mood), opacity: 0.6 }}
+              style={{
+                backgroundImage: `url(${bgUrl})`,
+                filter: getMoodFilter(currentScene.mood),
+                opacity: 0.6,
+              }}
             />
           )}
 
@@ -517,13 +719,23 @@ export default function ScenePlayer({
       )}
 
       {/* 비네팅 (양쪽 모드) */}
-      <div className="absolute inset-0 pointer-events-none" style={{ background: isRadio ? "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.8) 100%)" : "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)" }} />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: isRadio
+            ? "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.8) 100%)"
+            : "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)",
+        }}
+      />
 
       {/* 장면 타이틀 (전환 시) */}
       <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
-          <span className={`text-[10px] font-mono bg-bg-primary/40 backdrop-blur-sm rounded px-2 py-0.5 ${isRadio ? 'text-accent-purple' : 'text-text-tertiary'}`}>
-            {isRadio ? '🎧' : '🎬'} {currentScene.title} {currentScene.timeOfDay ? `· ${currentScene.timeOfDay}` : ""}
+          <span
+            className={`text-[10px] font-mono bg-bg-primary/40 backdrop-blur-sm rounded px-2 py-0.5 ${isRadio ? "text-accent-purple" : "text-text-tertiary"}`}
+          >
+            {isRadio ? "🎧" : "🎬"} {currentScene.title}{" "}
+            {currentScene.timeOfDay ? `· ${currentScene.timeOfDay}` : ""}
           </span>
           <span className="text-[9px] text-text-tertiary">
             {currentGlobalBeat}/{totalBeats}
@@ -532,15 +744,33 @@ export default function ScenePlayer({
 
         {/* 컨트롤 */}
         <div className="flex items-center gap-1">
-          <button onClick={() => setState((p) => ({ ...p, voiceEnabled: !p.voiceEnabled }))} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" aria-label="음성 토글">
-            {state.voiceEnabled ? <Volume2 className="h-3.5 w-3.5 text-text-secondary" /> : <VolumeX className="h-3.5 w-3.5 text-text-tertiary" />}
+          <button
+            onClick={() =>
+              setState((p) => ({ ...p, voiceEnabled: !p.voiceEnabled }))
+            }
+            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label="음성 토글"
+          >
+            {state.voiceEnabled ? (
+              <Volume2 className="h-3.5 w-3.5 text-text-secondary" />
+            ) : (
+              <VolumeX className="h-3.5 w-3.5 text-text-tertiary" />
+            )}
           </button>
-          <button onClick={() => setState((p) => ({ ...p, showOverlay: !p.showOverlay }))} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" aria-label="메트릭 토글">
+          <button
+            onClick={() =>
+              setState((p) => ({ ...p, showOverlay: !p.showOverlay }))
+            }
+            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label="메트릭 토글"
+          >
             <BarChart3 className="h-3.5 w-3.5 text-text-secondary" />
           </button>
           <select
             value={state.speed}
-            onChange={(e) => setState((p) => ({ ...p, speed: Number(e.target.value) }))}
+            onChange={(e) =>
+              setState((p) => ({ ...p, speed: Number(e.target.value) }))
+            }
             className="bg-transparent text-[10px] text-text-tertiary border-none outline-none cursor-pointer"
           >
             <option value={0.5}>0.5x</option>
@@ -549,11 +779,23 @@ export default function ScenePlayer({
             <option value={1.5}>1.5x</option>
             <option value={2}>2x</option>
           </select>
-          <button onClick={toggleFullscreen} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" aria-label="전체화면">
-            {state.fullscreen ? <Minimize2 className="h-3.5 w-3.5 text-text-secondary" /> : <Maximize2 className="h-3.5 w-3.5 text-text-secondary" />}
+          <button
+            onClick={toggleFullscreen}
+            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label="전체화면"
+          >
+            {state.fullscreen ? (
+              <Minimize2 className="h-3.5 w-3.5 text-text-secondary" />
+            ) : (
+              <Maximize2 className="h-3.5 w-3.5 text-text-secondary" />
+            )}
           </button>
           {onClose && (
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" aria-label="닫기">
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              aria-label="닫기"
+            >
               <X className="h-3.5 w-3.5 text-text-secondary" />
             </button>
           )}
@@ -562,13 +804,30 @@ export default function ScenePlayer({
 
       {/* 재생 컨트롤 (하단 중앙) */}
       <div className="absolute bottom-28 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
-        <button onClick={goPrev} disabled={!canPrev} className="p-2 rounded-full bg-bg-primary/30 backdrop-blur-sm hover:bg-white/10 disabled:opacity-40 transition-colors" aria-label="이전 비트">
+        <button
+          onClick={goPrev}
+          disabled={!canPrev}
+          className="p-2 rounded-full bg-bg-primary/30 backdrop-blur-sm hover:bg-white/10 disabled:opacity-40 transition-colors"
+          aria-label="이전 비트"
+        >
           <SkipBack className="h-4 w-4 text-text-secondary" />
         </button>
-        <button onClick={togglePlay} className="p-3 rounded-full bg-accent-purple/30 backdrop-blur-sm hover:bg-accent-purple/50 transition-colors" aria-label={state.isPlaying && !state.isPaused ? "일시정지" : "재생"}>
-          {state.isPlaying && !state.isPaused ? <Pause className="h-5 w-5 text-accent-purple" /> : <Play className="h-5 w-5 text-accent-purple" />}
+        <button
+          onClick={togglePlay}
+          className="p-3 rounded-full bg-accent-purple/30 backdrop-blur-sm hover:bg-accent-purple/50 transition-colors"
+          aria-label={state.isPlaying && !state.isPaused ? "일시정지" : "재생"}
+        >
+          {state.isPlaying && !state.isPaused ? (
+            <Pause className="h-5 w-5 text-accent-purple" />
+          ) : (
+            <Play className="h-5 w-5 text-accent-purple" />
+          )}
         </button>
-        <button onClick={goNext} className="p-2 rounded-full bg-bg-primary/30 backdrop-blur-sm hover:bg-white/10 transition-colors" aria-label="다음 비트">
+        <button
+          onClick={goNext}
+          className="p-2 rounded-full bg-bg-primary/30 backdrop-blur-sm hover:bg-white/10 transition-colors"
+          aria-label="다음 비트"
+        >
           <SkipForward className="h-4 w-4 text-text-secondary" />
         </button>
       </div>
@@ -577,42 +836,64 @@ export default function ScenePlayer({
       {!isRadio && currentBeat.speaker && (
         <>
           {/* 캐릭터 이미지 (있으면) */}
-          {characterImages?.get(currentBeat.speaker)?.get(getDominantEmotion(currentBeat.emotion)) ? (
+          {characterImages
+            ?.get(currentBeat.speaker)
+            ?.get(getDominantEmotion(currentBeat.emotion)) ? (
             <div className="absolute bottom-32 left-8 transition-all duration-500">
               <img
-                src={characterImages?.get(currentBeat.speaker)?.get(getDominantEmotion(currentBeat.emotion)) ?? ''}
+                src={
+                  characterImages
+                    ?.get(currentBeat.speaker)
+                    ?.get(getDominantEmotion(currentBeat.emotion)) ?? ""
+                }
                 alt={currentBeat.speaker}
                 className="h-64 object-contain drop-shadow-2xl"
               />
               <div className="text-center mt-1 bg-bg-secondary/80 backdrop-blur-sm rounded-lg px-3 py-1 border border-border/30">
-                <span className="text-xs font-mono text-accent-purple">{currentBeat.speaker}</span>
+                <span className="text-xs font-mono text-accent-purple">
+                  {currentBeat.speaker}
+                </span>
               </div>
             </div>
           ) : (
-            <CharacterDisplay name={currentBeat.speaker} emotion={currentBeat.emotion} side="left" />
+            <CharacterDisplay
+              name={currentBeat.speaker}
+              emotion={currentBeat.emotion}
+              side="left"
+            />
           )}
         </>
       )}
 
       {/* 대사창 (비주얼 모드), 라디오는 중앙 텍스트로 대체 */}
-      {!isRadio && <DialogueBox
-        beat={currentBeat}
-        speed={state.speed}
-        onNext={goNext}
-        onPrev={goPrev}
-        canPrev={canPrev}
-        showMetrics={state.showOverlay}
-        tension={currentScene.tension}
-        language={language}
-      />}
+      {!isRadio && (
+        <DialogueBox
+          beat={currentBeat}
+          speed={state.speed}
+          onNext={goNext}
+          onPrev={goPrev}
+          canPrev={canPrev}
+          showMetrics={state.showOverlay}
+          tension={currentScene.tension}
+          language={language}
+        />
+      )}
 
       {/* 라디오 모드 하단: 간단한 다음 버튼 */}
       {isRadio && (
         <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-4">
-          <button onClick={goPrev} disabled={!canPrev} className="p-2 rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-40 transition-colors" aria-label="이전">
+          <button
+            onClick={goPrev}
+            disabled={!canPrev}
+            className="p-2 rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-40 transition-colors"
+            aria-label="이전"
+          >
             <ChevronLeft className="h-5 w-5 text-text-secondary" />
           </button>
-          <button onClick={goNext} className="px-6 py-2 bg-accent-purple/15 hover:bg-accent-purple/25 text-accent-purple rounded-full text-sm font-mono transition-colors">
+          <button
+            onClick={goNext}
+            className="px-6 py-2 bg-accent-purple/15 hover:bg-accent-purple/25 text-accent-purple rounded-full text-sm font-mono transition-colors"
+          >
             다음
           </button>
         </div>

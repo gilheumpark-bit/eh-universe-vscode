@@ -3,7 +3,7 @@
 // ============================================================
 // 토스트 큐, 우선순위 레벨, 자동 닫기, 액션 버튼, 알림 센터.
 
-export type NotificationType = 'info' | 'success' | 'warning' | 'error';
+export type NotificationType = "info" | "success" | "warning" | "error";
 
 export interface NotificationAction {
   label: string;
@@ -41,7 +41,7 @@ const DEFAULT_DURATIONS: Record<NotificationType, number> = {
 };
 
 function emit(): void {
-  const visible = queue.filter(n => !n.dismissed).slice(0, MAX_VISIBLE);
+  const visible = queue.filter((n) => !n.dismissed).slice(0, MAX_VISIBLE);
   for (const listener of listeners) listener(visible);
 }
 
@@ -56,14 +56,20 @@ function generateId(): string {
 /** Subscribe to notification changes */
 export function subscribe(listener: NotificationListener): () => void {
   listeners.add(listener);
-  return () => { listeners.delete(listener); };
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 /** Push a new notification */
 export function notify(
   type: NotificationType,
   title: string,
-  options: { message?: string; duration?: number; actions?: NotificationAction[] } = {},
+  options: {
+    message?: string;
+    duration?: number;
+    actions?: NotificationAction[];
+  } = {},
 ): string {
   const id = generateId();
   const notification: Notification = {
@@ -93,7 +99,7 @@ export function notify(
 
 /** Dismiss a notification */
 export function dismiss(id: string): void {
-  const notif = queue.find(n => n.id === id);
+  const notif = queue.find((n) => n.id === id);
   if (notif) {
     notif.dismissed = true;
     emit();
@@ -117,9 +123,13 @@ export function clearHistory(): void {
 }
 
 // Shorthand helpers
-export const notifyInfo = (title: string, message?: string) => notify('info', title, { message });
-export const notifySuccess = (title: string, message?: string) => notify('success', title, { message });
-export const notifyWarning = (title: string, message?: string) => notify('warning', title, { message });
-export const notifyError = (title: string, message?: string) => notify('error', title, { message });
+export const notifyInfo = (title: string, message?: string) =>
+  notify("info", title, { message });
+export const notifySuccess = (title: string, message?: string) =>
+  notify("success", title, { message });
+export const notifyWarning = (title: string, message?: string) =>
+  notify("warning", title, { message });
+export const notifyError = (title: string, message?: string) =>
+  notify("error", title, { message });
 
 // IDENTITY_SEAL: role=Notifications | inputs=type,title,options | outputs=string,Notification[]

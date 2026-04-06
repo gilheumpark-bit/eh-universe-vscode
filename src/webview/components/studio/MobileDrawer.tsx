@@ -4,8 +4,8 @@
 // PART 1 — Mobile Bottom Drawer — Premium swipe-up panel
 // ============================================================
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { X, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { X, ChevronDown, ChevronUp } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -53,11 +53,11 @@ function useEdgeSwipe(onOpen: () => void, enabled: boolean) {
       touchStartX.current = 0;
     };
 
-    document.addEventListener('touchstart', onTouchStart, { passive: true });
-    document.addEventListener('touchend', onTouchEnd, { passive: true });
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchend", onTouchEnd, { passive: true });
     return () => {
-      document.removeEventListener('touchstart', onTouchStart);
-      document.removeEventListener('touchend', onTouchEnd);
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchend", onTouchEnd);
     };
   }, [onOpen, enabled]);
 }
@@ -68,7 +68,12 @@ function useEdgeSwipe(onOpen: () => void, enabled: boolean) {
 // PART 3 — Drawer Component
 // ============================================================
 
-export default function MobileDrawer({ open, onClose, title, children }: Props) {
+export default function MobileDrawer({
+  open,
+  onClose,
+  title,
+  children,
+}: Props) {
   const [snap, setSnap] = useState(0.5);
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
@@ -80,7 +85,9 @@ export default function MobileDrawer({ open, onClose, title, children }: Props) 
 
   // Edge swipe to open (only when drawer is closed)
   // Note: parent must pass an `onOpen` callback for this; here we just track visibility
-  useEdgeSwipe(() => {/* parent controls open state */}, false);
+  useEdgeSwipe(() => {
+    /* parent controls open state */
+  }, false);
 
   // Enter animation: delay animReady to allow CSS transition from height:0
   useEffect(() => {
@@ -105,11 +112,14 @@ export default function MobileDrawer({ open, onClose, title, children }: Props) 
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
   }, []);
 
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragging) return;
-    const delta = e.clientY - startY.current;
-    setDragOffset(delta);
-  }, [dragging]);
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!dragging) return;
+      const delta = e.clientY - startY.current;
+      setDragOffset(delta);
+    },
+    [dragging],
+  );
 
   const onPointerUp = useCallback(() => {
     if (!dragging) return;
@@ -127,15 +137,17 @@ export default function MobileDrawer({ open, onClose, title, children }: Props) 
       onClose();
     } else if (dragOffset > DRAG_THRESHOLD) {
       // Swipe down → snap lower
-      setSnap(prev => {
+      setSnap((prev) => {
         const idx = SNAP_POINTS.indexOf(prev);
         return idx > 0 ? SNAP_POINTS[idx - 1] : SNAP_POINTS[0];
       });
     } else if (dragOffset < -DRAG_THRESHOLD) {
       // Swipe up → snap higher
-      setSnap(prev => {
+      setSnap((prev) => {
         const idx = SNAP_POINTS.indexOf(prev);
-        return idx < SNAP_POINTS.length - 1 ? SNAP_POINTS[idx + 1] : SNAP_POINTS[SNAP_POINTS.length - 1];
+        return idx < SNAP_POINTS.length - 1
+          ? SNAP_POINTS[idx + 1]
+          : SNAP_POINTS[SNAP_POINTS.length - 1];
       });
     }
 
@@ -150,21 +162,23 @@ export default function MobileDrawer({ open, onClose, title, children }: Props) 
   // Lock body scroll when drawer is open
   useEffect(() => {
     if (open) {
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = ''; };
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
     }
   }, [open]);
 
   // Haptic feedback (hooks must be before conditional returns)
   const triggerHaptic = useCallback(() => {
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(5);
     }
   }, []);
 
   const handleSnapToggle = useCallback(() => {
     triggerHaptic();
-    setSnap(prev => {
+    setSnap((prev) => {
       const idx = SNAP_POINTS.indexOf(prev);
       // Toggle between half and full
       return idx === 1 ? SNAP_POINTS[2] : SNAP_POINTS[1];
@@ -176,7 +190,9 @@ export default function MobileDrawer({ open, onClose, title, children }: Props) 
   const heightPercent = snap * 100;
   const adjustedHeight = dragging
     ? Math.max(10, heightPercent - (dragOffset / window.innerHeight) * 100)
-    : (visible ? heightPercent : 0);
+    : visible
+      ? heightPercent
+      : 0;
 
   const backdropOpacity = visible ? 1 : 0;
 
@@ -187,9 +203,9 @@ export default function MobileDrawer({ open, onClose, title, children }: Props) 
         className="fixed inset-0 z-40 bg-black/60 md:hidden"
         style={{
           opacity: backdropOpacity,
-          backdropFilter: visible ? 'blur(8px)' : 'blur(0px)',
-          WebkitBackdropFilter: visible ? 'blur(8px)' : 'blur(0px)',
-          transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
+          backdropFilter: visible ? "blur(8px)" : "blur(0px)",
+          WebkitBackdropFilter: visible ? "blur(8px)" : "blur(0px)",
+          transition: "opacity 0.3s ease-out, backdrop-filter 0.3s ease-out",
         }}
         onClick={onClose}
         aria-hidden="true"
@@ -201,9 +217,11 @@ export default function MobileDrawer({ open, onClose, title, children }: Props) 
         className="fixed bottom-0 inset-x-0 z-50 md:hidden overflow-hidden flex flex-col"
         style={{
           height: `${adjustedHeight}vh`,
-          transition: dragging ? 'none' : 'height 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          willChange: dragging ? 'height' : 'auto',
+          transition: dragging
+            ? "none"
+            : "height 0.35s cubic-bezier(0.32, 0.72, 0, 1)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          willChange: dragging ? "height" : "auto",
         }}
         role="dialog"
         aria-modal="true"
@@ -213,27 +231,32 @@ export default function MobileDrawer({ open, onClose, title, children }: Props) 
         <div className="flex-1 flex flex-col bg-bg-primary/95 backdrop-blur-xl border-t border-white/10 rounded-t-3xl shadow-[0_-12px_48px_rgba(0,0,0,0.5),0_-4px_16px_rgba(0,0,0,0.3)]">
           {/* Top highlight line */}
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-t-3xl" />
-          
+
           {/* Drag handle — enhanced touch target with visual feedback */}
           <div
             className="relative flex items-center justify-center py-4 cursor-grab active:cursor-grabbing shrink-0 min-h-[48px]"
-            onPointerDown={(e) => { triggerHaptic(); onPointerDown(e); }}
+            onPointerDown={(e) => {
+              triggerHaptic();
+              onPointerDown(e);
+            }}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
-            style={{ touchAction: 'none' }}
+            style={{ touchAction: "none" }}
           >
             {/* Handle pill with glow on drag */}
-            <div className={`
+            <div
+              className={`
               w-12 h-1.5 rounded-full transition-all duration-200
-              ${dragging ? 'bg-accent-purple scale-110 shadow-[0_0_12px_rgba(141,123,195,0.5)]' : 'bg-white/25'}
-            `} />
-            
+              ${dragging ? "bg-accent-purple scale-110 shadow-[0_0_12px_rgba(141,123,195,0.5)]" : "bg-white/25"}
+            `}
+            />
+
             {/* Snap indicator arrows */}
             <button
               onClick={handleSnapToggle}
               className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full text-text-tertiary hover:text-text-secondary transition-colors"
-              aria-label={snap === SNAP_POINTS[2] ? 'Minimize' : 'Maximize'}
+              aria-label={snap === SNAP_POINTS[2] ? "Minimize" : "Maximize"}
             >
               {snap === SNAP_POINTS[2] ? (
                 <ChevronDown className="w-5 h-5" />
@@ -250,7 +273,10 @@ export default function MobileDrawer({ open, onClose, title, children }: Props) 
                 {title}
               </span>
               <button
-                onClick={() => { triggerHaptic(); onClose(); }}
+                onClick={() => {
+                  triggerHaptic();
+                  onClose();
+                }}
                 className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-text-tertiary hover:text-white hover:bg-white/5 transition-all active:scale-90"
                 aria-label="Close"
               >
@@ -261,9 +287,9 @@ export default function MobileDrawer({ open, onClose, title, children }: Props) 
 
           {/* Content — smooth scroll with fade edges */}
           <div className="relative flex-1 overflow-hidden">
-            <div 
+            <div
               className="h-full overflow-y-auto overscroll-contain px-5 py-4"
-              style={{ WebkitOverflowScrolling: 'touch' }}
+              style={{ WebkitOverflowScrolling: "touch" }}
             >
               {children}
             </div>

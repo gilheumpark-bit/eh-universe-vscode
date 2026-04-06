@@ -6,7 +6,13 @@
 // ============================================================
 
 import { useState, useCallback } from "react";
-import { Shield, ClipboardPaste, Play, ArrowRight, Sparkles } from "lucide-react";
+import {
+  Shield,
+  ClipboardPaste,
+  Play,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react";
 import { useLang } from "@/lib/LangContext";
 import { L4 } from "@/lib/i18n";
 
@@ -23,10 +29,7 @@ export function QuickVerify({ onStartVerify, onEasyMode, onClose }: Props) {
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"choose" | "paste">("choose");
 
-  const T = useCallback(
-    (v: { ko: string; en: string }) => L4(lang, v),
-    [lang],
-  );
+  const T = useCallback((v: { ko: string; en: string }) => L4(lang, v), [lang]);
 
   if (step === "paste") {
     return (
@@ -38,7 +41,9 @@ export function QuickVerify({ onStartVerify, onEasyMode, onClose }: Props) {
             <div className="flex items-center gap-1 text-[10px] text-text-tertiary mb-0.5">
               <span>{T({ ko: "검증", en: "Verify" })}</span>
               <span className="text-border">/</span>
-              <span className="text-text-secondary">{T({ ko: "코드 붙여넣기", en: "Paste Code" })}</span>
+              <span className="text-text-secondary">
+                {T({ ko: "코드 붙여넣기", en: "Paste Code" })}
+              </span>
             </div>
             <h2 className="text-sm font-bold text-text-primary">
               {T({ ko: "코드 검증", en: "Code Verification" })}
@@ -67,7 +72,10 @@ export function QuickVerify({ onStartVerify, onEasyMode, onClose }: Props) {
         <div className="p-4 border-t border-border">
           {!code.trim() && (
             <p className="text-[11px] text-text-tertiary text-center mb-2">
-              {T({ ko: "코드를 붙여넣으면 검증 버튼이 활성화됩니다", en: "Paste code above to enable verification" })}
+              {T({
+                ko: "코드를 붙여넣으면 검증 버튼이 활성화됩니다",
+                en: "Paste code above to enable verification",
+              })}
             </p>
           )}
           <button
@@ -79,7 +87,10 @@ export function QuickVerify({ onStartVerify, onEasyMode, onClose }: Props) {
             {T({ ko: "검증 시작", en: "Start Verification" })}
           </button>
           <button
-            onClick={() => { setCode(''); setStep("choose"); }}
+            onClick={() => {
+              setCode("");
+              setStep("choose");
+            }}
             className="w-full mt-2 py-2 text-xs text-text-tertiary hover:text-text-secondary transition-colors"
           >
             {T({ ko: "뒤로", en: "Back" })}
@@ -99,8 +110,14 @@ export function QuickVerify({ onStartVerify, onEasyMode, onClose }: Props) {
             {T({ ko: "AI 코드 검증", en: "AI Code Review" })}
           </span>
         </div>
-        <h2 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>
-          {T({ ko: "무엇을 검증할까요?", en: "What would you like to verify?" })}
+        <h2
+          className="text-2xl font-bold text-text-primary"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {T({
+            ko: "무엇을 검증할까요?",
+            en: "What would you like to verify?",
+          })}
         </h2>
         <p className="mt-2 text-sm text-text-tertiary max-w-sm">
           {T({
@@ -124,10 +141,16 @@ export function QuickVerify({ onStartVerify, onEasyMode, onClose }: Props) {
               {T({ ko: "코드 붙여넣기 → 검증", en: "Paste Code → Verify" })}
             </div>
             <div className="mt-0.5 text-[11px] text-text-tertiary">
-              {T({ ko: "외부에서 만든 코드를 검증합니다", en: "Verify code from Cursor, Copilot, etc." })}
+              {T({
+                ko: "외부에서 만든 코드를 검증합니다",
+                en: "Verify code from Cursor, Copilot, etc.",
+              })}
             </div>
           </div>
-          <ArrowRight size={16} className="text-text-tertiary group-hover:text-accent-green transition-colors" />
+          <ArrowRight
+            size={16}
+            className="text-text-tertiary group-hover:text-accent-green transition-colors"
+          />
         </button>
 
         {/* Option 2: Generate & Verify */}
@@ -140,13 +163,22 @@ export function QuickVerify({ onStartVerify, onEasyMode, onClose }: Props) {
           </div>
           <div className="flex-1">
             <div className="font-mono text-sm font-bold text-text-primary">
-              {T({ ko: "생성 → 검증 (이지모드)", en: "Generate → Verify (Easy Mode)" })}
+              {T({
+                ko: "생성 → 검증 (이지모드)",
+                en: "Generate → Verify (Easy Mode)",
+              })}
             </div>
             <div className="mt-0.5 text-[11px] text-text-tertiary">
-              {T({ ko: "명세서 작성 → AI 생성 → 자동 검증", en: "Write spec → AI generates → Auto-verify" })}
+              {T({
+                ko: "명세서 작성 → AI 생성 → 자동 검증",
+                en: "Write spec → AI generates → Auto-verify",
+              })}
             </div>
           </div>
-          <ArrowRight size={16} className="text-text-tertiary group-hover:text-accent-purple transition-colors" />
+          <ArrowRight
+            size={16}
+            className="text-text-tertiary group-hover:text-accent-purple transition-colors"
+          />
         </button>
       </div>
     </div>

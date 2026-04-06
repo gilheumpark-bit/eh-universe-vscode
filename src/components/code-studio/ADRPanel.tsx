@@ -4,16 +4,29 @@
 // PART 1 — Imports & Types
 // ============================================================
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 import {
-  Plus, Trash2, Edit3, Save, X, AlertTriangle,
-  CheckCircle, Clock, Archive, ArrowRight,
-} from 'lucide-react';
+  Plus,
+  Trash2,
+  Edit3,
+  Save,
+  X,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Archive,
+  ArrowRight,
+} from "lucide-react";
 import {
-  getADRs, createADR, updateADR, deleteADR,
-  checkADRCompliance, buildADRContext,
-  type ADR, type ADRViolation,
-} from '@/lib/code-studio/core/adr';
+  getADRs,
+  createADR,
+  updateADR,
+  deleteADR,
+  checkADRCompliance,
+  buildADRContext,
+  type ADR,
+  type ADRViolation,
+} from "@/lib/code-studio/core/adr";
 
 interface Props {
   files?: string[];
@@ -25,7 +38,7 @@ interface Props {
 
 interface FormState {
   title: string;
-  status: ADR['status'];
+  status: ADR["status"];
   context: string;
   decision: string;
   consequences: string;
@@ -33,18 +46,26 @@ interface FormState {
 }
 
 const EMPTY_FORM: FormState = {
-  title: '', status: 'proposed', context: '', decision: '', consequences: '', relatedFiles: '',
+  title: "",
+  status: "proposed",
+  context: "",
+  decision: "",
+  consequences: "",
+  relatedFiles: "",
 };
 
-const STATUS_ICON: Record<ADR['status'], React.ReactNode> = {
+const STATUS_ICON: Record<ADR["status"], React.ReactNode> = {
   proposed: <Clock className="w-3 h-3 text-accent-amber" />,
   accepted: <CheckCircle className="w-3 h-3 text-accent-green" />,
   deprecated: <Archive className="w-3 h-3 text-text-secondary" />,
   superseded: <ArrowRight className="w-3 h-3 text-accent-blue" />,
 };
 
-const STATUS_LABELS: Record<ADR['status'], string> = {
-  proposed: 'Proposed', accepted: 'Accepted', deprecated: 'Deprecated', superseded: 'Superseded',
+const STATUS_LABELS: Record<ADR["status"], string> = {
+  proposed: "Proposed",
+  accepted: "Accepted",
+  deprecated: "Deprecated",
+  superseded: "Superseded",
 };
 
 // ============================================================
@@ -57,14 +78,17 @@ export function ADRPanel({ files = [] }: Props) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [showForm, setShowForm] = useState(false);
   const [violations, setViolations] = useState<ADRViolation[]>([]);
-  const [activeTab, setActiveTab] = useState<'list' | 'compliance'>('list');
+  const [activeTab, setActiveTab] = useState<"list" | "compliance">("list");
   const [copied, setCopied] = useState(false);
 
   const reload = useCallback(() => setAdrs(getADRs()), []);
 
-  const setField = useCallback(<K extends keyof FormState>(key: K, val: FormState[K]) => {
-    setForm((prev) => ({ ...prev, [key]: val }));
-  }, []);
+  const setField = useCallback(
+    <K extends keyof FormState>(key: K, val: FormState[K]) => {
+      setForm((prev) => ({ ...prev, [key]: val }));
+    },
+    [],
+  );
 
   const handleSave = useCallback(() => {
     if (!form.title.trim()) return;
@@ -75,7 +99,10 @@ export function ADRPanel({ files = [] }: Props) {
       context: form.context,
       decision: form.decision,
       consequences: form.consequences,
-      relatedFiles: form.relatedFiles.split(',').map((s) => s.trim()).filter(Boolean),
+      relatedFiles: form.relatedFiles
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
     };
     if (editingId) {
       updateADR(editingId, data);
@@ -95,18 +122,18 @@ export function ADRPanel({ files = [] }: Props) {
       context: adr.context,
       decision: adr.decision,
       consequences: adr.consequences,
-      relatedFiles: adr.relatedFiles.join(', '),
+      relatedFiles: adr.relatedFiles.join(", "),
     });
     setEditingId(adr.id);
     setShowForm(true);
-    setActiveTab('list');
+    setActiveTab("list");
   }, []);
 
   const handleCheckCompliance = useCallback(() => {
     const currentAdrs = getADRs();
     const v = checkADRCompliance(files, currentAdrs);
     setViolations(v);
-    setActiveTab('compliance');
+    setActiveTab("compliance");
   }, [files]);
 
   const handleCopyContext = useCallback(() => {
@@ -126,10 +153,15 @@ export function ADRPanel({ files = [] }: Props) {
             onClick={handleCopyContext}
             className="px-1.5 py-0.5 rounded text-xs bg-bg-tertiary hover:bg-bg-primary border border-border transition-colors focus-visible:ring-2 ring-accent-blue"
           >
-            {copied ? 'Copied!' : 'Copy AI Context'}
+            {copied ? "Copied!" : "Copy AI Context"}
           </button>
           <button
-            onClick={() => { setForm(EMPTY_FORM); setEditingId(null); setShowForm(!showForm); setActiveTab('list'); }}
+            onClick={() => {
+              setForm(EMPTY_FORM);
+              setEditingId(null);
+              setShowForm(!showForm);
+              setActiveTab("list");
+            }}
             className="p-1 rounded hover:bg-bg-tertiary transition-colors"
             aria-label="Add ADR"
           >
@@ -141,62 +173,137 @@ export function ADRPanel({ files = [] }: Props) {
       {/* Tabs */}
       <div className="flex border-b border-border text-xs">
         <button
-          onClick={() => setActiveTab('list')}
-          className={`flex-1 py-1.5 text-center transition-colors ${activeTab === 'list' ? 'border-b-2 border-accent-blue text-accent-blue' : 'text-text-secondary hover:text-text-primary'}`}
+          onClick={() => setActiveTab("list")}
+          className={`flex-1 py-1.5 text-center transition-colors ${activeTab === "list" ? "border-b-2 border-accent-blue text-accent-blue" : "text-text-secondary hover:text-text-primary"}`}
         >
           Records ({adrs.length})
         </button>
         <button
           onClick={handleCheckCompliance}
-          className={`flex-1 py-1.5 text-center transition-colors ${activeTab === 'compliance' ? 'border-b-2 border-accent-blue text-accent-blue' : 'text-text-secondary hover:text-text-primary'}`}
+          className={`flex-1 py-1.5 text-center transition-colors ${activeTab === "compliance" ? "border-b-2 border-accent-blue text-accent-blue" : "text-text-secondary hover:text-text-primary"}`}
         >
-          Compliance {violations.length > 0 ? `(${violations.length})` : ''}
+          Compliance {violations.length > 0 ? `(${violations.length})` : ""}
         </button>
       </div>
 
       {/* Form */}
-      {showForm && activeTab === 'list' && (
+      {showForm && activeTab === "list" && (
         <div className="p-3 border-b border-border space-y-2">
-          <input value={form.title} onChange={(e) => setField('title', e.target.value)} placeholder="ADR Title" className="w-full px-2 py-1 rounded bg-bg-tertiary border border-border text-text-primary text-xs focus-visible:ring-2 ring-accent-blue" />
-          <select value={form.status} onChange={(e) => setField('status', e.target.value as ADR['status'])} className="w-full px-2 py-1 rounded bg-bg-tertiary border border-border text-text-primary text-xs focus-visible:ring-2 ring-accent-blue">
+          <input
+            value={form.title}
+            onChange={(e) => setField("title", e.target.value)}
+            placeholder="ADR Title"
+            className="w-full px-2 py-1 rounded bg-bg-tertiary border border-border text-text-primary text-xs focus-visible:ring-2 ring-accent-blue"
+          />
+          <select
+            value={form.status}
+            onChange={(e) =>
+              setField("status", e.target.value as ADR["status"])
+            }
+            className="w-full px-2 py-1 rounded bg-bg-tertiary border border-border text-text-primary text-xs focus-visible:ring-2 ring-accent-blue"
+          >
             <option value="proposed">Proposed</option>
             <option value="accepted">Accepted</option>
             <option value="deprecated">Deprecated</option>
             <option value="superseded">Superseded</option>
           </select>
-          <textarea value={form.context} onChange={(e) => setField('context', e.target.value)} placeholder="Context: Why was this decision needed?" rows={2} className="w-full px-2 py-1 rounded bg-bg-tertiary border border-border text-text-primary text-xs resize-none focus-visible:ring-2 ring-accent-blue" />
-          <textarea value={form.decision} onChange={(e) => setField('decision', e.target.value)} placeholder="Decision: What was decided?" rows={2} className="w-full px-2 py-1 rounded bg-bg-tertiary border border-border text-text-primary text-xs resize-none focus-visible:ring-2 ring-accent-blue" />
-          <textarea value={form.consequences} onChange={(e) => setField('consequences', e.target.value)} placeholder="Consequences: Trade-offs?" rows={2} className="w-full px-2 py-1 rounded bg-bg-tertiary border border-border text-text-primary text-xs resize-none focus-visible:ring-2 ring-accent-blue" />
-          <input value={form.relatedFiles} onChange={(e) => setField('relatedFiles', e.target.value)} placeholder="Related files (comma-separated)" className="w-full px-2 py-1 rounded bg-bg-tertiary border border-border text-text-primary text-xs focus-visible:ring-2 ring-accent-blue" />
+          <textarea
+            value={form.context}
+            onChange={(e) => setField("context", e.target.value)}
+            placeholder="Context: Why was this decision needed?"
+            rows={2}
+            className="w-full px-2 py-1 rounded bg-bg-tertiary border border-border text-text-primary text-xs resize-none focus-visible:ring-2 ring-accent-blue"
+          />
+          <textarea
+            value={form.decision}
+            onChange={(e) => setField("decision", e.target.value)}
+            placeholder="Decision: What was decided?"
+            rows={2}
+            className="w-full px-2 py-1 rounded bg-bg-tertiary border border-border text-text-primary text-xs resize-none focus-visible:ring-2 ring-accent-blue"
+          />
+          <textarea
+            value={form.consequences}
+            onChange={(e) => setField("consequences", e.target.value)}
+            placeholder="Consequences: Trade-offs?"
+            rows={2}
+            className="w-full px-2 py-1 rounded bg-bg-tertiary border border-border text-text-primary text-xs resize-none focus-visible:ring-2 ring-accent-blue"
+          />
+          <input
+            value={form.relatedFiles}
+            onChange={(e) => setField("relatedFiles", e.target.value)}
+            placeholder="Related files (comma-separated)"
+            className="w-full px-2 py-1 rounded bg-bg-tertiary border border-border text-text-primary text-xs focus-visible:ring-2 ring-accent-blue"
+          />
           <div className="flex justify-end gap-1">
-            <button onClick={() => setShowForm(false)} className="p-1 rounded hover:bg-bg-tertiary" aria-label="Cancel"><X className="w-4 h-4" /></button>
-            <button onClick={handleSave} className="px-2 py-1 rounded bg-accent-blue text-white text-xs hover:opacity-90" aria-label="Save">
-              <Save className="w-3 h-3 inline mr-1" />{editingId ? 'Update' : 'Create'}
+            <button
+              onClick={() => setShowForm(false)}
+              className="p-1 rounded hover:bg-bg-tertiary"
+              aria-label="Cancel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-2 py-1 rounded bg-accent-blue text-white text-xs hover:opacity-90"
+              aria-label="Save"
+            >
+              <Save className="w-3 h-3 inline mr-1" />
+              {editingId ? "Update" : "Create"}
             </button>
           </div>
         </div>
       )}
 
       {/* List Tab */}
-      {activeTab === 'list' && (
+      {activeTab === "list" && (
         <div className="flex-1 overflow-y-auto">
-          {adrs.length === 0 && <p className="text-text-secondary text-xs p-3">No ADRs yet. Click + to create one.</p>}
+          {adrs.length === 0 && (
+            <p className="text-text-secondary text-xs p-3">
+              No ADRs yet. Click + to create one.
+            </p>
+          )}
           {adrs.map((adr) => (
-            <div key={adr.id} className="px-3 py-2 border-b border-border hover:bg-bg-tertiary transition-colors group">
+            <div
+              key={adr.id}
+              className="px-3 py-2 border-b border-border hover:bg-bg-tertiary transition-colors group"
+            >
               <div className="flex items-center gap-1.5">
                 {STATUS_ICON[adr.status]}
-                <span className="font-medium text-xs flex-1 truncate">{adr.title}</span>
+                <span className="font-medium text-xs flex-1 truncate">
+                  {adr.title}
+                </span>
                 <span className="text-text-tertiary text-xs">{adr.date}</span>
-                <button onClick={() => handleEdit(adr)} className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-bg-primary" aria-label="Edit"><Edit3 className="w-3 h-3" /></button>
-                <button onClick={() => { deleteADR(adr.id); reload(); }} className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-bg-primary text-text-danger" aria-label="Delete"><Trash2 className="w-3 h-3" /></button>
+                <button
+                  onClick={() => handleEdit(adr)}
+                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-bg-primary"
+                  aria-label="Edit"
+                >
+                  <Edit3 className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() => {
+                    deleteADR(adr.id);
+                    reload();
+                  }}
+                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-bg-primary text-text-danger"
+                  aria-label="Delete"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
               </div>
-              <p className="text-text-secondary text-xs mt-0.5 line-clamp-2">{adr.decision}</p>
+              <p className="text-text-secondary text-xs mt-0.5 line-clamp-2">
+                {adr.decision}
+              </p>
               <div className="flex items-center gap-1 mt-0.5">
-                <span className={`text-xs px-1 py-0.5 rounded ${adr.status === 'accepted' ? 'bg-accent-green/20 text-accent-green' : adr.status === 'deprecated' ? 'bg-bg-tertiary text-text-secondary' : 'bg-accent-amber/20 text-accent-amber'}`}>
+                <span
+                  className={`text-xs px-1 py-0.5 rounded ${adr.status === "accepted" ? "bg-accent-green/20 text-accent-green" : adr.status === "deprecated" ? "bg-bg-tertiary text-text-secondary" : "bg-accent-amber/20 text-accent-amber"}`}
+                >
                   {STATUS_LABELS[adr.status]}
                 </span>
                 {adr.relatedFiles.length > 0 && (
-                  <span className="text-text-tertiary text-xs">{adr.relatedFiles.length} files</span>
+                  <span className="text-text-tertiary text-xs">
+                    {adr.relatedFiles.length} files
+                  </span>
                 )}
               </div>
             </div>
@@ -205,17 +312,25 @@ export function ADRPanel({ files = [] }: Props) {
       )}
 
       {/* Compliance Tab */}
-      {activeTab === 'compliance' && (
+      {activeTab === "compliance" && (
         <div className="flex-1 overflow-y-auto">
-          {violations.length === 0 && <p className="text-accent-green text-xs p-3 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> All ADRs compliant.</p>}
+          {violations.length === 0 && (
+            <p className="text-accent-green text-xs p-3 flex items-center gap-1">
+              <CheckCircle className="w-3 h-3" /> All ADRs compliant.
+            </p>
+          )}
           {violations.map((v, i) => (
             <div key={i} className="px-3 py-2 border-b border-border">
               <div className="flex items-center gap-1.5 text-xs">
-                <AlertTriangle className={`w-3 h-3 ${v.severity === 'error' ? 'text-text-danger' : v.severity === 'warn' ? 'text-accent-amber' : 'text-accent-blue'}`} />
+                <AlertTriangle
+                  className={`w-3 h-3 ${v.severity === "error" ? "text-text-danger" : v.severity === "warn" ? "text-accent-amber" : "text-accent-blue"}`}
+                />
                 <span className="font-medium truncate">{v.adrTitle}</span>
               </div>
               <p className="text-text-secondary text-xs mt-0.5">{v.reason}</p>
-              <p className="text-text-tertiary text-xs font-mono mt-0.5 truncate">{v.file}</p>
+              <p className="text-text-tertiary text-xs font-mono mt-0.5 truncate">
+                {v.file}
+              </p>
             </div>
           ))}
         </div>

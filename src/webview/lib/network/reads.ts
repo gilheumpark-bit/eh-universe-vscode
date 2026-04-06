@@ -1,13 +1,26 @@
 // Firebase Firestore — static import for data-layer modules.
 // Dynamic alternative: import('firebase/firestore') via lazyFirestore() in firebase.ts
 import {
-  collection, deleteDoc, doc, documentId, getDoc, getDocs,
-  limit, orderBy, query, setDoc, startAfter, where,
+  collection,
+  deleteDoc,
+  doc,
+  documentId,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  setDoc,
+  startAfter,
+  where,
   type QueryConstraint,
 } from "firebase/firestore";
 import {
-  type BoardType, type BookmarkRecord, type CommentRecord,
-  type PlanetRecord, type PostRecord,
+  type BoardType,
+  type BookmarkRecord,
+  type CommentRecord,
+  type PlanetRecord,
+  type PostRecord,
   type SettlementRecord,
 } from "@/lib/network-types";
 import { requireDb, COLLECTIONS, nowIso } from "./helpers";
@@ -16,8 +29,12 @@ import { requireDb, COLLECTIONS, nowIso } from "./helpers";
 // PART 4 — READ QUERIES
 // ============================================================
 
-export function sortByCreatedDesc<T extends { createdAt: string }>(records: T[]) {
-  return [...records].sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+export function sortByCreatedDesc<T extends { createdAt: string }>(
+  records: T[],
+) {
+  return [...records].sort((left, right) =>
+    right.createdAt.localeCompare(left.createdAt),
+  );
 }
 
 export async function getPlanetById(planetId: string) {
@@ -77,12 +94,20 @@ export async function listLatestPosts(limitCount = 8, boardType?: BoardType) {
 export async function listLatestSettlements(limitCount = 6) {
   const database = requireDb();
   const snapshot = await getDocs(
-    query(collection(database, COLLECTIONS.settlements), orderBy("createdAt", "desc"), limit(limitCount)),
+    query(
+      collection(database, COLLECTIONS.settlements),
+      orderBy("createdAt", "desc"),
+      limit(limitCount),
+    ),
   );
   return snapshot.docs.map((document) => document.data() as SettlementRecord);
 }
 
-export async function listPlanetPosts(planetId: string, boardType?: BoardType, limitCount = 120) {
+export async function listPlanetPosts(
+  planetId: string,
+  boardType?: BoardType,
+  limitCount = 120,
+) {
   const database = requireDb();
 
   if (boardType) {
@@ -111,7 +136,10 @@ export async function listPlanetPosts(planetId: string, boardType?: BoardType, l
   return snapshot.docs.map((document) => document.data() as PostRecord);
 }
 
-export async function listPlanetSettlements(planetId: string, limitCount = 120) {
+export async function listPlanetSettlements(
+  planetId: string,
+  limitCount = 120,
+) {
   const database = requireDb();
   // Composite index: planetId + createdAt (firestore.indexes.json)
   const snapshot = await getDocs(
@@ -167,13 +195,16 @@ export async function getPlanetsByIds(planetIds: string[]) {
     ),
   );
 
-  return snapshots.reduce<Record<string, PlanetRecord>>((accumulator, snapshot) => {
-    for (const document of snapshot.docs) {
-      const planet = document.data() as PlanetRecord;
-      accumulator[planet.id] = planet;
-    }
-    return accumulator;
-  }, {});
+  return snapshots.reduce<Record<string, PlanetRecord>>(
+    (accumulator, snapshot) => {
+      for (const document of snapshot.docs) {
+        const planet = document.data() as PlanetRecord;
+        accumulator[planet.id] = planet;
+      }
+      return accumulator;
+    },
+    {},
+  );
 }
 
 export async function listCommentsForPost(
@@ -228,12 +259,15 @@ export async function getAllUniqueTags(limitCount = 50): Promise<string[]> {
 
 // IDENTITY_SEAL: PART-4 | role=read queries | inputs=ids, filters, cursors | outputs=typed records, maps, tag lists
 
-
 // ============================================================
 // PART 7 — BOOKMARK OPERATIONS
 // ============================================================
 
-export function bookmarkRef(database: ReturnType<typeof requireDb>, userId: string, planetId: string) {
+export function bookmarkRef(
+  database: ReturnType<typeof requireDb>,
+  userId: string,
+  planetId: string,
+) {
   return doc(database, COLLECTIONS.users, userId, "bookmarks", planetId);
 }
 
@@ -261,7 +295,10 @@ export async function listBookmarks(userId: string): Promise<BookmarkRecord[]> {
   return snapshot.docs.map((document) => document.data() as BookmarkRecord);
 }
 
-export async function isBookmarked(userId: string, planetId: string): Promise<boolean> {
+export async function isBookmarked(
+  userId: string,
+  planetId: string,
+): Promise<boolean> {
   const database = requireDb();
   const snapshot = await getDoc(bookmarkRef(database, userId, planetId));
   return snapshot.exists();

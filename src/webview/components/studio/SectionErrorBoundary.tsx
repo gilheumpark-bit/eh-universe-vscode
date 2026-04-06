@@ -1,5 +1,5 @@
-import type { ErrorInfo, ReactNode } from 'react';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import type { ErrorInfo, ReactNode } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // ============================================================
 // SectionErrorBoundary — Thin wrapper around unified ErrorBoundary
@@ -16,7 +16,12 @@ interface Props {
   onError?: (error: Error, info: ErrorInfo) => void;
 }
 
-export function SectionErrorBoundary({ children, sectionName, fallbackHeight, onError }: Props) {
+export function SectionErrorBoundary({
+  children,
+  sectionName,
+  fallbackHeight,
+  onError,
+}: Props) {
   return (
     <ErrorBoundary
       variant="section"

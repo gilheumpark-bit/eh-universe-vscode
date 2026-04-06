@@ -1,5 +1,5 @@
-import * as React from 'react';
-import CodeStudioShell from './components/code-studio/CodeStudioShell';
+import * as React from "react";
+import CodeStudioShell from "./components/code-studio/CodeStudioShell";
 
 // Declare standard VS Code API for TS
 declare const tsvscode: {

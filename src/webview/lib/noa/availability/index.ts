@@ -3,7 +3,11 @@
 // Source: NOA v401 Advisory Sovereignty (일일 리스크 예산)
 // ============================================================
 
-import type { RiskBudgetState, AvailabilityResult, RiskBudgetManager } from "../types";
+import type {
+  RiskBudgetState,
+  AvailabilityResult,
+  RiskBudgetManager,
+} from "../types";
 import { DEFAULT_DAILY_RISK_BUDGET } from "../config";
 import { burnPatterns, sanitizeResponse } from "./burn";
 
@@ -21,7 +25,7 @@ import { burnPatterns, sanitizeResponse } from "./burn";
 import { checkHallucination } from "./hallucination";
 
 export function createRiskBudgetManager(
-  dailyBudget: number = DEFAULT_DAILY_RISK_BUDGET
+  dailyBudget: number = DEFAULT_DAILY_RISK_BUDGET,
 ): RiskBudgetManager {
   let consumed = 0;
   let resetAt = getNextMidnight();
@@ -62,14 +66,18 @@ export function createRiskBudgetManager(
       riskCost: number,
       promptLength: number,
       responseLength: number,
-      responseText?: string
+      responseText?: string,
     ): AvailabilityResult {
       checkReset();
       const remaining = dailyBudget - consumed;
       const budgetAllowed = riskCost <= remaining;
 
       // Advisory Council: 할루시네이션 어드바이저
-      const halluCheck = checkHallucination(promptLength, responseLength, responseText);
+      const halluCheck = checkHallucination(
+        promptLength,
+        responseLength,
+        responseText,
+      );
 
       // 예산 부족 → burn, 할루 의심 → neutralize, 둘 다 정상 → proceed
       let action: AvailabilityResult["action"] = "proceed";
@@ -88,7 +96,10 @@ export function createRiskBudgetManager(
     },
 
     /** Apply burn-rate sanitization to a response based on availability. */
-    sanitize(text: string, path: Parameters<typeof sanitizeResponse>[1]): string {
+    sanitize(
+      text: string,
+      path: Parameters<typeof sanitizeResponse>[1],
+    ): string {
       return sanitizeResponse(text, path);
     },
 

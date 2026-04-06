@@ -7,7 +7,13 @@
 // ============================================================
 
 // --- Re-export types ---
-export type { ProviderId, ChatMsg, StreamOptions, ProviderDef, ProviderCapabilities } from '@/lib/ai-providers';
+export type {
+  ProviderId,
+  ChatMsg,
+  StreamOptions,
+  ProviderDef,
+  ProviderCapabilities,
+} from "@/lib/ai-providers";
 
 // --- Re-export values & functions ---
 export {
@@ -38,6 +44,6 @@ export {
 
   // Streaming
   streamChat,
-} from '@/lib/ai-providers';
+} from "@/lib/ai-providers";
 
 // IDENTITY_SEAL: PART-1 | role=hook-bridge | inputs=@/lib/ai-providers | outputs=re-exports for components

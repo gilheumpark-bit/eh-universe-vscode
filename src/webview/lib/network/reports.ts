@@ -1,15 +1,18 @@
 // Firebase Firestore — static import for data-layer modules.
 // Dynamic alternative: import('firebase/firestore') via lazyFirestore() in firebase.ts
 import {
-  collection, doc, getDocs,
-  limit, orderBy, query, setDoc, where,
+  collection,
+  doc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  setDoc,
+  where,
   type QueryConstraint,
 } from "firebase/firestore";
 import { auth } from "@/lib/firebase";
-import {
-  type ReportReason,
-  type ReportRecord,
-} from "@/lib/network-types";
+import { type ReportReason, type ReportRecord } from "@/lib/network-types";
 import { requireDb, normalizeText, COLLECTIONS, nowIso } from "./helpers";
 
 // ============================================================
@@ -23,7 +26,9 @@ import { requireDb, normalizeText, COLLECTIONS, nowIso } from "./helpers";
 function assertCurrentUser(expectedUserId: string): void {
   const currentUser = auth?.currentUser;
   if (!currentUser || currentUser.uid !== expectedUserId) {
-    throw new Error("Auth mismatch: reporterId does not match the current user");
+    throw new Error(
+      "Auth mismatch: reporterId does not match the current user",
+    );
   }
 }
 
@@ -86,11 +91,15 @@ export async function listReports(
 ): Promise<ReportRecord[]> {
   const database = requireDb();
   const reportsRef = collection(database, COLLECTIONS.reports);
-  const constraints: QueryConstraint[] = [orderBy("createdAt", "desc"), limit(limitCount)];
-  if (statusFilter !== "all") constraints.unshift(where("status", "==", statusFilter));
+  const constraints: QueryConstraint[] = [
+    orderBy("createdAt", "desc"),
+    limit(limitCount),
+  ];
+  if (statusFilter !== "all")
+    constraints.unshift(where("status", "==", statusFilter));
   if (targetType) constraints.unshift(where("targetType", "==", targetType));
   const snap = await getDocs(query(reportsRef, ...constraints));
-  return snap.docs.map(d => d.data() as ReportRecord);
+  return snap.docs.map((d) => d.data() as ReportRecord);
 }
 
 /** 신고 상태 변경 (관리자용) — includes audit trail */

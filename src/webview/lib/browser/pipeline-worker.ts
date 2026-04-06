@@ -6,7 +6,7 @@
 
 export interface WorkerTask {
   id: string;
-  type: 'score-text' | 'validate-content' | 'fuzzy-match' | 'extract-terms';
+  type: "score-text" | "validate-content" | "fuzzy-match" | "extract-terms";
   payload: unknown;
 }
 
@@ -143,7 +143,7 @@ function extractTerms(payload) {
 
 function getWorker(): Worker {
   if (!worker) {
-    const blob = new Blob([WORKER_CODE], { type: 'application/javascript' });
+    const blob = new Blob([WORKER_CODE], { type: "application/javascript" });
     worker = new Worker(URL.createObjectURL(blob));
     worker.onmessage = (e: MessageEvent<WorkerResult>) => {
       const resolver = pending.get(e.data.id);
@@ -161,7 +161,9 @@ function getWorker(): Worker {
 }
 
 /** 백그라운드 스레드에서 작업 실행 */
-export function runInWorker(task: Omit<WorkerTask, 'id'>): Promise<WorkerResult> {
+export function runInWorker(
+  task: Omit<WorkerTask, "id">,
+): Promise<WorkerResult> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject });
@@ -170,7 +172,7 @@ export function runInWorker(task: Omit<WorkerTask, 'id'>): Promise<WorkerResult>
     setTimeout(() => {
       if (pending.has(id)) {
         pending.delete(id);
-        reject(new Error('Worker task timeout'));
+        reject(new Error("Worker task timeout"));
       }
     }, 30000);
   });
@@ -188,21 +190,49 @@ export function terminateWorker(): void {
 // ── 편의 함수 ──
 
 export async function scoreTextInBackground(text: string) {
-  const result = await runInWorker({ type: 'score-text', payload: { text } });
-  return result.result as { sentences: number; avgLen: number; tension: number; pacing: number; immersion: number; eos: number };
+  const result = await runInWorker({ type: "score-text", payload: { text } });
+  return result.result as {
+    sentences: number;
+    avgLen: number;
+    tension: number;
+    pacing: number;
+    immersion: number;
+    eos: number;
+  };
 }
 
 export async function validateInBackground(text: string) {
-  const result = await runInWorker({ type: 'validate-content', payload: { text } });
-  return result.result as { issues: Array<{ type: string; pattern: string }>; repeated: Array<{ word: string; count: number }>; wordCount: number };
+  const result = await runInWorker({
+    type: "validate-content",
+    payload: { text },
+  });
+  return result.result as {
+    issues: Array<{ type: string; pattern: string }>;
+    repeated: Array<{ word: string; count: number }>;
+    wordCount: number;
+  };
 }
 
-export async function fuzzyMatchInBackground(source: string, candidates: Array<{ source: string; target: string }>, threshold?: number) {
-  const result = await runInWorker({ type: 'fuzzy-match', payload: { source, candidates, threshold } });
-  return result.result as Array<{ source: string; target: string; similarity: number }>;
+export async function fuzzyMatchInBackground(
+  source: string,
+  candidates: Array<{ source: string; target: string }>,
+  threshold?: number,
+) {
+  const result = await runInWorker({
+    type: "fuzzy-match",
+    payload: { source, candidates, threshold },
+  });
+  return result.result as Array<{
+    source: string;
+    target: string;
+    similarity: number;
+  }>;
 }
 
 export async function extractTermsInBackground(text: string) {
-  const result = await runInWorker({ type: 'extract-terms', payload: { text } });
+  const result = await runInWorker({
+    type: "extract-terms",
+    payload: { text },
+  });
   return result.result as Array<{ term: string; freq: number }>;
 }

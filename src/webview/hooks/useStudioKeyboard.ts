@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { AppTab } from '@/lib/studio-types';
+import { useEffect } from "react";
+import { AppTab } from "@/lib/studio-types";
 
 interface UseStudioKeyboardOptions {
   onTabChange: (tab: AppTab) => void;
@@ -31,15 +31,21 @@ interface UseStudioKeyboardOptions {
 export function useStudioKeyboard(opts: UseStudioKeyboardOptions) {
   useEffect(() => {
     const tabByFKey: Record<string, AppTab> = {
-      F1: 'world', F2: 'characters', F3: 'rulebook', F4: 'writing',
-      F5: 'style', F6: 'manuscript', F7: 'history', F8: 'settings',
+      F1: "world",
+      F2: "characters",
+      F3: "rulebook",
+      F4: "writing",
+      F5: "style",
+      F6: "manuscript",
+      F7: "history",
+      F8: "settings",
     };
     const handler = (e: KeyboardEvent) => {
       const ctrl = e.ctrlKey || e.metaKey;
       const shift = e.shiftKey;
 
       // Escape always works (even when disabled) to close modals
-      if (e.key === 'Escape' && opts.onEscape) {
+      if (e.key === "Escape" && opts.onEscape) {
         e.preventDefault();
         opts.onEscape();
         return;
@@ -48,7 +54,11 @@ export function useStudioKeyboard(opts: UseStudioKeyboardOptions) {
       // Skip shortcuts when modal/dialog is active
       if (opts.disabled) return;
       const active = document.activeElement;
-      const isInInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT');
+      const isInInput =
+        active &&
+        (active.tagName === "INPUT" ||
+          active.tagName === "TEXTAREA" ||
+          active.tagName === "SELECT");
       if (isInInput) {
         // Allow F-keys and Ctrl combos even in inputs, but not when a dialog is open
         const isInDialog = active.closest('[role="dialog"], [data-modal]');
@@ -56,31 +66,67 @@ export function useStudioKeyboard(opts: UseStudioKeyboardOptions) {
       }
 
       // Ctrl+S — save
-      if (ctrl && !shift && e.key === 's') { e.preventDefault(); opts.onSave?.(); return; }
+      if (ctrl && !shift && e.key === "s") {
+        e.preventDefault();
+        opts.onSave?.();
+        return;
+      }
       // Ctrl+Shift+N — new episode
-      if (ctrl && shift && (e.key === 'N' || e.key === 'n')) { e.preventDefault(); opts.onNewEpisode?.(); return; }
+      if (ctrl && shift && (e.key === "N" || e.key === "n")) {
+        e.preventDefault();
+        opts.onNewEpisode?.();
+        return;
+      }
       // Ctrl+Shift+Z — redo (must check before Ctrl+Z)
-      if (ctrl && shift && (e.key === 'Z' || e.key === 'z')) {
+      if (ctrl && shift && (e.key === "Z" || e.key === "z")) {
         // Only intercept outside text inputs to avoid breaking native undo/redo
-        if (!isInInput) { e.preventDefault(); opts.onRedo?.(); }
+        if (!isInInput) {
+          e.preventDefault();
+          opts.onRedo?.();
+        }
         return;
       }
       // Ctrl+Z — undo
-      if (ctrl && !shift && e.key === 'z') {
-        if (!isInInput) { e.preventDefault(); opts.onUndo?.(); }
+      if (ctrl && !shift && e.key === "z") {
+        if (!isInInput) {
+          e.preventDefault();
+          opts.onUndo?.();
+        }
         return;
       }
       // Ctrl+K — global search palette
-      if (ctrl && e.key === 'k') { e.preventDefault(); opts.onGlobalSearch?.(); return; }
+      if (ctrl && e.key === "k") {
+        e.preventDefault();
+        opts.onGlobalSearch?.();
+        return;
+      }
 
-      if (ctrl && e.key === 'f') { e.preventDefault(); opts.onToggleSearch(); }
-      if (ctrl && e.key === 'e') { e.preventDefault(); opts.onExportTXT(); }
-      if (ctrl && e.key === 'p') { e.preventDefault(); opts.onPrint(); }
+      if (ctrl && e.key === "f") {
+        e.preventDefault();
+        opts.onToggleSearch();
+      }
+      if (ctrl && e.key === "e") {
+        e.preventDefault();
+        opts.onExportTXT();
+      }
+      if (ctrl && e.key === "p") {
+        e.preventDefault();
+        opts.onPrint();
+      }
       // Ctrl+N (without shift) — new session
-      if (ctrl && !shift && e.key === 'n') { e.preventDefault(); opts.onNewSession(); }
-      if (e.key === 'F11') { e.preventDefault(); opts.onToggleFocus(); }
-      if (e.key === 'F12') { e.preventDefault(); opts.onToggleShortcuts(); }
-      if (ctrl && e.key === '/') {
+      if (ctrl && !shift && e.key === "n") {
+        e.preventDefault();
+        opts.onNewSession();
+      }
+      if (e.key === "F11") {
+        e.preventDefault();
+        opts.onToggleFocus();
+      }
+      if (e.key === "F12") {
+        e.preventDefault();
+        opts.onToggleShortcuts();
+      }
+      if (ctrl && e.key === "/") {
         e.preventDefault();
         // Ctrl+/ toggles assistant if handler provided, otherwise shortcuts modal
         if (opts.onToggleAssistant) {
@@ -90,9 +136,12 @@ export function useStudioKeyboard(opts: UseStudioKeyboardOptions) {
         }
       }
       const targetTab = tabByFKey[e.key];
-      if (targetTab) { e.preventDefault(); opts.onTabChange(targetTab); }
+      if (targetTab) {
+        e.preventDefault();
+        opts.onTabChange(targetTab);
+      }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [opts]);
 }

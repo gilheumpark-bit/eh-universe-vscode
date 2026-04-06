@@ -4,18 +4,23 @@
 // 네트워크 끊긴 상태에서 저장/동기화 요청을 큐에 쌓고,
 // 네트워크 복구 시 자동 재전송.
 
-const SYNC_QUEUE_KEY = 'eh-sync-queue';
+const SYNC_QUEUE_KEY = "eh-sync-queue";
 
 export interface SyncTask {
   id: string;
-  type: 'save-project' | 'save-translation' | 'save-glossary' | 'sync-drive' | 'export';
+  type:
+    | "save-project"
+    | "save-translation"
+    | "save-glossary"
+    | "sync-drive"
+    | "export";
   payload: string; // JSON serialized
   createdAt: number;
   retryCount: number;
 }
 
 /** 큐에 작업 추가 */
-export function enqueueSync(type: SyncTask['type'], payload: unknown): void {
+export function enqueueSync(type: SyncTask["type"], payload: unknown): void {
   const queue = loadQueue();
   queue.push({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -45,7 +50,7 @@ function saveQueue(queue: SyncTask[]): void {
 
 /** 큐에서 완료된 작업 제거 */
 export function dequeueSync(id: string): void {
-  const queue = loadQueue().filter(t => t.id !== id);
+  const queue = loadQueue().filter((t) => t.id !== id);
   saveQueue(queue);
 }
 
@@ -62,12 +67,14 @@ export function syncQueueSize(): number {
 /** Background Sync API 등록 (SW에서 처리) */
 async function registerBackgroundSync(): Promise<void> {
   try {
-    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    if ("serviceWorker" in navigator && "SyncManager" in window) {
       const reg = await navigator.serviceWorker.ready;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- ServiceWorkerRegistration.sync is non-standard Background Sync API
-      await (reg as any).sync.register('eh-sync-queue');
+      await (reg as any).sync.register("eh-sync-queue");
     }
-  } catch { /* Background Sync 미지원 — 수동 재시도 fallback */ }
+  } catch {
+    /* Background Sync 미지원 — 수동 재시도 fallback */
+  }
 }
 
 /**
@@ -95,16 +102,16 @@ export function processQueueOnOnline(
     saveQueue(loadQueue());
   };
 
-  window.addEventListener('online', process);
+  window.addEventListener("online", process);
   // 마운트 시 즉시 체크
   if (navigator.onLine && loadQueue().length > 0) process();
 
-  return () => window.removeEventListener('online', process);
+  return () => window.removeEventListener("online", process);
 }
 
 /** 오프라인 감지 */
 export function isOffline(): boolean {
-  return typeof navigator !== 'undefined' && !navigator.onLine;
+  return typeof navigator !== "undefined" && !navigator.onLine;
 }
 
 /** 온/오프라인 상태 변화 리스너 */
@@ -113,10 +120,10 @@ export function onConnectivityChange(
 ): () => void {
   const onOnline = () => callback(true);
   const onOffline = () => callback(false);
-  window.addEventListener('online', onOnline);
-  window.addEventListener('offline', onOffline);
+  window.addEventListener("online", onOnline);
+  window.addEventListener("offline", onOffline);
   return () => {
-    window.removeEventListener('online', onOnline);
-    window.removeEventListener('offline', onOffline);
+    window.removeEventListener("online", onOnline);
+    window.removeEventListener("offline", onOffline);
   };
 }

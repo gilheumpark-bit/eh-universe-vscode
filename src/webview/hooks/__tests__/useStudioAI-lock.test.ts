@@ -7,7 +7,7 @@
  * used by handleSend / handleRegenerate.
  */
 
-describe('useStudioAI generation lock', () => {
+describe("useStudioAI generation lock", () => {
   // Reproduce the exact lock pattern from useStudioAI
   let lockRef: { current: boolean };
 
@@ -58,7 +58,7 @@ describe('useStudioAI generation lock', () => {
 
   // --- test cases ---
 
-  it('lock is released when canGenerate returns false', () => {
+  it("lock is released when canGenerate returns false", () => {
     const canGenerate = jest.fn().mockReturnValue(false);
     const acquired = handleSendWhenCannotGenerate(canGenerate);
 
@@ -67,7 +67,7 @@ describe('useStudioAI generation lock', () => {
     expect(canGenerate).toHaveBeenCalled();
   });
 
-  it('lock is released after successful generation', async () => {
+  it("lock is released after successful generation", async () => {
     const work = jest.fn().mockResolvedValue(undefined);
 
     await handleSendSuccess(work);
@@ -76,8 +76,8 @@ describe('useStudioAI generation lock', () => {
     expect(lockRef.current).toBe(false);
   });
 
-  it('lock is released after generation error', async () => {
-    const work = jest.fn().mockRejectedValue(new Error('stream failed'));
+  it("lock is released after generation error", async () => {
+    const work = jest.fn().mockRejectedValue(new Error("stream failed"));
 
     // The finally block in the hook catches and releases lock
     await handleSendWithError(work).catch(() => {});
@@ -85,7 +85,7 @@ describe('useStudioAI generation lock', () => {
     expect(lockRef.current).toBe(false);
   });
 
-  it('handleRegenerate respects lock', () => {
+  it("handleRegenerate respects lock", () => {
     // Pre-acquire lock (simulating an in-flight generation)
     lockRef.current = true;
 
@@ -96,22 +96,26 @@ describe('useStudioAI generation lock', () => {
     expect(lockRef.current).toBe(true);
   });
 
-  it('concurrent handleSend calls are blocked by lock', async () => {
+  it("concurrent handleSend calls are blocked by lock", async () => {
     let resolveFirst: () => void;
-    const firstWork = new Promise<void>(r => { resolveFirst = r; });
+    const firstWork = new Promise<void>((r) => {
+      resolveFirst = r;
+    });
     const callLog: string[] = [];
 
     // First call acquires lock
     const p1 = handleSendSuccess(async () => {
-      callLog.push('first-start');
+      callLog.push("first-start");
       await firstWork;
-      callLog.push('first-end');
+      callLog.push("first-end");
     });
 
     // Second call should be blocked (lock is true)
     expect(lockRef.current).toBe(true);
     let secondRan = false;
-    const p2 = handleSendSuccess(async () => { secondRan = true; });
+    const p2 = handleSendSuccess(async () => {
+      secondRan = true;
+    });
 
     // Resolve first
     resolveFirst!();
@@ -119,7 +123,7 @@ describe('useStudioAI generation lock', () => {
     await p2;
 
     expect(secondRan).toBe(false);
-    expect(callLog).toEqual(['first-start', 'first-end']);
+    expect(callLog).toEqual(["first-start", "first-end"]);
     expect(lockRef.current).toBe(false);
   });
 });

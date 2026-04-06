@@ -6,7 +6,13 @@
 // Replaces native `title` attribute with themed, accessible tooltip.
 // Uses existing keyframe `tooltip-in` from globals-components.css.
 
-import { useState, useRef, useCallback, useEffect, type ReactNode } from "react";
+import {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  type ReactNode,
+} from "react";
 
 interface TooltipProps {
   content: string;

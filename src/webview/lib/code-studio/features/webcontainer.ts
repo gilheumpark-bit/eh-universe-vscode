@@ -13,7 +13,9 @@ export interface WebContainerInstance {
   /** true if backed by a real WebContainer, false if simulated */
   isAvailable: boolean;
   /** Run a shell command and return output */
-  run(command: string): Promise<{ stdout: string; stderr: string; exitCode: number }>;
+  run(
+    command: string,
+  ): Promise<{ stdout: string; stderr: string; exitCode: number }>;
   /** Write a file to the virtual filesystem */
   writeFile(path: string, content: string): Promise<void>;
   /** Read a file from the virtual filesystem */
@@ -86,9 +88,10 @@ async function bootRealContainer(): Promise<WebContainerInstance | null> {
         while (!done) {
           const result = await stdoutReader.read();
           if (result.value) {
-            stdout += typeof result.value === "string"
-              ? result.value
-              : decoder.decode(result.value);
+            stdout +=
+              typeof result.value === "string"
+                ? result.value
+                : decoder.decode(result.value);
           }
           done = result.done;
         }
@@ -158,11 +161,18 @@ function createSimulatedContainer(): WebContainerInstance {
   let devServerRunning = false;
 
   // Seed some default files
-  fs.set("/package.json", JSON.stringify({
-    name: "eh-code-studio-demo",
-    version: "1.0.0",
-    scripts: { dev: "next dev", build: "next build" },
-  }, null, 2));
+  fs.set(
+    "/package.json",
+    JSON.stringify(
+      {
+        name: "eh-code-studio-demo",
+        version: "1.0.0",
+        scripts: { dev: "next dev", build: "next build" },
+      },
+      null,
+      2,
+    ),
+  );
   fs.set("/index.js", "console.log('Hello from EH Code Studio');");
 
   return {
@@ -285,7 +295,8 @@ function simulateCommand(
       if (!target) return err("cat: missing operand", 1);
       const normalized = normalizePath(target);
       const content = fs.get(normalized);
-      if (content == null) return err(`cat: ${target}: No such file or directory`, 1);
+      if (content == null)
+        return err(`cat: ${target}: No such file or directory`, 1);
       return ok(content);
     }
 
@@ -303,7 +314,8 @@ function simulateCommand(
 
     case "node":
       if (args[0] === "-v" || args[0] === "--version") return ok("v20.11.0");
-      if (args[0] === "-e" && args[1]) return ok(`[sim] eval: ${args.slice(1).join(" ")}`);
+      if (args[0] === "-e" && args[1])
+        return ok(`[sim] eval: ${args.slice(1).join(" ")}`);
       return ok("[sim] node executed");
 
     case "npm":
@@ -329,9 +341,7 @@ function simulateNpm(args: string[]): SimProcess {
       return ok("10.2.0");
     case "install":
     case "i":
-      return ok(
-        "[sim] added 127 packages in 2.3s\n\n0 vulnerabilities",
-      );
+      return ok("[sim] added 127 packages in 2.3s\n\n0 vulnerabilities");
     case "run": {
       const script = args[1] ?? "unknown";
       return ok(`[sim] > ${script}\n[sim] script executed successfully`);
@@ -357,7 +367,9 @@ function simulateGit(args: string[]): SimProcess {
       if (args.includes("--oneline")) {
         return ok("abc1234 Initial commit");
       }
-      return ok("commit abc1234 (HEAD -> main)\nAuthor: Code Studio\nDate: today\n\n    Initial commit");
+      return ok(
+        "commit abc1234 (HEAD -> main)\nAuthor: Code Studio\nDate: today\n\n    Initial commit",
+      );
     case "init":
       return ok("Initialized empty Git repository in /home/project/.git/");
     case "branch":
@@ -376,7 +388,9 @@ function simulateGit(args: string[]): SimProcess {
     case "add":
       return ok("");
     case "commit":
-      return ok("[main def5678] Simulated commit\n 1 file changed, 1 insertion(+)");
+      return ok(
+        "[main def5678] Simulated commit\n 1 file changed, 1 insertion(+)",
+      );
     case "push":
       return ok("Everything up-to-date");
     case "pull":

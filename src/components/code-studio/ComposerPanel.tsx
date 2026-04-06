@@ -5,7 +5,16 @@
 // ============================================================
 
 import { useState, useCallback } from "react";
-import { FileText, Send, Check, X, ChevronDown, ChevronRight, Loader2, Eye } from "lucide-react";
+import {
+  FileText,
+  Send,
+  Check,
+  X,
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  Eye,
+} from "lucide-react";
 import type { FileNode } from "@/lib/code-studio/core/types";
 import { fileIconColor } from "@/lib/code-studio/core/types";
 import type { ComposerMode } from "@/lib/code-studio/core/composer-state";
@@ -35,7 +44,10 @@ interface ComposerPanelProps {
 // PART 2 — File Selector
 // ============================================================
 
-function flattenFiles(nodes: FileNode[], prefix = ""): Array<{ id: string; path: string }> {
+function flattenFiles(
+  nodes: FileNode[],
+  prefix = "",
+): Array<{ id: string; path: string }> {
   const result: Array<{ id: string; path: string }> = [];
   for (const node of nodes) {
     const path = prefix ? `${prefix}/${node.name}` : node.name;
@@ -110,42 +122,71 @@ function ChangeCard({
   lang: "KO" | "EN" | string;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const linesChanged = change.modified.split("\n").length - change.original.split("\n").length;
+  const linesChanged =
+    change.modified.split("\n").length - change.original.split("\n").length;
 
   return (
     <div className="rounded-lg border border-white/5 bg-white/2">
       <div className="flex items-center gap-2 px-3 py-2">
-        <button onClick={() => setExpanded(!expanded)} className="text-gray-500">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-gray-500"
+        >
           {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
         </button>
         <FileText size={14} className={fileIconColor(change.fileName)} />
-        <span className="flex-1 truncate text-sm text-gray-300">{change.fileName}</span>
-        <span className={`text-[10px] ${linesChanged >= 0 ? "text-green-400" : "text-red-400"}`}>
-          {linesChanged >= 0 ? `+${linesChanged}` : linesChanged} {L4(lang, { ko: "줄", en: "lines" })}
+        <span className="flex-1 truncate text-sm text-gray-300">
+          {change.fileName}
+        </span>
+        <span
+          className={`text-[10px] ${linesChanged >= 0 ? "text-green-400" : "text-red-400"}`}
+        >
+          {linesChanged >= 0 ? `+${linesChanged}` : linesChanged}{" "}
+          {L4(lang, { ko: "줄", en: "lines" })}
         </span>
         {change.status === "pending" && (
           <div className="flex items-center gap-1">
             {onPreview && (
-              <button onClick={onPreview} className="p-1 text-gray-500 hover:text-blue-400" title={L4(lang, { ko: "변경 사항 미리보기", en: "Preview diff" })}>
+              <button
+                onClick={onPreview}
+                className="p-1 text-gray-500 hover:text-blue-400"
+                title={L4(lang, {
+                  ko: "변경 사항 미리보기",
+                  en: "Preview diff",
+                })}
+              >
                 <Eye size={14} />
               </button>
             )}
-            <button onClick={onAccept} className="p-1 text-gray-500 hover:text-green-400" title={L4(lang, { ko: "수락", en: "Accept" })}>
+            <button
+              onClick={onAccept}
+              className="p-1 text-gray-500 hover:text-green-400"
+              title={L4(lang, { ko: "수락", en: "Accept" })}
+            >
               <Check size={14} />
             </button>
-            <button onClick={onReject} className="p-1 text-gray-500 hover:text-red-400" title={L4(lang, { ko: "거절", en: "Reject" })}>
+            <button
+              onClick={onReject}
+              className="p-1 text-gray-500 hover:text-red-400"
+              title={L4(lang, { ko: "거절", en: "Reject" })}
+            >
               <X size={14} />
             </button>
           </div>
         )}
-        {change.status === "accepted" && <Check size={14} className="text-green-400" />}
-        {change.status === "rejected" && <X size={14} className="text-red-400" />}
+        {change.status === "accepted" && (
+          <Check size={14} className="text-green-400" />
+        )}
+        {change.status === "rejected" && (
+          <X size={14} className="text-red-400" />
+        )}
       </div>
       {expanded && (
         <div className="border-t border-white/5 px-3 py-2">
           <pre className="max-h-48 overflow-auto text-[11px] text-gray-400 font-mono whitespace-pre-wrap">
             {change.modified.slice(0, 2000)}
-            {change.modified.length > 2000 && L4(lang, { ko: "\n... (생략됨)", en: "\n... (truncated)" })}
+            {change.modified.length > 2000 &&
+              L4(lang, { ko: "\n... (생략됨)", en: "\n... (truncated)" })}
           </pre>
         </div>
       )}
@@ -188,12 +229,20 @@ export default function ComposerPanel({
     try {
       const result = await onCompose(Array.from(selectedIds), instruction);
       setChanges(result);
-    } catch { /* handled upstream */ }
-    finally { setComposing(false); }
+    } catch {
+      /* handled upstream */
+    } finally {
+      setComposing(false);
+    }
   }, [selectedIds, instruction, onCompose]);
 
-  const updateChangeStatus = (index: number, status: "accepted" | "rejected") => {
-    setChanges((prev) => prev.map((c, i) => (i === index ? { ...c, status } : c)));
+  const updateChangeStatus = (
+    index: number,
+    status: "accepted" | "rejected",
+  ) => {
+    setChanges((prev) =>
+      prev.map((c, i) => (i === index ? { ...c, status } : c)),
+    );
   };
 
   const applyAll = () => {
@@ -210,7 +259,12 @@ export default function ComposerPanel({
         {L4(lang, { ko: "멀티 파일 컴포저", en: "Multi-file Composer" })}
       </div>
 
-      <FileSelector files={allFiles} selectedIds={selectedIds} onToggle={toggleFile} lang={lang} />
+      <FileSelector
+        files={allFiles}
+        selectedIds={selectedIds}
+        onToggle={toggleFile}
+        lang={lang}
+      />
 
       {/* Instruction */}
       <div className="border-b border-white/5 p-3">
@@ -218,17 +272,29 @@ export default function ComposerPanel({
           value={instruction}
           onChange={(e) => setInstruction(e.target.value)}
           rows={3}
-          placeholder={L4(lang, { ko: "이 파일들에 적용할 변경 사항을 설명해주세요...", en: "Describe the changes you want across these files..." })}
+          placeholder={L4(lang, {
+            ko: "이 파일들에 적용할 변경 사항을 설명해주세요...",
+            en: "Describe the changes you want across these files...",
+          })}
           className="w-full resize-none rounded border border-white/10 bg-bg-primary px-3 py-2 text-xs text-white outline-none focus:border-blue-500/50 placeholder:text-white/50"
         />
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-[10px] text-gray-600">{selectedIds.size}{L4(lang, { ko: "개 파일 선택됨", en: " file(s) selected" })}</span>
+          <span className="text-[10px] text-gray-600">
+            {selectedIds.size}
+            {L4(lang, { ko: "개 파일 선택됨", en: " file(s) selected" })}
+          </span>
           <button
             onClick={handleCompose}
-            disabled={composing || selectedIds.size === 0 || !instruction.trim()}
+            disabled={
+              composing || selectedIds.size === 0 || !instruction.trim()
+            }
             className="flex items-center gap-1 rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
           >
-            {composing ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+            {composing ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Send size={12} />
+            )}
             {L4(lang, { ko: "작성", en: "Compose" })}
           </button>
         </div>
@@ -252,7 +318,9 @@ export default function ComposerPanel({
       {changes.length > 0 && (
         <div className="border-t border-white/5 px-3 py-2 flex items-center justify-between">
           <span className="text-xs text-gray-500">
-            {acceptedCount}{L4(lang, { ko: "개 수락됨", en: " accepted" })}, {pendingCount}{L4(lang, { ko: "개 대기 중", en: " pending" })}
+            {acceptedCount}
+            {L4(lang, { ko: "개 수락됨", en: " accepted" })}, {pendingCount}
+            {L4(lang, { ko: "개 대기 중", en: " pending" })}
           </span>
           <button
             onClick={applyAll}
@@ -260,7 +328,8 @@ export default function ComposerPanel({
             className="flex items-center gap-1 rounded bg-green-600 px-3 py-1 text-xs text-white hover:bg-green-500 disabled:opacity-50 transition-colors"
           >
             <Check size={12} />
-            {L4(lang, { ko: "수락된 항목 적용", en: "Apply Accepted" })} ({acceptedCount})
+            {L4(lang, { ko: "수락된 항목 적용", en: "Apply Accepted" })} (
+            {acceptedCount})
           </button>
         </div>
       )}

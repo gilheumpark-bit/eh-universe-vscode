@@ -18,7 +18,7 @@ export interface CollabUser {
 
 export interface CollabEdit {
   userId: string;
-  type: 'insert' | 'delete' | 'replace';
+  type: "insert" | "delete" | "replace";
   position: number;
   content: string;
   timestamp: number;
@@ -26,13 +26,20 @@ export interface CollabEdit {
 
 export interface CollabRoom {
   id: string;
-  type: 'novel' | 'code' | 'translation';
+  type: "novel" | "code" | "translation";
   users: CollabUser[];
   /** 현재 문서 버전 */
   version: number;
 }
 
-const USER_COLORS = ['#4a8f78', '#8b6f56', '#6d7d8f', '#a85c52', '#b8955c', '#6b5ba3'];
+const USER_COLORS = [
+  "#4a8f78",
+  "#8b6f56",
+  "#6d7d8f",
+  "#a85c52",
+  "#b8955c",
+  "#6b5ba3",
+];
 
 /** 협업 룸 ID 생성 */
 export function createRoomId(): string {
@@ -40,12 +47,18 @@ export function createRoomId(): string {
 }
 
 /** 협업 초대 URL 생성 */
-export function getCollabInviteUrl(roomId: string, type: CollabRoom['type']): string {
+export function getCollabInviteUrl(
+  roomId: string,
+  type: CollabRoom["type"],
+): string {
   return `${window.location.origin}/collab/${type}/${roomId}`;
 }
 
 /** 초대 URL을 클립보드에 복사 */
-export async function copyCollabInvite(roomId: string, type: CollabRoom['type']): Promise<boolean> {
+export async function copyCollabInvite(
+  roomId: string,
+  type: CollabRoom["type"],
+): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(getCollabInviteUrl(roomId, type));
     return true;
@@ -56,11 +69,16 @@ export async function copyCollabInvite(roomId: string, type: CollabRoom['type'])
 
 /** 로컬 유저 정보 생성 */
 export function createLocalUser(name?: string): CollabUser {
-  const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('eh-collab-user') : null;
+  const stored =
+    typeof localStorage !== "undefined"
+      ? localStorage.getItem("eh-collab-user")
+      : null;
   if (stored) {
     try {
       return { ...JSON.parse(stored), lastActive: Date.now() };
-    } catch { /* */ }
+    } catch {
+      /* */
+    }
   }
 
   const user: CollabUser = {
@@ -69,7 +87,7 @@ export function createLocalUser(name?: string): CollabUser {
     color: USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)],
     lastActive: Date.now(),
   };
-  localStorage.setItem('eh-collab-user', JSON.stringify(user));
+  localStorage.setItem("eh-collab-user", JSON.stringify(user));
   return user;
 }
 
@@ -80,13 +98,19 @@ export function createLocalChannel(roomId: string): BroadcastChannel {
 }
 
 /** 로컬 채널에 편집 브로드캐스트 */
-export function broadcastEdit(channel: BroadcastChannel, edit: CollabEdit): void {
-  channel.postMessage({ type: 'edit', payload: edit });
+export function broadcastEdit(
+  channel: BroadcastChannel,
+  edit: CollabEdit,
+): void {
+  channel.postMessage({ type: "edit", payload: edit });
 }
 
 /** 로컬 채널에 커서 위치 브로드캐스트 */
-export function broadcastCursor(channel: BroadcastChannel, user: CollabUser): void {
-  channel.postMessage({ type: 'cursor', payload: user });
+export function broadcastCursor(
+  channel: BroadcastChannel,
+  user: CollabUser,
+): void {
+  channel.postMessage({ type: "cursor", payload: user });
 }
 
 /** 로컬 채널 리스너 등록 */
@@ -102,14 +126,22 @@ export function onLocalMessage(
   const handler = (e: MessageEvent) => {
     const { type, payload } = e.data;
     switch (type) {
-      case 'edit': handlers.onEdit?.(payload); break;
-      case 'cursor': handlers.onCursor?.(payload); break;
-      case 'join': handlers.onJoin?.(payload); break;
-      case 'leave': handlers.onLeave?.(payload); break;
+      case "edit":
+        handlers.onEdit?.(payload);
+        break;
+      case "cursor":
+        handlers.onCursor?.(payload);
+        break;
+      case "join":
+        handlers.onJoin?.(payload);
+        break;
+      case "leave":
+        handlers.onLeave?.(payload);
+        break;
     }
   };
-  channel.addEventListener('message', handler);
-  return () => channel.removeEventListener('message', handler);
+  channel.addEventListener("message", handler);
+  return () => channel.removeEventListener("message", handler);
 }
 
 // ── 원격 협업 (SSE 기반 — 서버 필요 시 활성화) ──

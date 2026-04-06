@@ -8,30 +8,34 @@
 // 비용 구조 : 검색 쿼리당 과금 (서버리스, 대기 비용 없음)
 // ============================================================
 
-import { SearchServiceClient } from '@google-cloud/discoveryengine';
+import { SearchServiceClient } from "@google-cloud/discoveryengine";
 
 // ── 환경 변수 ──
 function getProjectId(): string {
-  return process.env.GCP_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || 'eh-universe';
+  return (
+    process.env.GCP_PROJECT_ID ||
+    process.env.GOOGLE_CLOUD_PROJECT ||
+    "eh-universe"
+  );
 }
 
 function getLocation(): string {
-  return process.env.AGENT_BUILDER_LOCATION || 'global';
+  return process.env.AGENT_BUILDER_LOCATION || "global";
 }
 
 /** 각 스튜디오별 데이터스토어 ID */
-export type AgentStudioType = 'universe' | 'novel' | 'code';
+export type AgentStudioType = "universe" | "novel" | "code";
 
 const DATA_STORE_ENV: Record<AgentStudioType, string> = {
-  universe: 'AGENT_BUILDER_UNIVERSE_DS_ID',
-  novel:    'AGENT_BUILDER_NOVEL_DS_ID',
-  code:     'AGENT_BUILDER_CODE_DS_ID',
+  universe: "AGENT_BUILDER_UNIVERSE_DS_ID",
+  novel: "AGENT_BUILDER_NOVEL_DS_ID",
+  code: "AGENT_BUILDER_CODE_DS_ID",
 };
 
 const ENGINE_ENV: Record<AgentStudioType, string> = {
-  universe: 'AGENT_BUILDER_UNIVERSE_ENGINE_ID',
-  novel:    'AGENT_BUILDER_NOVEL_ENGINE_ID',
-  code:     'AGENT_BUILDER_CODE_ENGINE_ID',
+  universe: "AGENT_BUILDER_UNIVERSE_ENGINE_ID",
+  novel: "AGENT_BUILDER_NOVEL_ENGINE_ID",
+  code: "AGENT_BUILDER_CODE_ENGINE_ID",
 };
 
 export function getDataStoreId(studio: AgentStudioType): string | undefined {
@@ -48,9 +52,9 @@ export function isAgentBuilderConfigured(studio: AgentStudioType): boolean {
 
 export function getAgentBuilderStatus(): Record<AgentStudioType, boolean> {
   return {
-    universe: isAgentBuilderConfigured('universe'),
-    novel:    isAgentBuilderConfigured('novel'),
-    code:     isAgentBuilderConfigured('code'),
+    universe: isAgentBuilderConfigured("universe"),
+    novel: isAgentBuilderConfigured("novel"),
+    code: isAgentBuilderConfigured("code"),
   };
 }
 
@@ -117,7 +121,9 @@ export async function searchAgentBuilder(
 ): Promise<AgentSearchResponse> {
   const engineId = getEngineId(studio);
   if (!engineId) {
-    throw new Error(`Agent Builder engine for "${studio}" is not configured. Set ${ENGINE_ENV[studio]} in .env.local`);
+    throw new Error(
+      `Agent Builder engine for "${studio}" is not configured. Set ${ENGINE_ENV[studio]} in .env.local`,
+    );
   }
 
   const client = getSearchClient();
@@ -159,7 +165,7 @@ export async function searchAgentBuilder(
 주어진 세계관 문서 안에서만 답변하되, 위반 사항이 감지되면 즉시 위 4대 권리를 행사하세요.`,
         },
         modelSpec: {
-          version: 'stable',
+          version: "stable",
         },
       },
       snippetSpec: {
@@ -176,37 +182,53 @@ export async function searchAgentBuilder(
   // 결과 파싱
   const results: AgentSearchResult[] = [];
 
-  if (response && typeof response === 'object' && 'results' in response) {
-    const rawResults = (response as { results?: Array<Record<string, unknown>> }).results;
+  if (response && typeof response === "object" && "results" in response) {
+    const rawResults = (
+      response as { results?: Array<Record<string, unknown>> }
+    ).results;
     if (Array.isArray(rawResults)) {
       for (const r of rawResults) {
         const doc = r.document as Record<string, unknown> | undefined;
-        const derivedData = doc?.derivedStructData as Record<string, unknown> | undefined;
-        const structData = doc?.structData as Record<string, unknown> | undefined;
+        const derivedData = doc?.derivedStructData as
+          | Record<string, unknown>
+          | undefined;
+        const structData = doc?.structData as
+          | Record<string, unknown>
+          | undefined;
 
         results.push({
-          id: (doc?.id as string) || '',
-          title: (derivedData?.title as string) || (structData?.title as string) || '',
-          snippet: (derivedData?.snippets as Array<{ snippet?: string }>)?.[0]?.snippet
-            || (derivedData?.extractive_answers as Array<{ content?: string }>)?.[0]?.content
-            || '',
+          id: (doc?.id as string) || "",
+          title:
+            (derivedData?.title as string) ||
+            (structData?.title as string) ||
+            "",
+          snippet:
+            (derivedData?.snippets as Array<{ snippet?: string }>)?.[0]
+              ?.snippet ||
+            (
+              derivedData?.extractive_answers as Array<{ content?: string }>
+            )?.[0]?.content ||
+            "",
           uri: derivedData?.link as string | undefined,
-          relevanceScore: typeof r.modelScores === 'object' ? undefined : undefined,
+          relevanceScore:
+            typeof r.modelScores === "object" ? undefined : undefined,
         });
       }
     }
   }
 
   // 요약 추출
-  let summary = '';
-  if (response && typeof response === 'object' && 'summary' in response) {
-    const summaryObj = (response as { summary?: { summaryText?: string } }).summary;
-    summary = summaryObj?.summaryText || '';
+  let summary = "";
+  if (response && typeof response === "object" && "summary" in response) {
+    const summaryObj = (response as { summary?: { summaryText?: string } })
+      .summary;
+    summary = summaryObj?.summaryText || "";
   }
 
-  const totalSize = (response && typeof response === 'object' && 'totalSize' in response)
-    ? Number((response as { totalSize?: number }).totalSize) || 0
-    : results.length;
+  const totalSize =
+    response && typeof response === "object" && "totalSize" in response
+      ? Number((response as { totalSize?: number }).totalSize) || 0
+      : results.length;
 
   return { summary, results, totalSize };
 }
@@ -217,7 +239,11 @@ export async function converseAgentBuilder(
   studio: AgentStudioType,
   query: string,
   conversationId?: string,
-): Promise<{ reply: string; conversationId: string; references: AgentSearchResult[] }> {
+): Promise<{
+  reply: string;
+  conversationId: string;
+  references: AgentSearchResult[];
+}> {
   const engineId = getEngineId(studio);
   if (!engineId) {
     throw new Error(`Agent Builder engine for "${studio}" is not configured.`);
@@ -239,7 +265,7 @@ export async function converseAgentBuilder(
   });
 
   return {
-    reply: searchResult.summary || '검색 결과에서 관련 정보를 찾지 못했습니다.',
+    reply: searchResult.summary || "검색 결과에서 관련 정보를 찾지 못했습니다.",
     conversationId: conversationId || `conv-${Date.now()}`,
     references: searchResult.results,
   };

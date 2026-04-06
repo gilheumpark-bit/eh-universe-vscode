@@ -1,15 +1,21 @@
-import React from 'react';
-import dynamic from 'next/dynamic';
-import LoadingSkeleton from '@/components/studio/LoadingSkeleton';
-import { APIKeySlotManager } from '@/components/home/APIKeySlotManager';
-import { ConfirmModal } from '@/components/studio/UXHelpers';
-import { MoveSessionModal, SaveSlotModal } from '@/components/studio/StudioModals';
-import StudioToasts from '@/components/studio/StudioToasts';
-import { INITIAL_CONFIG } from '@/hooks/useProjectManager';
-import type { ChatSession, AppTab, AppLanguage } from '@/lib/studio-types';
+import React from "react";
+import dynamic from "next/dynamic";
+import LoadingSkeleton from "@/components/studio/LoadingSkeleton";
+import { APIKeySlotManager } from "@/components/home/APIKeySlotManager";
+import { ConfirmModal } from "@/components/studio/UXHelpers";
+import {
+  MoveSessionModal,
+  SaveSlotModal,
+} from "@/components/studio/StudioModals";
+import StudioToasts from "@/components/studio/StudioToasts";
+import { INITIAL_CONFIG } from "@/hooks/useProjectManager";
+import type { ChatSession, AppTab, AppLanguage } from "@/lib/studio-types";
 
 const DynSkeleton = () => <LoadingSkeleton height={120} />;
-const QuickStartModal = dynamic(() => import('@/components/studio/QuickStartModal'), { ssr: false, loading: DynSkeleton });
+const QuickStartModal = dynamic(
+  () => import("@/components/studio/QuickStartModal"),
+  { ssr: false, loading: DynSkeleton },
+);
 
 interface StudioOverlayManagerProps {
   language: AppLanguage;
@@ -64,18 +70,46 @@ interface StudioOverlayManagerProps {
 }
 
 export default function StudioOverlayManager({
-  language, isKO,
-  showQuickStartModal, setShowQuickStartModal, handleQuickStart, isQuickGenerating,
-  showApiKeyModal, setShowApiKeyModal, hostedProviders, setApiKeyVersion,
-  confirmState, closeConfirm,
-  moveModal, setMoveModal, moveSessionToProject,
-  saveSlotModalOpen, setSaveSlotModalOpen, activeTab, currentSession, updateCurrentSession, triggerSave,
-  showSyncReminder, setShowSyncReminder, user, lastSyncTime, handleSync, signInWithGoogle,
-  storageFull, setStorageFull, exportAllJSON,
-  fallbackNotice, setFallbackNotice, exportDoneFormat, setExportDoneFormat,
-  worldImportBanner, setWorldImportBanner,
-  uxError, setUxError,
-  alertToast, setAlertToast
+  language,
+  isKO,
+  showQuickStartModal,
+  setShowQuickStartModal,
+  handleQuickStart,
+  isQuickGenerating,
+  showApiKeyModal,
+  setShowApiKeyModal,
+  hostedProviders,
+  setApiKeyVersion,
+  confirmState,
+  closeConfirm,
+  moveModal,
+  setMoveModal,
+  moveSessionToProject,
+  saveSlotModalOpen,
+  setSaveSlotModalOpen,
+  activeTab,
+  currentSession,
+  updateCurrentSession,
+  triggerSave,
+  showSyncReminder,
+  setShowSyncReminder,
+  user,
+  lastSyncTime,
+  handleSync,
+  signInWithGoogle,
+  storageFull,
+  setStorageFull,
+  exportAllJSON,
+  fallbackNotice,
+  setFallbackNotice,
+  exportDoneFormat,
+  setExportDoneFormat,
+  worldImportBanner,
+  setWorldImportBanner,
+  uxError,
+  setUxError,
+  alertToast,
+  setAlertToast,
 }: StudioOverlayManagerProps) {
   return (
     <>
@@ -89,7 +123,10 @@ export default function StudioOverlayManager({
 
       {showApiKeyModal && (
         <APIKeySlotManager
-          onClose={() => { setShowApiKeyModal(false); setApiKeyVersion(v => v + 1); }}
+          onClose={() => {
+            setShowApiKeyModal(false);
+            setApiKeyVersion((v) => v + 1);
+          }}
         />
       )}
 
@@ -104,33 +141,81 @@ export default function StudioOverlayManager({
         onCancel={closeConfirm}
       />
 
-      {moveModal && <MoveSessionModal data={moveModal} language={language} onMove={moveSessionToProject} onClose={() => setMoveModal(null)} />}
+      {moveModal && (
+        <MoveSessionModal
+          data={moveModal}
+          language={language}
+          onMove={moveSessionToProject}
+          onClose={() => setMoveModal(null)}
+        />
+      )}
 
-      {saveSlotModalOpen && <SaveSlotModal language={language} activeTab={activeTab} config={currentSession?.config}
-        onSave={(slot) => {
-          updateCurrentSession({ config: { ...(currentSession?.config || INITIAL_CONFIG), savedSlots: [...(currentSession?.config?.savedSlots || []), slot] } });
-          triggerSave();
-        }}
-        onClose={() => setSaveSlotModalOpen(false)} />}
+      {saveSlotModalOpen && (
+        <SaveSlotModal
+          language={language}
+          activeTab={activeTab}
+          config={currentSession?.config}
+          onSave={(slot) => {
+            updateCurrentSession({
+              config: {
+                ...(currentSession?.config || INITIAL_CONFIG),
+                savedSlots: [
+                  ...(currentSession?.config?.savedSlots || []),
+                  slot,
+                ],
+              },
+            });
+            triggerSave();
+          }}
+          onClose={() => setSaveSlotModalOpen(false)}
+        />
+      )}
 
       <StudioToasts
-        language={language} isKO={isKO}
-        showSyncReminder={showSyncReminder} setShowSyncReminder={setShowSyncReminder}
-        user={user} lastSyncTime={lastSyncTime} handleSync={handleSync} signInWithGoogle={signInWithGoogle}
-        storageFull={storageFull} setStorageFull={setStorageFull} exportAllJSON={exportAllJSON}
-        fallbackNotice={fallbackNotice} setFallbackNotice={setFallbackNotice}
-        exportDoneFormat={exportDoneFormat} setExportDoneFormat={setExportDoneFormat}
-        worldImportBanner={worldImportBanner} setWorldImportBanner={setWorldImportBanner}
-        uxError={uxError} setUxError={setUxError}
+        language={language}
+        isKO={isKO}
+        showSyncReminder={showSyncReminder}
+        setShowSyncReminder={setShowSyncReminder}
+        user={user}
+        lastSyncTime={lastSyncTime}
+        handleSync={handleSync}
+        signInWithGoogle={signInWithGoogle}
+        storageFull={storageFull}
+        setStorageFull={setStorageFull}
+        exportAllJSON={exportAllJSON}
+        fallbackNotice={fallbackNotice}
+        setFallbackNotice={setFallbackNotice}
+        exportDoneFormat={exportDoneFormat}
+        setExportDoneFormat={setExportDoneFormat}
+        worldImportBanner={worldImportBanner}
+        setWorldImportBanner={setWorldImportBanner}
+        uxError={uxError}
+        setUxError={setUxError}
       />
       {alertToast && (
-        <div className={`fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[200] px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2 max-w-md text-sm ${
-          alertToast.variant === 'error' ? 'bg-red-900/95 border border-red-600 text-red-100'
-          : alertToast.variant === 'info' ? 'bg-blue-900/95 border border-blue-600 text-blue-100'
-          : 'bg-amber-900/95 border border-amber-600 text-amber-100'
-        }`}>
-          <span>{alertToast.variant === 'error' ? '\u274C' : alertToast.variant === 'info' ? '\u2139\uFE0F' : '\u26A0\uFE0F'} {alertToast.message}</span>
-          <button onClick={() => setAlertToast(null)} className="ml-2 opacity-60 hover:opacity-100">&times;</button>
+        <div
+          className={`fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[200] px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2 max-w-md text-sm ${
+            alertToast.variant === "error"
+              ? "bg-red-900/95 border border-red-600 text-red-100"
+              : alertToast.variant === "info"
+                ? "bg-blue-900/95 border border-blue-600 text-blue-100"
+                : "bg-amber-900/95 border border-amber-600 text-amber-100"
+          }`}
+        >
+          <span>
+            {alertToast.variant === "error"
+              ? "\u274C"
+              : alertToast.variant === "info"
+                ? "\u2139\uFE0F"
+                : "\u26A0\uFE0F"}{" "}
+            {alertToast.message}
+          </span>
+          <button
+            onClick={() => setAlertToast(null)}
+            className="ml-2 opacity-60 hover:opacity-100"
+          >
+            &times;
+          </button>
         </div>
       )}
     </>

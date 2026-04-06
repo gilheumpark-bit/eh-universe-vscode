@@ -16,10 +16,22 @@ export interface AnsiSpan {
 
 // Foreground colors (30-37 standard, 90-97 bright)
 const ANSI_COLORS: Record<number, string> = {
-  30: "#1e1e1e", 31: "#f85149", 32: "#3fb950", 33: "#d29922",
-  34: "#58a6ff", 35: "#bc8cff", 36: "#39c5cf", 37: "#e6edf3",
-  90: "#6e7681", 91: "#ff7b72", 92: "#56d364", 93: "#e3b341",
-  94: "#79c0ff", 95: "#d2a8ff", 96: "#56d4dd", 97: "#ffffff",
+  30: "#1e1e1e",
+  31: "#f85149",
+  32: "#3fb950",
+  33: "#d29922",
+  34: "#58a6ff",
+  35: "#bc8cff",
+  36: "#39c5cf",
+  37: "#e6edf3",
+  90: "#6e7681",
+  91: "#ff7b72",
+  92: "#56d364",
+  93: "#e3b341",
+  94: "#79c0ff",
+  95: "#d2a8ff",
+  96: "#56d4dd",
+  97: "#ffffff",
 };
 
 /**

@@ -4,7 +4,13 @@
 // PART 1 — Imports, Types & Import Parser
 // ============================================================
 
-import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
 import { RotateCcw, AlertTriangle } from "lucide-react";
 import {
   ForceNode,
@@ -62,14 +68,22 @@ function parseImports(content: string): string[] {
 }
 
 /** Resolve relative import to absolute-ish path within project */
-function resolveImport(from: string, specifier: string, knownPaths: Set<string>): string | null {
+function resolveImport(
+  from: string,
+  specifier: string,
+  knownPaths: Set<string>,
+): string | null {
   let resolved: string;
   if (specifier.startsWith("@/")) {
     resolved = specifier.replace("@/", "src/");
   } else {
     // Relative path resolution
-    const fromDir = from.includes("/") ? from.slice(0, from.lastIndexOf("/")) : "";
-    const parts = [...fromDir.split("/"), ...specifier.split("/")].filter(Boolean);
+    const fromDir = from.includes("/")
+      ? from.slice(0, from.lastIndexOf("/"))
+      : "";
+    const parts = [...fromDir.split("/"), ...specifier.split("/")].filter(
+      Boolean,
+    );
     const stack: string[] = [];
     for (const p of parts) {
       if (p === "..") stack.pop();
@@ -79,7 +93,13 @@ function resolveImport(from: string, specifier: string, knownPaths: Set<string>)
   }
 
   // Try with common extensions
-  const candidates = [resolved, `${resolved}.ts`, `${resolved}.tsx`, `${resolved}/index.ts`, `${resolved}/index.tsx`];
+  const candidates = [
+    resolved,
+    `${resolved}.ts`,
+    `${resolved}.tsx`,
+    `${resolved}/index.ts`,
+    `${resolved}/index.tsx`,
+  ];
   for (const c of candidates) {
     if (knownPaths.has(c)) return c;
   }
@@ -140,28 +160,37 @@ function useDrag(
   const dragging = useRef<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const onPointerDown = useCallback((id: string, e: React.PointerEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    dragging.current = id;
-    nodesRef.current = nodesRef.current.map((n) =>
-      n.id === id ? { ...n, pinned: true } : n,
-    );
-  }, [nodesRef]);
+  const onPointerDown = useCallback(
+    (id: string, e: React.PointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+      dragging.current = id;
+      nodesRef.current = nodesRef.current.map((n) =>
+        n.id === id ? { ...n, pinned: true } : n,
+      );
+    },
+    [nodesRef],
+  );
 
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragging.current || !svgRef.current) return;
-    const rect = svgRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * SVG_W;
-    const y = ((e.clientY - rect.top) / rect.height) * SVG_H;
-    nodesRef.current = nodesRef.current.map((n) =>
-      n.id === dragging.current ? { ...n, x, y, vx: 0, vy: 0 } : n,
-    );
-    const updated = tickForceLayout(nodesRef.current, edges, { width: SVG_W, height: SVG_H });
-    nodesRef.current = updated;
-    setNodes([...updated]);
-  }, [edges, nodesRef, setNodes]);
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!dragging.current || !svgRef.current) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * SVG_W;
+      const y = ((e.clientY - rect.top) / rect.height) * SVG_H;
+      nodesRef.current = nodesRef.current.map((n) =>
+        n.id === dragging.current ? { ...n, x, y, vx: 0, vy: 0 } : n,
+      );
+      const updated = tickForceLayout(nodesRef.current, edges, {
+        width: SVG_W,
+        height: SVG_H,
+      });
+      nodesRef.current = updated;
+      setNodes([...updated]);
+    },
+    [edges, nodesRef, setNodes],
+  );
 
   const onPointerUp = useCallback(() => {
     if (dragging.current) {
@@ -181,7 +210,15 @@ function useDrag(
 // PART 3 — SVG Rendering Components
 // ============================================================
 
-function DepEdgeLine({ from, to, isCircular }: { from: ForceNode; to: ForceNode; isCircular: boolean }) {
+function DepEdgeLine({
+  from,
+  to,
+  isCircular,
+}: {
+  from: ForceNode;
+  to: ForceNode;
+  isCircular: boolean;
+}) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
@@ -209,7 +246,11 @@ function DepEdgeLine({ from, to, isCircular }: { from: ForceNode; to: ForceNode;
   );
 }
 
-function FileNode({ node, path, onPointerDown }: {
+function FileNode({
+  node,
+  path,
+  onPointerDown,
+}: {
   node: ForceNode;
   path: string;
   onPointerDown: (id: string, e: React.PointerEvent) => void;
@@ -223,8 +264,25 @@ function FileNode({ node, path, onPointerDown }: {
       style={{ cursor: "grab" }}
       onPointerDown={(e) => onPointerDown(node.id, e)}
     >
-      <circle cx={node.x} cy={node.y} r={NODE_R} fill={color} opacity={0.2} stroke={color} strokeWidth={1.5} />
-      <text x={node.x} y={node.y + 1} fill="white" fontSize="7" textAnchor="middle" dominantBaseline="central" fontWeight="bold" style={{ pointerEvents: "none", userSelect: "none" }}>
+      <circle
+        cx={node.x}
+        cy={node.y}
+        r={NODE_R}
+        fill={color}
+        opacity={0.2}
+        stroke={color}
+        strokeWidth={1.5}
+      />
+      <text
+        x={node.x}
+        y={node.y + 1}
+        fill="white"
+        fontSize="7"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontWeight="bold"
+        style={{ pointerEvents: "none", userSelect: "none" }}
+      >
         {displayName}
       </text>
     </g>
@@ -257,7 +315,10 @@ function DependencyGraph({ files }: Props) {
   }, [files, knownPaths]);
 
   // Detect circular dependencies
-  const circularEdgeKeys = useMemo(() => findCircularDeps(depEdges), [depEdges]);
+  const circularEdgeKeys = useMemo(
+    () => findCircularDeps(depEdges),
+    [depEdges],
+  );
 
   // Force edges
   const forceEdges: ForceEdge[] = useMemo(
@@ -267,7 +328,10 @@ function DependencyGraph({ files }: Props) {
 
   // Layout key for re-simulation
   const layoutKey = useMemo(
-    () => filePaths.join(",") + "|" + depEdges.map((e) => `${e.source}->${e.target}`).join(","),
+    () =>
+      filePaths.join(",") +
+      "|" +
+      depEdges.map((e) => `${e.source}->${e.target}`).join(","),
     [filePaths, depEdges],
   );
 
@@ -275,7 +339,10 @@ function DependencyGraph({ files }: Props) {
   const initialNodes = useMemo(() => {
     if (filePaths.length === 0) return [];
     const positions = initializePositions(filePaths, SVG_W, SVG_H);
-    return simulateForceLayout(positions, forceEdges, { width: SVG_W, height: SVG_H });
+    return simulateForceLayout(positions, forceEdges, {
+      width: SVG_W,
+      height: SVG_H,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layoutKey]);
 
@@ -292,14 +359,21 @@ function DependencyGraph({ files }: Props) {
     setNodes(initialNodes);
   }, [initialNodes]);
 
-  const { svgRef, onPointerDown, onPointerMove, onPointerUp } = useDrag(nodesRef, forceEdges, setNodesAndRef);
+  const { svgRef, onPointerDown, onPointerMove, onPointerUp } = useDrag(
+    nodesRef,
+    forceEdges,
+    setNodesAndRef,
+  );
 
   const getNode = (id: string) => nodes.find((n) => n.id === id);
 
   const handleResetLayout = useCallback(() => {
     if (filePaths.length === 0) return;
     const positions = initializePositions(filePaths, SVG_W, SVG_H);
-    const fresh = simulateForceLayout(positions, forceEdges, { width: SVG_W, height: SVG_H });
+    const fresh = simulateForceLayout(positions, forceEdges, {
+      width: SVG_W,
+      height: SVG_H,
+    });
     nodesRef.current = fresh;
     setNodes(fresh);
   }, [filePaths, forceEdges]);
@@ -311,7 +385,9 @@ function DependencyGraph({ files }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-white/5 shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-medium text-text-primary">Dependency Graph</span>
+          <span className="text-[13px] font-medium text-text-primary">
+            Dependency Graph
+          </span>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 text-text-tertiary border border-white/10">
             {filePaths.length} files
           </span>
@@ -321,7 +397,11 @@ function DependencyGraph({ files }: Props) {
             </span>
           )}
         </div>
-        <button onClick={handleResetLayout} className="p-1.5 rounded hover:bg-white/10 text-text-tertiary hover:text-white transition-colors" title="Reset layout">
+        <button
+          onClick={handleResetLayout}
+          className="p-1.5 rounded hover:bg-white/10 text-text-tertiary hover:text-white transition-colors"
+          title="Reset layout"
+        >
           <RotateCcw className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -337,20 +417,48 @@ function DependencyGraph({ files }: Props) {
             ref={svgRef}
             viewBox={`0 0 ${SVG_W} ${SVG_H}`}
             className="w-full h-full"
-            style={{ fontFamily: "var(--font-mono, monospace)", touchAction: "none" }}
+            style={{
+              fontFamily: "var(--font-mono, monospace)",
+              touchAction: "none",
+            }}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerLeave={onPointerUp}
           >
             <defs>
-              <marker id="arrowGray" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+              <marker
+                id="arrowGray"
+                markerWidth="6"
+                markerHeight="4"
+                refX="5"
+                refY="2"
+                orient="auto"
+              >
                 <path d="M0,0 L6,2 L0,4" fill="#4b5563" />
               </marker>
-              <marker id="arrowRed" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+              <marker
+                id="arrowRed"
+                markerWidth="6"
+                markerHeight="4"
+                refX="5"
+                refY="2"
+                orient="auto"
+              >
                 <path d="M0,0 L6,2 L0,4" fill="#ef4444" />
               </marker>
-              <pattern id="depGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--color-border, #1e2530)" strokeWidth="0.5" opacity="0.2" />
+              <pattern
+                id="depGrid"
+                width="40"
+                height="40"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 40 0 L 0 0 0 40"
+                  fill="none"
+                  stroke="var(--color-border, #1e2530)"
+                  strokeWidth="0.5"
+                  opacity="0.2"
+                />
               </pattern>
             </defs>
             <rect width={SVG_W} height={SVG_H} fill="url(#depGrid)" rx="8" />
@@ -361,12 +469,24 @@ function DependencyGraph({ files }: Props) {
               const to = getNode(e.target);
               if (!from || !to) return null;
               const key = `${e.source}->${e.target}`;
-              return <DepEdgeLine key={i} from={from} to={to} isCircular={circularEdgeKeys.has(key)} />;
+              return (
+                <DepEdgeLine
+                  key={i}
+                  from={from}
+                  to={to}
+                  isCircular={circularEdgeKeys.has(key)}
+                />
+              );
             })}
 
             {/* Nodes */}
             {nodes.map((node) => (
-              <FileNode key={node.id} node={node} path={node.id} onPointerDown={onPointerDown} />
+              <FileNode
+                key={node.id}
+                node={node}
+                path={node.id}
+                onPointerDown={onPointerDown}
+              />
             ))}
           </svg>
         )}
@@ -376,7 +496,10 @@ function DependencyGraph({ files }: Props) {
       <div className="flex items-center gap-3 p-2 border-t border-white/5 text-[9px] text-text-tertiary shrink-0">
         {Object.entries(TYPE_COLORS).map(([ext, color]) => (
           <div key={ext} className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full inline-block" style={{ background: color }} />
+            <span
+              className="w-2 h-2 rounded-full inline-block"
+              style={{ background: color }}
+            />
             <span>{ext}</span>
           </div>
         ))}

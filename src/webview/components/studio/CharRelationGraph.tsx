@@ -2,26 +2,51 @@
 // PART 1 — Types, Constants, Imports
 // ============================================================
 
-import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { Character, CharRelation, CharRelationType, AppLanguage } from '@/lib/studio-types';
-import { ForceNode, ForceEdge, simulateForceLayout, initializePositions, tickForceLayout } from '@/lib/force-graph';
-import { Maximize2, Minimize2, RotateCcw, Search, X } from 'lucide-react';
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
+import {
+  Character,
+  CharRelation,
+  CharRelationType,
+  AppLanguage,
+} from "@/lib/studio-types";
+import {
+  ForceNode,
+  ForceEdge,
+  simulateForceLayout,
+  initializePositions,
+  tickForceLayout,
+} from "@/lib/force-graph";
+import { Maximize2, Minimize2, RotateCcw, Search, X } from "lucide-react";
 
 const ROLE_COLORS: Record<string, string> = {
-  hero: '#3b82f6', villain: '#ef4444', ally: '#22c55e', extra: '#6b7280',
+  hero: "#3b82f6",
+  villain: "#ef4444",
+  ally: "#22c55e",
+  extra: "#6b7280",
 };
 
-const REL_STYLES: Record<CharRelationType, { ko: string; en: string; color: string; dash?: string }> = {
-  lover:       { ko: '연인', en: 'Lover', color: '#ec4899' },
-  rival:       { ko: '라이벌', en: 'Rival', color: '#f59e0b', dash: '6,3' },
-  friend:      { ko: '친구', en: 'Friend', color: '#22c55e' },
-  enemy:       { ko: '적', en: 'Enemy', color: '#ef4444', dash: '4,4' },
-  family:      { ko: '가족', en: 'Family', color: '#8b5cf6' },
-  mentor:      { ko: '사제', en: 'Mentor', color: '#06b6d4', dash: '8,3' },
-  subordinate: { ko: '상하', en: 'Sub', color: '#6b7280', dash: '2,4' },
+const REL_STYLES: Record<
+  CharRelationType,
+  { ko: string; en: string; color: string; dash?: string }
+> = {
+  lover: { ko: "연인", en: "Lover", color: "#ec4899" },
+  rival: { ko: "라이벌", en: "Rival", color: "#f59e0b", dash: "6,3" },
+  friend: { ko: "친구", en: "Friend", color: "#22c55e" },
+  enemy: { ko: "적", en: "Enemy", color: "#ef4444", dash: "4,4" },
+  family: { ko: "가족", en: "Family", color: "#8b5cf6" },
+  mentor: { ko: "사제", en: "Mentor", color: "#06b6d4", dash: "8,3" },
+  subordinate: { ko: "상하", en: "Sub", color: "#6b7280", dash: "2,4" },
 };
 
-const ALL_REL_TYPES: CharRelationType[] = Object.keys(REL_STYLES) as CharRelationType[];
+const ALL_REL_TYPES: CharRelationType[] = Object.keys(
+  REL_STYLES,
+) as CharRelationType[];
 
 const SVG_W = 600;
 const SVG_H = 450;
@@ -56,81 +81,105 @@ function useDragAndPan(
   edges: ForceEdge[],
   setNodes: (n: ForceNode[]) => void,
   transform: ViewTransform,
-  setTransform: React.Dispatch<React.SetStateAction<ViewTransform>>
+  setTransform: React.Dispatch<React.SetStateAction<ViewTransform>>,
 ) {
   const dragging = useRef<string | null>(null);
-  const panning = useRef<{ startX: number; startY: number; startPanX: number; startPanY: number } | null>(null);
+  const panning = useRef<{
+    startX: number;
+    startY: number;
+    startPanX: number;
+    startPanY: number;
+  } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
   // Convert client coords to SVG user-space coords accounting for zoom/pan
-  const toSVGCoord = useCallback((clientX: number, clientY: number) => {
-    const svg = svgRef.current;
-    if (!svg) return { x: 0, y: 0 };
-    const rect = svg.getBoundingClientRect();
-    const vbW = SVG_W / transform.zoom;
-    const vbH = SVG_H / transform.zoom;
-    const vbX = -transform.panX;
-    const vbY = -transform.panY;
-    return {
-      x: vbX + ((clientX - rect.left) / rect.width) * vbW,
-      y: vbY + ((clientY - rect.top) / rect.height) * vbH,
-    };
-  }, [transform]);
+  const toSVGCoord = useCallback(
+    (clientX: number, clientY: number) => {
+      const svg = svgRef.current;
+      if (!svg) return { x: 0, y: 0 };
+      const rect = svg.getBoundingClientRect();
+      const vbW = SVG_W / transform.zoom;
+      const vbH = SVG_H / transform.zoom;
+      const vbX = -transform.panX;
+      const vbY = -transform.panY;
+      return {
+        x: vbX + ((clientX - rect.left) / rect.width) * vbW,
+        y: vbY + ((clientY - rect.top) / rect.height) * vbH,
+      };
+    },
+    [transform],
+  );
 
-  const onPointerDown = useCallback((id: string, e: React.PointerEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    dragging.current = id;
-    panning.current = null;
-    nodesRef.current = nodesRef.current.map(n =>
-      n.id === id ? { ...n, pinned: true } : n
-    );
-  }, [nodesRef]);
+  const onPointerDown = useCallback(
+    (id: string, e: React.PointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+      dragging.current = id;
+      panning.current = null;
+      nodesRef.current = nodesRef.current.map((n) =>
+        n.id === id ? { ...n, pinned: true } : n,
+      );
+    },
+    [nodesRef],
+  );
 
   // Pan start: triggered from empty SVG area
-  const onSvgPointerDown = useCallback((e: React.PointerEvent) => {
-    // Only start pan if clicking on empty space (not a node)
-    if (dragging.current) return;
-    panning.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      startPanX: transform.panX,
-      startPanY: transform.panY,
-    };
-  }, [transform.panX, transform.panY]);
+  const onSvgPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      // Only start pan if clicking on empty space (not a node)
+      if (dragging.current) return;
+      panning.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        startPanX: transform.panX,
+        startPanY: transform.panY,
+      };
+    },
+    [transform.panX, transform.panY],
+  );
 
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    // Node drag
-    if (dragging.current) {
-      const { x, y } = toSVGCoord(e.clientX, e.clientY);
-      nodesRef.current = nodesRef.current.map(n =>
-        n.id === dragging.current ? { ...n, x, y, vx: 0, vy: 0 } : n
-      );
-      const updated = tickForceLayout(nodesRef.current, edges, { width: SVG_W, height: SVG_H });
-      nodesRef.current = updated;
-      setNodes([...updated]);
-      return;
-    }
-    // Pan drag
-    if (panning.current) {
-      const svg = svgRef.current;
-      if (!svg) return;
-      const rect = svg.getBoundingClientRect();
-      const dx = (e.clientX - panning.current.startX) / rect.width * (SVG_W / transform.zoom);
-      const dy = (e.clientY - panning.current.startY) / rect.height * (SVG_H / transform.zoom);
-      setTransform(prev => ({
-        ...prev,
-        panX: panning.current!.startPanX + dx,
-        panY: panning.current!.startPanY + dy,
-      }));
-    }
-  }, [edges, nodesRef, setNodes, toSVGCoord, transform.zoom, setTransform]);
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      // Node drag
+      if (dragging.current) {
+        const { x, y } = toSVGCoord(e.clientX, e.clientY);
+        nodesRef.current = nodesRef.current.map((n) =>
+          n.id === dragging.current ? { ...n, x, y, vx: 0, vy: 0 } : n,
+        );
+        const updated = tickForceLayout(nodesRef.current, edges, {
+          width: SVG_W,
+          height: SVG_H,
+        });
+        nodesRef.current = updated;
+        setNodes([...updated]);
+        return;
+      }
+      // Pan drag
+      if (panning.current) {
+        const svg = svgRef.current;
+        if (!svg) return;
+        const rect = svg.getBoundingClientRect();
+        const dx =
+          ((e.clientX - panning.current.startX) / rect.width) *
+          (SVG_W / transform.zoom);
+        const dy =
+          ((e.clientY - panning.current.startY) / rect.height) *
+          (SVG_H / transform.zoom);
+        setTransform((prev) => ({
+          ...prev,
+          panX: panning.current!.startPanX + dx,
+          panY: panning.current!.startPanY + dy,
+        }));
+      }
+    },
+    [edges, nodesRef, setNodes, toSVGCoord, transform.zoom, setTransform],
+  );
 
   const onPointerUp = useCallback(() => {
     if (dragging.current) {
-      nodesRef.current = nodesRef.current.map(n =>
-        n.id === dragging.current ? { ...n, pinned: false } : n
+      nodesRef.current = nodesRef.current.map((n) =>
+        n.id === dragging.current ? { ...n, pinned: false } : n,
       );
       dragging.current = null;
     }
@@ -138,40 +187,53 @@ function useDragAndPan(
   }, [nodesRef]);
 
   // Scroll-wheel zoom centered on cursor
-  const onWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const svg = svgRef.current;
-    if (!svg) return;
-    const rect = svg.getBoundingClientRect();
+  const onWheel = useCallback(
+    (e: React.WheelEvent) => {
+      e.preventDefault();
+      const svg = svgRef.current;
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
 
-    // Cursor position as fraction [0,1] within SVG element
-    const fracX = (e.clientX - rect.left) / rect.width;
-    const fracY = (e.clientY - rect.top) / rect.height;
+      // Cursor position as fraction [0,1] within SVG element
+      const fracX = (e.clientX - rect.left) / rect.width;
+      const fracY = (e.clientY - rect.top) / rect.height;
 
-    setTransform(prev => {
-      const direction = e.deltaY < 0 ? 1 : -1;
-      const newZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, prev.zoom + direction * ZOOM_STEP));
-      if (newZoom === prev.zoom) return prev;
+      setTransform((prev) => {
+        const direction = e.deltaY < 0 ? 1 : -1;
+        const newZoom = Math.max(
+          ZOOM_MIN,
+          Math.min(ZOOM_MAX, prev.zoom + direction * ZOOM_STEP),
+        );
+        if (newZoom === prev.zoom) return prev;
 
-      // Keep the point under cursor stationary
-      const oldVBW = SVG_W / prev.zoom;
-      const oldVBH = SVG_H / prev.zoom;
-      const newVBW = SVG_W / newZoom;
-      const newVBH = SVG_H / newZoom;
+        // Keep the point under cursor stationary
+        const oldVBW = SVG_W / prev.zoom;
+        const oldVBH = SVG_H / prev.zoom;
+        const newVBW = SVG_W / newZoom;
+        const newVBH = SVG_H / newZoom;
 
-      // Point in SVG space under cursor before zoom
-      const cursorSvgX = -prev.panX + fracX * oldVBW;
-      const cursorSvgY = -prev.panY + fracY * oldVBH;
+        // Point in SVG space under cursor before zoom
+        const cursorSvgX = -prev.panX + fracX * oldVBW;
+        const cursorSvgY = -prev.panY + fracY * oldVBH;
 
-      // After zoom, we want the same SVG point at the same screen fraction
-      const newPanX = -(cursorSvgX - fracX * newVBW);
-      const newPanY = -(cursorSvgY - fracY * newVBH);
+        // After zoom, we want the same SVG point at the same screen fraction
+        const newPanX = -(cursorSvgX - fracX * newVBW);
+        const newPanY = -(cursorSvgY - fracY * newVBH);
 
-      return { zoom: newZoom, panX: newPanX, panY: newPanY };
-    });
-  }, [setTransform]);
+        return { zoom: newZoom, panX: newPanX, panY: newPanY };
+      });
+    },
+    [setTransform],
+  );
 
-  return { svgRef, onPointerDown, onSvgPointerDown, onPointerMove, onPointerUp, onWheel };
+  return {
+    svgRef,
+    onPointerDown,
+    onSvgPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onWheel,
+  };
 }
 
 // IDENTITY_SEAL: PART-2 | role=drag-pan-zoom-handlers | inputs=ForceNode[],ForceEdge[],ViewTransform | outputs=svgRef,handlers
@@ -180,8 +242,18 @@ function useDragAndPan(
 // PART 3 — SVG Rendering (Edges & Nodes)
 // ============================================================
 
-function EdgeLine({ from, to, rel, isKO, highlight }: {
-  from: ForceNode; to: ForceNode; rel: CharRelation; isKO: boolean; highlight: boolean;
+function EdgeLine({
+  from,
+  to,
+  rel,
+  isKO,
+  highlight,
+}: {
+  from: ForceNode;
+  to: ForceNode;
+  rel: CharRelation;
+  isKO: boolean;
+  highlight: boolean;
 }) {
   const style = REL_STYLES[rel.type];
   const dx = to.x - from.x;
@@ -203,7 +275,7 @@ function EdgeLine({ from, to, rel, isKO, highlight }: {
   const labelY = my + ny * (curvature * 0.6);
 
   return (
-    <g style={{ transition: 'opacity 0.3s' }} opacity={opacity}>
+    <g style={{ transition: "opacity 0.3s" }} opacity={opacity}>
       <path
         d={`M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`}
         fill="none"
@@ -213,20 +285,42 @@ function EdgeLine({ from, to, rel, isKO, highlight }: {
         strokeLinecap="round"
       />
       {highlight && (
-        <text x={labelX} y={labelY - 4} fill={style.color} fontSize="9" textAnchor="middle" fontWeight="bold">
+        <text
+          x={labelX}
+          y={labelY - 4}
+          fill={style.color}
+          fontSize="9"
+          textAnchor="middle"
+          fontWeight="bold"
+        >
           {isKO ? style.ko : style.en}
         </text>
       )}
       {highlight && rel.desc && (
-        <text x={labelX} y={labelY + 7} fill={style.color} fontSize="7" textAnchor="middle" opacity="0.8">
-          {rel.desc.length > 20 ? rel.desc.slice(0, 20) + '...' : rel.desc}
+        <text
+          x={labelX}
+          y={labelY + 7}
+          fill={style.color}
+          fontSize="7"
+          textAnchor="middle"
+          opacity="0.8"
+        >
+          {rel.desc.length > 20 ? rel.desc.slice(0, 20) + "..." : rel.desc}
         </text>
       )}
     </g>
   );
 }
 
-function CharNode({ node, character, selected, dimmed, glowing, onPointerDown, onClick }: {
+function CharNode({
+  node,
+  character,
+  selected,
+  dimmed,
+  glowing,
+  onPointerDown,
+  onClick,
+}: {
   node: ForceNode;
   character: Character;
   selected: boolean;
@@ -235,37 +329,74 @@ function CharNode({ node, character, selected, dimmed, glowing, onPointerDown, o
   onPointerDown: (id: string, e: React.PointerEvent) => void;
   onClick: () => void;
 }) {
-  const roleColor = ROLE_COLORS[character.role] || '#6b7280';
+  const roleColor = ROLE_COLORS[character.role] || "#6b7280";
   const initial = character.name.slice(0, 2);
 
   // Determine which filter to apply: search glow > selected glow > none
   let filterAttr: string | undefined;
-  if (glowing) filterAttr = 'url(#searchGlow)';
-  else if (selected) filterAttr = 'url(#glow)';
+  if (glowing) filterAttr = "url(#searchGlow)";
+  else if (selected) filterAttr = "url(#glow)";
 
   const nodeOpacity = dimmed ? 0.3 : 1;
 
   return (
     <g
-      style={{ cursor: 'grab', transition: 'filter 0.2s, opacity 0.3s' }}
+      style={{ cursor: "grab", transition: "filter 0.2s, opacity 0.3s" }}
       filter={filterAttr}
       opacity={nodeOpacity}
-      onPointerDown={e => onPointerDown(node.id, e)}
-      onClick={e => { e.stopPropagation(); onClick(); }}
+      onPointerDown={(e) => onPointerDown(node.id, e)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
     >
       {/* Outer ring for selected */}
       {selected && (
-        <circle cx={node.x} cy={node.y} r={NODE_R + 4} fill="none" stroke={roleColor} strokeWidth="2" opacity="0.5" />
+        <circle
+          cx={node.x}
+          cy={node.y}
+          r={NODE_R + 4}
+          fill="none"
+          stroke={roleColor}
+          strokeWidth="2"
+          opacity="0.5"
+        />
       )}
       {/* Main circle */}
-      <circle cx={node.x} cy={node.y} r={NODE_R} fill={roleColor} opacity="0.15" stroke={roleColor} strokeWidth="2" />
+      <circle
+        cx={node.x}
+        cy={node.y}
+        r={NODE_R}
+        fill={roleColor}
+        opacity="0.15"
+        stroke={roleColor}
+        strokeWidth="2"
+      />
       {/* Initial text */}
-      <text x={node.x} y={node.y + 1} fill="white" fontSize="12" textAnchor="middle" dominantBaseline="central" fontWeight="bold" style={{ pointerEvents: 'none', userSelect: 'none' }}>
+      <text
+        x={node.x}
+        y={node.y + 1}
+        fill="white"
+        fontSize="12"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontWeight="bold"
+        style={{ pointerEvents: "none", userSelect: "none" }}
+      >
         {initial}
       </text>
       {/* Name label below */}
-      <text x={node.x} y={node.y + NODE_R + 12} fill="var(--color-text-secondary, #b5b0a8)" fontSize="8" textAnchor="middle" style={{ pointerEvents: 'none', userSelect: 'none' }}>
-        {character.name.length > 6 ? character.name.slice(0, 6) + '...' : character.name}
+      <text
+        x={node.x}
+        y={node.y + NODE_R + 12}
+        fill="var(--color-text-secondary, #b5b0a8)"
+        fontSize="8"
+        textAnchor="middle"
+        style={{ pointerEvents: "none", userSelect: "none" }}
+      >
+        {character.name.length > 6
+          ? character.name.slice(0, 6) + "..."
+          : character.name}
       </text>
     </g>
   );
@@ -277,7 +408,12 @@ function CharNode({ node, character, selected, dimmed, glowing, onPointerDown, o
 // PART 4 — Search Bar Component
 // ============================================================
 
-function GraphSearchBar({ value, onChange, onClear, isKO }: {
+function GraphSearchBar({
+  value,
+  onChange,
+  onClear,
+  isKO,
+}: {
   value: string;
   onChange: (v: string) => void;
   onClear: () => void;
@@ -289,8 +425,8 @@ function GraphSearchBar({ value, onChange, onClear, isKO }: {
       <input
         type="text"
         value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={isKO ? '캐릭터 검색...' : 'Search characters...'}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={isKO ? "캐릭터 검색..." : "Search characters..."}
         className="w-full pl-8 pr-8 py-1.5 text-xs bg-bg-secondary/50 border border-border/50 rounded-lg text-white placeholder:text-text-tertiary focus:outline-none focus:border-white/30 transition-colors"
       />
       {value && (
@@ -312,7 +448,13 @@ function GraphSearchBar({ value, onChange, onClear, isKO }: {
 // PART 5 — Legend with Relationship Type Filter
 // ============================================================
 
-function FilterableLegend({ visibleTypes, onToggle, isKO, zoomLevel, onResetZoom }: {
+function FilterableLegend({
+  visibleTypes,
+  onToggle,
+  isKO,
+  zoomLevel,
+  onResetZoom,
+}: {
   visibleTypes: Set<CharRelationType>;
   onToggle: (type: CharRelationType) => void;
   isKO: boolean;
@@ -321,7 +463,7 @@ function FilterableLegend({ visibleTypes, onToggle, isKO, zoomLevel, onResetZoom
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2 mt-3 text-[9px]">
-      {ALL_REL_TYPES.map(rt => {
+      {ALL_REL_TYPES.map((rt) => {
         const active = visibleTypes.has(rt);
         return (
           <button
@@ -329,12 +471,17 @@ function FilterableLegend({ visibleTypes, onToggle, isKO, zoomLevel, onResetZoom
             onClick={() => onToggle(rt)}
             className={`flex items-center gap-1.5 px-1.5 py-0.5 rounded transition-all border ${
               active
-                ? 'border-border/50 opacity-100'
-                : 'border-transparent opacity-40 line-through'
+                ? "border-border/50 opacity-100"
+                : "border-transparent opacity-40 line-through"
             } hover:opacity-100`}
-            title={isKO
-              ? (active ? `${REL_STYLES[rt].ko} 숨기기` : `${REL_STYLES[rt].ko} 표시`)
-              : (active ? `Hide ${REL_STYLES[rt].en}` : `Show ${REL_STYLES[rt].en}`)
+            title={
+              isKO
+                ? active
+                  ? `${REL_STYLES[rt].ko} 숨기기`
+                  : `${REL_STYLES[rt].ko} 표시`
+                : active
+                  ? `Hide ${REL_STYLES[rt].en}`
+                  : `Show ${REL_STYLES[rt].en}`
             }
           >
             <span
@@ -354,14 +501,16 @@ function FilterableLegend({ visibleTypes, onToggle, isKO, zoomLevel, onResetZoom
           <button
             onClick={onResetZoom}
             className="flex items-center gap-1 text-text-tertiary hover:text-white transition-colors"
-            title={isKO ? '줌 초기화' : 'Reset zoom'}
+            title={isKO ? "줌 초기화" : "Reset zoom"}
           >
             <RotateCcw className="w-3 h-3" />
             <span>{Math.round(zoomLevel * 100)}%</span>
           </button>
         )}
         <span className="text-text-tertiary italic">
-          {isKO ? '드래그로 이동 · 스크롤로 확대/축소' : 'Drag to move · Scroll to zoom'}
+          {isKO
+            ? "드래그로 이동 · 스크롤로 확대/축소"
+            : "Drag to move · Scroll to zoom"}
         </span>
       </span>
     </div>
@@ -374,19 +523,30 @@ function FilterableLegend({ visibleTypes, onToggle, isKO, zoomLevel, onResetZoom
 // PART 6 — Main Component + Detail Panel
 // ============================================================
 
-const CharRelationGraph: React.FC<Props> = ({ characters, relations, language, onSelectCharacter }) => {
-  const isKO = language === 'KO';
+const CharRelationGraph: React.FC<Props> = ({
+  characters,
+  relations,
+  language,
+  onSelectCharacter,
+}) => {
+  const isKO = language === "KO";
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
 
   // --- Zoom & Pan state ---
-  const [transform, setTransform] = useState<ViewTransform>({ zoom: 1, panX: 0, panY: 0 });
+  const [transform, setTransform] = useState<ViewTransform>({
+    zoom: 1,
+    panX: 0,
+    panY: 0,
+  });
 
   // --- Relationship type filter state ---
-  const [visibleTypes, setVisibleTypes] = useState<Set<CharRelationType>>(() => new Set(ALL_REL_TYPES));
+  const [visibleTypes, setVisibleTypes] = useState<Set<CharRelationType>>(
+    () => new Set(ALL_REL_TYPES),
+  );
 
   // --- Search state ---
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Compute viewBox from transform
   const viewBox = useMemo(() => {
@@ -411,21 +571,31 @@ const CharRelationGraph: React.FC<Props> = ({ characters, relations, language, o
   }, [searchQuery, characters]);
 
   // Build force edges from relations
-  const forceEdges: ForceEdge[] = useMemo(() =>
-    relations.map(r => ({ source: r.from, target: r.to })),
-    [relations]
+  const forceEdges: ForceEdge[] = useMemo(
+    () => relations.map((r) => ({ source: r.from, target: r.to })),
+    [relations],
   );
 
   // Stable key to detect when characters/forceEdges change
-  const layoutKey = useMemo(() =>
-    characters.map(c => c.id).join(',') + '|' + forceEdges.map(e => `${e.source}-${e.target}`).join(','),
-    [characters, forceEdges]
+  const layoutKey = useMemo(
+    () =>
+      characters.map((c) => c.id).join(",") +
+      "|" +
+      forceEdges.map((e) => `${e.source}-${e.target}`).join(","),
+    [characters, forceEdges],
   );
 
   // Initialize positions and run simulation
   const initialNodes = useMemo(() => {
-    const positions = initializePositions(characters.map(c => c.id), SVG_W, SVG_H);
-    return simulateForceLayout(positions, forceEdges, { width: SVG_W, height: SVG_H });
+    const positions = initializePositions(
+      characters.map((c) => c.id),
+      SVG_W,
+      SVG_H,
+    );
+    return simulateForceLayout(positions, forceEdges, {
+      width: SVG_W,
+      height: SVG_H,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layoutKey]);
 
@@ -444,13 +614,27 @@ const CharRelationGraph: React.FC<Props> = ({ characters, relations, language, o
     setNodes(initialNodes);
   }, [initialNodes]);
 
-  const { svgRef, onPointerDown, onSvgPointerDown, onPointerMove, onPointerUp, onWheel } =
-    useDragAndPan(nodesRef, forceEdges, setNodesAndRef, transform, setTransform);
+  const {
+    svgRef,
+    onPointerDown,
+    onSvgPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onWheel,
+  } = useDragAndPan(
+    nodesRef,
+    forceEdges,
+    setNodesAndRef,
+    transform,
+    setTransform,
+  );
 
   // Selected character info
-  const selectedChar = selectedId ? characters.find(c => c.id === selectedId) : null;
+  const selectedChar = selectedId
+    ? characters.find((c) => c.id === selectedId)
+    : null;
   const selectedRelations = selectedId
-    ? relations.filter(r => r.from === selectedId || r.to === selectedId)
+    ? relations.filter((r) => r.from === selectedId || r.to === selectedId)
     : [];
 
   const isHighlighted = (rel: CharRelation) => {
@@ -459,15 +643,15 @@ const CharRelationGraph: React.FC<Props> = ({ characters, relations, language, o
   };
 
   const handleNodeClick = (id: string) => {
-    setSelectedId(prev => prev === id ? null : id);
+    setSelectedId((prev) => (prev === id ? null : id));
     onSelectCharacter?.(id);
   };
 
-  const getNodeById = (id: string) => nodes.find(n => n.id === id);
+  const getNodeById = (id: string) => nodes.find((n) => n.id === id);
 
   // Filter toggle handler
   const handleToggleType = useCallback((type: CharRelationType) => {
-    setVisibleTypes(prev => {
+    setVisibleTypes((prev) => {
       const next = new Set(prev);
       if (next.has(type)) {
         // Don't allow hiding all types
@@ -487,39 +671,52 @@ const CharRelationGraph: React.FC<Props> = ({ characters, relations, language, o
 
   // Filtered relations based on visible types
   const filteredRelations = useMemo(
-    () => relations.filter(r => visibleTypes.has(r.type)),
-    [relations, visibleTypes]
+    () => relations.filter((r) => visibleTypes.has(r.type)),
+    [relations, visibleTypes],
   );
 
   return (
-    <div className={`relative transition-all duration-300 ${expanded ? 'fixed inset-4 z-50 bg-bg-primary/95 backdrop-blur-xl rounded-3xl border border-border p-4' : ''}`}>
+    <div
+      className={`relative transition-all duration-300 ${expanded ? "fixed inset-4 z-50 bg-bg-primary/95 backdrop-blur-xl rounded-3xl border border-border p-4" : ""}`}
+    >
       {/* Expand/collapse button */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="absolute top-2 right-2 z-10 p-2 text-text-tertiary hover:text-white transition-colors"
-        aria-label={expanded ? 'Collapse' : 'Expand'}
+        aria-label={expanded ? "Collapse" : "Expand"}
       >
-        {expanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+        {expanded ? (
+          <Minimize2 className="w-4 h-4" />
+        ) : (
+          <Maximize2 className="w-4 h-4" />
+        )}
       </button>
 
       {/* 캐릭터 검색 입력 */}
       <GraphSearchBar
         value={searchQuery}
         onChange={setSearchQuery}
-        onClear={() => setSearchQuery('')}
+        onClear={() => setSearchQuery("")}
         isKO={isKO}
       />
 
-      <div className={`flex ${expanded ? 'h-[calc(100%-6rem)]' : ''} flex-col lg:flex-row gap-4`}>
+      <div
+        className={`flex ${expanded ? "h-[calc(100%-6rem)]" : ""} flex-col lg:flex-row gap-4`}
+      >
         {/* SVG Graph */}
-        <div className={`${expanded ? 'flex-1' : 'w-full'}`}>
+        <div className={`${expanded ? "flex-1" : "w-full"}`}>
           <svg
             ref={svgRef}
             viewBox={viewBox}
-            className={`w-full ${expanded ? 'h-full' : 'max-h-[400px]'}`}
-            style={{ fontFamily: 'var(--font-mono, monospace)', touchAction: 'none' }}
+            className={`w-full ${expanded ? "h-full" : "max-h-[400px]"}`}
+            style={{
+              fontFamily: "var(--font-mono, monospace)",
+              touchAction: "none",
+            }}
             role="img"
-            aria-label={isKO ? '캐릭터 관계 그래프' : 'Character relationship graph'}
+            aria-label={
+              isKO ? "캐릭터 관계 그래프" : "Character relationship graph"
+            }
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerLeave={onPointerUp}
@@ -539,8 +736,17 @@ const CharRelationGraph: React.FC<Props> = ({ characters, relations, language, o
               {/* Search highlight glow filter */}
               <filter id="searchGlow">
                 <feGaussianBlur stdDeviation="4" result="blur" />
-                <feFlood floodColor="#fbbf24" floodOpacity="0.6" result="color" />
-                <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+                <feFlood
+                  floodColor="#fbbf24"
+                  floodOpacity="0.6"
+                  result="color"
+                />
+                <feComposite
+                  in="color"
+                  in2="blur"
+                  operator="in"
+                  result="coloredBlur"
+                />
                 <feMerge>
                   <feMergeNode in="coloredBlur" />
                   <feMergeNode in="SourceGraphic" />
@@ -550,11 +756,29 @@ const CharRelationGraph: React.FC<Props> = ({ characters, relations, language, o
 
             {/* Background grid */}
             <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--color-border, #1e2530)" strokeWidth="0.5" opacity="0.3" />
+              <pattern
+                id="grid"
+                width="40"
+                height="40"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 40 0 L 0 0 0 40"
+                  fill="none"
+                  stroke="var(--color-border, #1e2530)"
+                  strokeWidth="0.5"
+                  opacity="0.3"
+                />
               </pattern>
             </defs>
-            <rect x={-transform.panX} y={-transform.panY} width={SVG_W / transform.zoom} height={SVG_H / transform.zoom} fill="url(#grid)" rx="12" />
+            <rect
+              x={-transform.panX}
+              y={-transform.panY}
+              width={SVG_W / transform.zoom}
+              height={SVG_H / transform.zoom}
+              fill="url(#grid)"
+              rx="12"
+            />
 
             {/* Edges — only visible types */}
             {filteredRelations.map((rel, i) => {
@@ -562,13 +786,20 @@ const CharRelationGraph: React.FC<Props> = ({ characters, relations, language, o
               const to = getNodeById(rel.to);
               if (!from || !to) return null;
               return (
-                <EdgeLine key={`e-${i}`} from={from} to={to} rel={rel} isKO={isKO} highlight={isHighlighted(rel)} />
+                <EdgeLine
+                  key={`e-${i}`}
+                  from={from}
+                  to={to}
+                  rel={rel}
+                  isKO={isKO}
+                  highlight={isHighlighted(rel)}
+                />
               );
             })}
 
             {/* Nodes */}
-            {nodes.map(node => {
-              const char = characters.find(c => c.id === node.id);
+            {nodes.map((node) => {
+              const char = characters.find((c) => c.id === node.id);
               if (!char) return null;
 
               // Search-based dimming/glowing
@@ -593,8 +824,16 @@ const CharRelationGraph: React.FC<Props> = ({ characters, relations, language, o
 
             {/* Empty state */}
             {characters.length === 0 && (
-              <text x={SVG_W / 2} y={SVG_H / 2} fill="var(--color-text-tertiary)" fontSize="12" textAnchor="middle">
-                {isKO ? '캐릭터를 추가하면 관계 그래프가 표시됩니다' : 'Add characters to see the relationship graph'}
+              <text
+                x={SVG_W / 2}
+                y={SVG_H / 2}
+                fill="var(--color-text-tertiary)"
+                fontSize="12"
+                textAnchor="middle"
+              >
+                {isKO
+                  ? "캐릭터를 추가하면 관계 그래프가 표시됩니다"
+                  : "Add characters to see the relationship graph"}
               </text>
             )}
           </svg>
@@ -602,33 +841,43 @@ const CharRelationGraph: React.FC<Props> = ({ characters, relations, language, o
 
         {/* Detail Panel — shows when a character is selected */}
         {selectedChar && (
-          <div className={`${expanded ? 'w-72' : 'w-full lg:w-64'} bg-bg-secondary/30 border border-border/50 rounded-2xl p-4 space-y-3 animate-in slide-in-from-right-2 duration-200`}>
+          <div
+            className={`${expanded ? "w-72" : "w-full lg:w-64"} bg-bg-secondary/30 border border-border/50 rounded-2xl p-4 space-y-3 animate-in slide-in-from-right-2 duration-200`}
+          >
             <div className="flex items-center gap-3">
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm"
-                style={{ background: ROLE_COLORS[selectedChar.role] || '#6b7280' }}
+                style={{
+                  background: ROLE_COLORS[selectedChar.role] || "#6b7280",
+                }}
               >
                 {selectedChar.name.slice(0, 2)}
               </div>
               <div className="min-w-0">
-                <h4 className="text-sm font-black text-white truncate">{selectedChar.name}</h4>
-                <p className="text-[9px] text-text-tertiary uppercase font-bold tracking-wider">{selectedChar.role}</p>
+                <h4 className="text-sm font-black text-white truncate">
+                  {selectedChar.name}
+                </h4>
+                <p className="text-[9px] text-text-tertiary uppercase font-bold tracking-wider">
+                  {selectedChar.role}
+                </p>
               </div>
             </div>
 
             {selectedChar.traits && (
-              <p className="text-[10px] text-text-secondary leading-relaxed line-clamp-3">{selectedChar.traits}</p>
+              <p className="text-[10px] text-text-secondary leading-relaxed line-clamp-3">
+                {selectedChar.traits}
+              </p>
             )}
 
             {/* Connections */}
             {selectedRelations.length > 0 && (
               <div className="space-y-1.5">
                 <h5 className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">
-                  {isKO ? '관계' : 'Relations'} ({selectedRelations.length})
+                  {isKO ? "관계" : "Relations"} ({selectedRelations.length})
                 </h5>
                 {selectedRelations.map((rel, i) => {
                   const otherId = rel.from === selectedId ? rel.to : rel.from;
-                  const other = characters.find(c => c.id === otherId);
+                  const other = characters.find((c) => c.id === otherId);
                   const style = REL_STYLES[rel.type];
                   return (
                     <button
@@ -636,9 +885,17 @@ const CharRelationGraph: React.FC<Props> = ({ characters, relations, language, o
                       onClick={() => setSelectedId(otherId)}
                       className="w-full flex items-center gap-2 bg-black/20 border border-border/30 rounded-lg px-3 py-1.5 text-left hover:border-white/20 transition-colors"
                     >
-                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: style.color }} />
-                      <span className="text-[10px] font-bold text-white truncate">{other?.name}</span>
-                      <span className="text-[9px] font-bold ml-auto shrink-0" style={{ color: style.color }}>
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ background: style.color }}
+                      />
+                      <span className="text-[10px] font-bold text-white truncate">
+                        {other?.name}
+                      </span>
+                      <span
+                        className="text-[9px] font-bold ml-auto shrink-0"
+                        style={{ color: style.color }}
+                      >
                         {isKO ? style.ko : style.en}
                       </span>
                     </button>
@@ -649,7 +906,9 @@ const CharRelationGraph: React.FC<Props> = ({ characters, relations, language, o
 
             {selectedRelations.length === 0 && (
               <p className="text-[10px] text-text-tertiary italic">
-                {isKO ? '아직 관계가 설정되지 않았습니다' : 'No relations set yet'}
+                {isKO
+                  ? "아직 관계가 설정되지 않았습니다"
+                  : "No relations set yet"}
               </p>
             )}
           </div>

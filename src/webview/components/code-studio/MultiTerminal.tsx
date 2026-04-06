@@ -28,7 +28,9 @@ const MAX_TERMINALS = 5;
 
 export function MultiTerminal({ renderTerminal }: Props) {
   const t = useCodeStudioT();
-  const [tabs, setTabs] = useState<TerminalTab[]>([{ id: "term-1", name: "Terminal 1" }]);
+  const [tabs, setTabs] = useState<TerminalTab[]>([
+    { id: "term-1", name: "Terminal 1" },
+  ]);
   const [activeTab, setActiveTab] = useState("term-1");
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -38,7 +40,9 @@ export function MultiTerminal({ renderTerminal }: Props) {
   useEffect(() => {
     if (didLocalizeTabs.current) return;
     didLocalizeTabs.current = true;
-    queueMicrotask(() => setTabs([{ id: "term-1", name: `${t.termShellLabel} 1` }]));
+    queueMicrotask(() =>
+      setTabs([{ id: "term-1", name: `${t.termShellLabel} 1` }]),
+    );
   }, [t.termShellLabel]);
 
   const addTab = useCallback(() => {
@@ -49,18 +53,21 @@ export function MultiTerminal({ renderTerminal }: Props) {
     setActiveTab(id);
   }, [tabs.length, t.termShellLabel]);
 
-  const closeTab = useCallback((id: string) => {
-    setTabs((prev) => {
-      const next = prev.filter((t) => t.id !== id);
-      if (next.length === 0) {
-        const fallback = { id: "term-1", name: `${t.termShellLabel} 1` };
-        setActiveTab(fallback.id);
-        return [fallback];
-      }
-      if (activeTab === id) setActiveTab(next[next.length - 1].id);
-      return next;
-    });
-  }, [activeTab, t.termShellLabel]);
+  const closeTab = useCallback(
+    (id: string) => {
+      setTabs((prev) => {
+        const next = prev.filter((t) => t.id !== id);
+        if (next.length === 0) {
+          const fallback = { id: "term-1", name: `${t.termShellLabel} 1` };
+          setActiveTab(fallback.id);
+          return [fallback];
+        }
+        if (activeTab === id) setActiveTab(next[next.length - 1].id);
+        return next;
+      });
+    },
+    [activeTab, t.termShellLabel],
+  );
 
   const startRename = useCallback((id: string, currentName: string) => {
     setRenamingId(id);
@@ -88,9 +95,11 @@ export function MultiTerminal({ renderTerminal }: Props) {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-1 px-2 py-1 text-[10px] border-r border-white/8 cursor-pointer transition-colors
-              ${tab.id === activeTab
-                ? "bg-white/5 text-text-primary"
-                : "text-text-tertiary hover:bg-white/5"}`}
+              ${
+                tab.id === activeTab
+                  ? "bg-white/5 text-text-primary"
+                  : "text-text-tertiary hover:bg-white/5"
+              }`}
           >
             <TerminalIcon size={10} />
             {renamingId === tab.id ? (
@@ -119,7 +128,10 @@ export function MultiTerminal({ renderTerminal }: Props) {
             )}
             {tabs.length > 1 && (
               <span
-                onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeTab(tab.id);
+                }}
                 className="hover:text-red-400 ml-1 cursor-pointer"
               >
                 <X size={8} />
@@ -144,7 +156,10 @@ export function MultiTerminal({ renderTerminal }: Props) {
       {/* Active Terminal Content */}
       <div className="flex-1 overflow-hidden">
         {tabs.map((tab) => (
-          <div key={tab.id} className={tab.id === activeTab ? "h-full" : "hidden"}>
+          <div
+            key={tab.id}
+            className={tab.id === activeTab ? "h-full" : "hidden"}
+          >
             {renderTerminal ? (
               renderTerminal(tab.id)
             ) : (

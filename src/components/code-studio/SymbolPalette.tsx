@@ -4,13 +4,27 @@
 // PART 1 — Imports & Types
 // ============================================================
 
-import { useState, useEffect, useCallback, useMemo, useRef, startTransition } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+  startTransition,
+} from "react";
 import { Hash, FileText, X, Search } from "lucide-react";
 import { useCodeStudioT } from "@/lib/use-code-studio-translations";
 
 export interface SymbolEntry {
   name: string;
-  kind: "function" | "class" | "variable" | "interface" | "type" | "enum" | "const";
+  kind:
+    | "function"
+    | "class"
+    | "variable"
+    | "interface"
+    | "type"
+    | "enum"
+    | "const";
   file: string;
   line?: number;
 }
@@ -56,7 +70,7 @@ function fuzzyScore(query: string, target: string): number {
   let lastMatchIndex = -1;
   for (let i = 0; i < t.length && qi < q.length; i++) {
     if (t[i] === q[qi]) {
-      score += (lastMatchIndex === i - 1) ? 2 : 1; // consecutive bonus
+      score += lastMatchIndex === i - 1 ? 2 : 1; // consecutive bonus
       lastMatchIndex = i;
       qi++;
     }
@@ -70,7 +84,11 @@ function fuzzyScore(query: string, target: string): number {
 // PART 3 — Component
 // ============================================================
 
-export default function SymbolPalette({ symbols, onSelect, onClose }: SymbolPaletteProps) {
+export default function SymbolPalette({
+  symbols,
+  onSelect,
+  onClose,
+}: SymbolPaletteProps) {
   const t = useCodeStudioT();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -115,12 +133,17 @@ export default function SymbolPalette({ symbols, onSelect, onClose }: SymbolPale
   );
 
   useEffect(() => {
-    const el = listRef.current?.children[selectedIndex] as HTMLElement | undefined;
+    const el = listRef.current?.children[selectedIndex] as
+      | HTMLElement
+      | undefined;
     el?.scrollIntoView({ block: "nearest" });
   }, [selectedIndex]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/40" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/40"
+      onClick={onClose}
+    >
       <div
         className="w-[480px] max-h-[400px] rounded-xl border border-white/10 bg-[#1e1e2e] shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
@@ -141,18 +164,24 @@ export default function SymbolPalette({ symbols, onSelect, onClose }: SymbolPale
         </div>
         <div ref={listRef} className="max-h-[340px] overflow-y-auto">
           {filtered.length === 0 && (
-            <div className="px-4 py-6 text-center text-sm text-gray-500">{t.symNoSymbols}</div>
+            <div className="px-4 py-6 text-center text-sm text-gray-500">
+              {t.symNoSymbols}
+            </div>
           )}
           {filtered.map((sym, i) => (
             <button
               key={`${sym.file}-${sym.name}-${i}`}
               className={`flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors ${
-                i === selectedIndex ? "bg-white/10 text-white" : "text-gray-300 hover:bg-white/5"
+                i === selectedIndex
+                  ? "bg-white/10 text-white"
+                  : "text-gray-300 hover:bg-white/5"
               }`}
               onMouseEnter={() => setSelectedIndex(i)}
               onClick={() => onSelect(sym)}
             >
-              <span className={`text-[10px] font-mono font-bold ${KIND_COLORS[sym.kind]}`}>
+              <span
+                className={`text-[10px] font-mono font-bold ${KIND_COLORS[sym.kind]}`}
+              >
                 {KIND_ABBR[sym.kind]}
               </span>
               <span className="font-medium truncate">{sym.name}</span>

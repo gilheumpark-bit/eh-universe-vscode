@@ -25,7 +25,9 @@ export default function CodeBlockActions({
       await navigator.clipboard.writeText(code);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch { /* clipboard not available */ }
+    } catch {
+      /* clipboard not available */
+    }
   };
 
   const actions = [
@@ -51,7 +53,9 @@ export default function CodeBlockActions({
       icon: <Play size={14} />,
       label: "Run",
       onClick: () => onRunInTerminal?.(code),
-      show: !!onRunInTerminal && (language === "bash" || language === "shell" || language === "sh"),
+      show:
+        !!onRunInTerminal &&
+        (language === "bash" || language === "shell" || language === "sh"),
     },
   ];
 

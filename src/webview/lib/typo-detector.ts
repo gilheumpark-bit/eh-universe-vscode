@@ -7,7 +7,7 @@ export interface TypoMatch {
   index: number;
   original: string;
   suggestion: string;
-  type: 'double-char' | 'jamo-slip' | 'spacing' | 'batchim-swap';
+  type: "double-char" | "jamo-slip" | "spacing" | "batchim-swap";
 }
 
 // ============================================================
@@ -31,7 +31,7 @@ function detectDoubleChars(text: string): TypoMatch[] {
       index: m.index,
       original: m[0],
       suggestion: char,
-      type: 'double-char',
+      type: "double-char",
     });
   }
   return matches;
@@ -39,23 +39,94 @@ function detectDoubleChars(text: string): TypoMatch[] {
 
 /** 한글 자모 분해 — reserved for future advanced Hangul decomposition features */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const CHO = [
+  "ㄱ",
+  "ㄲ",
+  "ㄴ",
+  "ㄷ",
+  "ㄸ",
+  "ㄹ",
+  "ㅁ",
+  "ㅂ",
+  "ㅃ",
+  "ㅅ",
+  "ㅆ",
+  "ㅇ",
+  "ㅈ",
+  "ㅉ",
+  "ㅊ",
+  "ㅋ",
+  "ㅌ",
+  "ㅍ",
+  "ㅎ",
+];
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const JUNG = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+const JUNG = [
+  "ㅏ",
+  "ㅐ",
+  "ㅑ",
+  "ㅒ",
+  "ㅓ",
+  "ㅔ",
+  "ㅕ",
+  "ㅖ",
+  "ㅗ",
+  "ㅘ",
+  "ㅙ",
+  "ㅚ",
+  "ㅛ",
+  "ㅜ",
+  "ㅝ",
+  "ㅞ",
+  "ㅟ",
+  "ㅠ",
+  "ㅡ",
+  "ㅢ",
+  "ㅣ",
+];
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const JONG = ['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const JONG = [
+  "",
+  "ㄱ",
+  "ㄲ",
+  "ㄳ",
+  "ㄴ",
+  "ㄵ",
+  "ㄶ",
+  "ㄷ",
+  "ㄹ",
+  "ㄺ",
+  "ㄻ",
+  "ㄼ",
+  "ㄽ",
+  "ㄾ",
+  "ㄿ",
+  "ㅀ",
+  "ㅁ",
+  "ㅂ",
+  "ㅄ",
+  "ㅅ",
+  "ㅆ",
+  "ㅇ",
+  "ㅈ",
+  "ㅊ",
+  "ㅋ",
+  "ㅌ",
+  "ㅍ",
+  "ㅎ",
+];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isHangul(ch: string): boolean {
   const code = ch.charCodeAt(0);
-  return code >= 0xAC00 && code <= 0xD7A3;
+  return code >= 0xac00 && code <= 0xd7a3;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function decomposeHangul(ch: string): [number, number, number] | null {
   const code = ch.charCodeAt(0);
-  if (code < 0xAC00 || code > 0xD7A3) return null;
-  const base = code - 0xAC00;
+  if (code < 0xac00 || code > 0xd7a3) return null;
+  const base = code - 0xac00;
   const jong = base % 28;
   const jung = ((base - jong) / 28) % 21;
   const cho = Math.floor((base - jong) / 28 / 21);
@@ -64,13 +135,14 @@ function decomposeHangul(ch: string): [number, number, number] | null {
 
 /** 흔한 받침 오타 패턴: "했닫" → "했다", "있늘" → "있는" 등 */
 const BATCHIM_TYPOS: Record<string, string> = {
-  '닫': '다', '닫아': '다',
-  '늘': '는',
-  '읕': '을',
-  '엇': '었',
-  '겄': '것',
-  '갓': '같',
-  '잇': '있',
+  닫: "다",
+  닫아: "다",
+  늘: "는",
+  읕: "을",
+  엇: "었",
+  겄: "것",
+  갓: "같",
+  잇: "있",
 };
 
 function detectBatchimSwap(text: string): TypoMatch[] {
@@ -82,7 +154,7 @@ function detectBatchimSwap(text: string): TypoMatch[] {
         index: idx,
         original: typo,
         suggestion: fix,
-        type: 'batchim-swap',
+        type: "batchim-swap",
       });
       idx = text.indexOf(typo, idx + 1);
     }
@@ -103,7 +175,7 @@ function detectLooseJamo(text: string): TypoMatch[] {
       index: m.index,
       original: m[0],
       suggestion: `[자모 분리: ${m[0]}]`,
-      type: 'jamo-slip',
+      type: "jamo-slip",
     });
   }
   return matches;
@@ -123,7 +195,7 @@ export function detectTypos(text: string): TypoMatch[] {
   // 위치 기준 정렬, 중복 제거
   all.sort((a, b) => a.index - b.index);
   const seen = new Set<number>();
-  return all.filter(m => {
+  return all.filter((m) => {
     if (seen.has(m.index)) return false;
     seen.add(m.index);
     return true;
@@ -135,8 +207,11 @@ export function applyTypoFixes(text: string, fixes: TypoMatch[]): string {
   const sorted = [...fixes].sort((a, b) => b.index - a.index);
   let result = text;
   for (const fix of sorted) {
-    if (fix.type === 'jamo-slip') continue; // 자모 분리는 자동수정 불가
-    result = result.slice(0, fix.index) + fix.suggestion + result.slice(fix.index + fix.original.length);
+    if (fix.type === "jamo-slip") continue; // 자모 분리는 자동수정 불가
+    result =
+      result.slice(0, fix.index) +
+      fix.suggestion +
+      result.slice(fix.index + fix.original.length);
   }
   return result;
 }

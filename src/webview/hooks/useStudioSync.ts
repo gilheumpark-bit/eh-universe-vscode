@@ -2,11 +2,11 @@
 // useStudioSync — Drive 동기화 상태 관리
 // ============================================================
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { logger } from '@/lib/logger';
-import { syncAllProjects } from '@/services/driveService';
-import type { Project } from '@/lib/studio-types';
-import type { User } from 'firebase/auth';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { logger } from "@/lib/logger";
+import { syncAllProjects } from "@/services/driveService";
+import type { Project } from "@/lib/studio-types";
+import type { User } from "firebase/auth";
 
 interface UseStudioSyncParams {
   user: User | null;
@@ -19,9 +19,16 @@ interface UseStudioSyncParams {
 
 /** Manages Google Drive project synchronization with 2-hour reminder and auto-retry on 401 */
 export function useStudioSync({
-  user, accessToken, refreshAccessToken, projects, setProjects, setUxError,
+  user,
+  accessToken,
+  refreshAccessToken,
+  projects,
+  setProjects,
+  setUxError,
 }: UseStudioSyncParams) {
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
+  const [syncStatus, setSyncStatus] = useState<
+    "idle" | "syncing" | "done" | "error"
+  >("idle");
   const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
   const [showSyncReminder, setShowSyncReminder] = useState(false);
 
@@ -51,54 +58,66 @@ export function useStudioSync({
       token = await refreshAccessToken();
       if (!token) return;
     }
-    setSyncStatus('syncing');
+    setSyncStatus("syncing");
     try {
       const result = await syncAllProjects(token, projectsRef.current);
       setProjects(result.merged);
       setLastSyncTime(Date.now());
       if (result.failedCount > 0) {
-        setSyncStatus('done');
-        setUxError({ error: new Error(`Drive sync: ${result.failedCount} file(s) failed to sync`) });
+        setSyncStatus("done");
+        setUxError({
+          error: new Error(
+            `Drive sync: ${result.failedCount} file(s) failed to sync`,
+          ),
+        });
       } else {
-        setSyncStatus('done');
+        setSyncStatus("done");
       }
-      setTimeout(() => setSyncStatus('idle'), 3000);
+      setTimeout(() => setSyncStatus("idle"), 3000);
     } catch (err: unknown) {
-      const msg = (err as Error)?.message || '';
-      if (msg.includes('401')) {
+      const msg = (err as Error)?.message || "";
+      if (msg.includes("401")) {
         const newToken = await refreshAccessToken();
         if (newToken) {
           try {
-            const retryResult = await syncAllProjects(newToken, projectsRef.current);
+            const retryResult = await syncAllProjects(
+              newToken,
+              projectsRef.current,
+            );
             setProjects(retryResult.merged);
             setLastSyncTime(Date.now());
             if (retryResult.failedCount > 0) {
-              setSyncStatus('done');
-              setUxError({ error: new Error(`Drive sync: ${retryResult.failedCount} file(s) failed to sync`) });
+              setSyncStatus("done");
+              setUxError({
+                error: new Error(
+                  `Drive sync: ${retryResult.failedCount} file(s) failed to sync`,
+                ),
+              });
             } else {
-              setSyncStatus('done');
+              setSyncStatus("done");
             }
-            setTimeout(() => setSyncStatus('idle'), 3000);
+            setTimeout(() => setSyncStatus("idle"), 3000);
             return;
           } catch (retryErr) {
-            logger.error('Sync', 'Retry failed', retryErr);
-            setSyncStatus('error');
-            setTimeout(() => setSyncStatus('idle'), 5000);
+            logger.error("Sync", "Retry failed", retryErr);
+            setSyncStatus("error");
+            setTimeout(() => setSyncStatus("idle"), 5000);
             return;
           }
         }
       }
-      logger.error('Sync', err);
-      setSyncStatus('error');
-      setTimeout(() => setSyncStatus('idle'), 5000);
+      logger.error("Sync", err);
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus("idle"), 5000);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- projectsRef.current avoids stale closure
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- projectsRef.current avoids stale closure
   }, [accessToken, refreshAccessToken, setProjects, setUxError]);
 
   return {
     syncStatus,
     lastSyncTime,
-    showSyncReminder, setShowSyncReminder,
+    showSyncReminder,
+    setShowSyncReminder,
     handleSync,
   };
 }

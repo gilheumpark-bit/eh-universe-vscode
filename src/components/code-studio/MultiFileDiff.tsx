@@ -29,7 +29,10 @@ interface Props {
 // PART 2 — Diff Computation
 // ============================================================
 
-function computeUnifiedDiff(original: string, modified: string): { lines: DiffLine[]; added: number; removed: number } {
+function computeUnifiedDiff(
+  original: string,
+  modified: string,
+): { lines: DiffLine[]; added: number; removed: number } {
   const origLines = original.split("\n");
   const modLines = modified.split("\n");
   const result: DiffLine[] = [];
@@ -56,7 +59,10 @@ function computeUnifiedDiff(original: string, modified: string): { lines: DiffLi
         oi++;
       }
       // Emit added lines from modified
-      if (mLine !== undefined && (oLine === undefined || origLines[oi] !== mLine)) {
+      if (
+        mLine !== undefined &&
+        (oLine === undefined || origLines[oi] !== mLine)
+      ) {
         result.push({ type: "added", lineNum: mi + 1, content: mLine });
         added++;
         mi++;
@@ -78,7 +84,10 @@ function computeUnifiedDiff(original: string, modified: string): { lines: DiffLi
 
 function FileDiffSection({ file }: { file: FileDiff }) {
   const [collapsed, setCollapsed] = useState(false);
-  const diff = useMemo(() => computeUnifiedDiff(file.original, file.modified), [file.original, file.modified]);
+  const diff = useMemo(
+    () => computeUnifiedDiff(file.original, file.modified),
+    [file.original, file.modified],
+  );
 
   const toggle = useCallback(() => setCollapsed((p) => !p), []);
 
@@ -89,11 +98,21 @@ function FileDiffSection({ file }: { file: FileDiff }) {
         onClick={toggle}
         className="flex items-center gap-2 w-full px-3 py-2 bg-bg-tertiary hover:bg-border/50 transition-colors text-left"
       >
-        {collapsed ? <ChevronRight size={14} className="text-text-tertiary" /> : <ChevronDown size={14} className="text-text-tertiary" />}
+        {collapsed ? (
+          <ChevronRight size={14} className="text-text-tertiary" />
+        ) : (
+          <ChevronDown size={14} className="text-text-tertiary" />
+        )}
         <FileText size={14} className="text-text-secondary" />
-        <span className="text-xs font-medium text-text-primary truncate flex-1">{file.path}</span>
-        <span className="text-[10px] text-accent-green font-mono">+{diff.added}</span>
-        <span className="text-[10px] text-accent-red font-mono">-{diff.removed}</span>
+        <span className="text-xs font-medium text-text-primary truncate flex-1">
+          {file.path}
+        </span>
+        <span className="text-[10px] text-accent-green font-mono">
+          +{diff.added}
+        </span>
+        <span className="text-[10px] text-accent-red font-mono">
+          -{diff.removed}
+        </span>
       </button>
 
       {/* Diff body */}
@@ -123,12 +142,16 @@ function FileDiffSection({ file }: { file: FileDiff }) {
                 <span className="w-4 text-center text-text-tertiary select-none shrink-0">
                   {prefix}
                 </span>
-                <span className={`${textClass} whitespace-pre pr-4`}>{line.content}</span>
+                <span className={`${textClass} whitespace-pre pr-4`}>
+                  {line.content}
+                </span>
               </div>
             );
           })}
           {diff.lines.length === 0 && (
-            <div className="px-3 py-4 text-center text-text-tertiary text-[10px]">No changes</div>
+            <div className="px-3 py-4 text-center text-text-tertiary text-[10px]">
+              No changes
+            </div>
           )}
         </div>
       )}
@@ -167,10 +190,15 @@ export function MultiFileDiff({ files }: Props) {
       {/* Summary header */}
       <div className="flex items-center gap-3 px-3 py-2 border-b border-border bg-bg-primary">
         <span className="text-xs font-semibold text-text-primary">
-          {totalStats.fileCount} file{totalStats.fileCount !== 1 ? "s" : ""} changed
+          {totalStats.fileCount} file{totalStats.fileCount !== 1 ? "s" : ""}{" "}
+          changed
         </span>
-        <span className="text-[10px] text-accent-green font-mono">+{totalStats.added}</span>
-        <span className="text-[10px] text-accent-red font-mono">-{totalStats.removed}</span>
+        <span className="text-[10px] text-accent-green font-mono">
+          +{totalStats.added}
+        </span>
+        <span className="text-[10px] text-accent-red font-mono">
+          -{totalStats.removed}
+        </span>
       </div>
 
       {/* File diffs */}

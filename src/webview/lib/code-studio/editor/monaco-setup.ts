@@ -3,8 +3,8 @@
 // ============================================================
 // 컴파일러 옵션, 언어 등록, 테마 설정, IntelliSense, provider 등록.
 
-import type * as Monaco from 'monaco-editor';
-import { setupTypeScriptIntelliSense } from './ts-intellisense';
+import type * as Monaco from "monaco-editor";
+import { setupTypeScriptIntelliSense } from "./ts-intellisense";
 
 // ============================================================
 // PART 1 — Theme Configuration
@@ -17,76 +17,76 @@ export interface ThemeTokenColor {
 }
 
 const DARK_THEME_COLORS: Record<string, string> = {
-  'editor.background': '#0d1117',
-  'editor.foreground': '#c9d1d9',
-  'editor.lineHighlightBackground': '#161b22',
-  'editor.selectionBackground': '#264f78',
-  'editorCursor.foreground': '#58a6ff',
-  'editorWhitespace.foreground': '#484f58',
-  'editorIndentGuide.background': '#21262d',
-  'editorIndentGuide.activeBackground': '#30363d',
-  'editorLineNumber.foreground': '#484f58',
-  'editorLineNumber.activeForeground': '#c9d1d9',
-  'editor.selectionHighlightBackground': '#3b5070',
-  'editorBracketMatch.background': '#264f7833',
-  'editorBracketMatch.border': '#58a6ff',
+  "editor.background": "#0d1117",
+  "editor.foreground": "#c9d1d9",
+  "editor.lineHighlightBackground": "#161b22",
+  "editor.selectionBackground": "#264f78",
+  "editorCursor.foreground": "#58a6ff",
+  "editorWhitespace.foreground": "#484f58",
+  "editorIndentGuide.background": "#21262d",
+  "editorIndentGuide.activeBackground": "#30363d",
+  "editorLineNumber.foreground": "#484f58",
+  "editorLineNumber.activeForeground": "#c9d1d9",
+  "editor.selectionHighlightBackground": "#3b5070",
+  "editorBracketMatch.background": "#264f7833",
+  "editorBracketMatch.border": "#58a6ff",
 };
 
 const DARK_TOKEN_COLORS: ThemeTokenColor[] = [
-  { token: 'comment', foreground: '#8b949e', fontStyle: 'italic' },
-  { token: 'keyword', foreground: '#ff7b72' },
-  { token: 'string', foreground: '#a5d6ff' },
-  { token: 'number', foreground: '#79c0ff' },
-  { token: 'type', foreground: '#ffa657' },
-  { token: 'function', foreground: '#d2a8ff' },
-  { token: 'variable', foreground: '#c9d1d9' },
-  { token: 'constant', foreground: '#79c0ff' },
-  { token: 'operator', foreground: '#ff7b72' },
-  { token: 'delimiter', foreground: '#c9d1d9' },
-  { token: 'tag', foreground: '#7ee787' },
-  { token: 'attribute.name', foreground: '#79c0ff' },
-  { token: 'attribute.value', foreground: '#a5d6ff' },
+  { token: "comment", foreground: "#8b949e", fontStyle: "italic" },
+  { token: "keyword", foreground: "#ff7b72" },
+  { token: "string", foreground: "#a5d6ff" },
+  { token: "number", foreground: "#79c0ff" },
+  { token: "type", foreground: "#ffa657" },
+  { token: "function", foreground: "#d2a8ff" },
+  { token: "variable", foreground: "#c9d1d9" },
+  { token: "constant", foreground: "#79c0ff" },
+  { token: "operator", foreground: "#ff7b72" },
+  { token: "delimiter", foreground: "#c9d1d9" },
+  { token: "tag", foreground: "#7ee787" },
+  { token: "attribute.name", foreground: "#79c0ff" },
+  { token: "attribute.value", foreground: "#a5d6ff" },
 ];
 
 const LIGHT_THEME_COLORS: Record<string, string> = {
-  'editor.background': '#ffffff',
-  'editor.foreground': '#24292f',
-  'editor.lineHighlightBackground': '#f6f8fa',
-  'editor.selectionBackground': '#b6d7ff',
-  'editorCursor.foreground': '#0969da',
-  'editorLineNumber.foreground': '#8c959f',
-  'editorLineNumber.activeForeground': '#24292f',
+  "editor.background": "#ffffff",
+  "editor.foreground": "#24292f",
+  "editor.lineHighlightBackground": "#f6f8fa",
+  "editor.selectionBackground": "#b6d7ff",
+  "editorCursor.foreground": "#0969da",
+  "editorLineNumber.foreground": "#8c959f",
+  "editorLineNumber.activeForeground": "#24292f",
 };
 
 const LIGHT_TOKEN_COLORS: ThemeTokenColor[] = [
-  { token: 'comment', foreground: '#6e7781', fontStyle: 'italic' },
-  { token: 'keyword', foreground: '#cf222e' },
-  { token: 'string', foreground: '#0a3069' },
-  { token: 'number', foreground: '#0550ae' },
-  { token: 'type', foreground: '#953800' },
-  { token: 'function', foreground: '#8250df' },
-  { token: 'variable', foreground: '#24292f' },
+  { token: "comment", foreground: "#6e7781", fontStyle: "italic" },
+  { token: "keyword", foreground: "#cf222e" },
+  { token: "string", foreground: "#0a3069" },
+  { token: "number", foreground: "#0550ae" },
+  { token: "type", foreground: "#953800" },
+  { token: "function", foreground: "#8250df" },
+  { token: "variable", foreground: "#24292f" },
 ];
 
 export function registerThemes(monaco: typeof Monaco): void {
-  monaco.editor.defineTheme('eh-dark', {
-    base: 'vs-dark',
+  monaco.editor.defineTheme("eh-dark", {
+    base: "vs-dark",
     inherit: true,
     colors: DARK_THEME_COLORS,
-    rules: DARK_TOKEN_COLORS.map(t => ({
+    rules: DARK_TOKEN_COLORS.map((t) => ({
       token: t.token,
-      foreground: t.foreground.replace('#', ''),
+      foreground: t.foreground.replace("#", ""),
       fontStyle: t.fontStyle,
     })),
   });
 
-  monaco.editor.defineTheme('eh-light', {
-    base: 'vs',
+  monaco.editor.defineTheme("eh-light", {
+    base: "vs",
     inherit: true,
     colors: LIGHT_THEME_COLORS,
-    rules: LIGHT_TOKEN_COLORS.map(t => ({
+    rules: LIGHT_TOKEN_COLORS.map((t) => ({
       token: t.token,
-      foreground: t.foreground.replace('#', ''),
+      foreground: t.foreground.replace("#", ""),
       fontStyle: t.fontStyle,
     })),
   });
@@ -115,8 +115,8 @@ export function configureTypeScript(monaco: typeof Monaco): void {
     noEmit: true,
     allowJs: true,
     skipLibCheck: true,
-    baseUrl: '.',
-    paths: { '@/*': ['./src/*'] },
+    baseUrl: ".",
+    paths: { "@/*": ["./src/*"] },
   });
 
   // In production, skip full semantic TS checks in-browser (smaller worker CPU; still syntax-highlight).
@@ -148,32 +148,34 @@ export function configureTypeScript(monaco: typeof Monaco): void {
 export interface EditorSetupOptions {
   fontSize?: number;
   tabSize?: number;
-  wordWrap?: 'on' | 'off';
+  wordWrap?: "on" | "off";
   minimap?: boolean;
-  theme?: 'dark' | 'light';
+  theme?: "dark" | "light";
 }
 
-export function getEditorOptions(opts: EditorSetupOptions = {}): Record<string, unknown> {
+export function getEditorOptions(
+  opts: EditorSetupOptions = {},
+): Record<string, unknown> {
   return {
     fontSize: opts.fontSize ?? 14,
     tabSize: opts.tabSize ?? 2,
-    wordWrap: opts.wordWrap ?? 'on',
+    wordWrap: opts.wordWrap ?? "on",
     minimap: { enabled: opts.minimap ?? false },
     scrollBeyondLastLine: false,
     automaticLayout: true,
     padding: { top: 12, bottom: 12 },
-    lineNumbers: 'on',
-    renderWhitespace: 'selection',
+    lineNumbers: "on",
+    renderWhitespace: "selection",
     bracketPairColorization: { enabled: true },
     guides: { bracketPairs: true, indentation: true },
     suggestOnTriggerCharacters: true,
     quickSuggestions: { other: true, comments: false, strings: true },
     parameterHints: { enabled: true },
     folding: true,
-    foldingStrategy: 'indentation',
+    foldingStrategy: "indentation",
     smoothScrolling: true,
-    cursorBlinking: 'smooth',
-    cursorSmoothCaretAnimation: 'on',
+    cursorBlinking: "smooth",
+    cursorSmoothCaretAnimation: "on",
     formatOnPaste: true,
     formatOnType: true,
     linkedEditing: true,
@@ -196,8 +198,8 @@ export function registerKeyBindings(
 
   if (handlers.onSave) {
     editor.addAction({
-      id: 'eh-save',
-      label: 'Save File',
+      id: "eh-save",
+      label: "Save File",
       keybindings: [KeyMod.CtrlCmd | KeyCode.KeyS],
       run: handlers.onSave,
     });
@@ -205,8 +207,8 @@ export function registerKeyBindings(
 
   if (handlers.onFormat) {
     editor.addAction({
-      id: 'eh-format',
-      label: 'Format Document',
+      id: "eh-format",
+      label: "Format Document",
       keybindings: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyF],
       run: handlers.onFormat,
     });
@@ -214,8 +216,8 @@ export function registerKeyBindings(
 
   if (handlers.onCommandPalette) {
     editor.addAction({
-      id: 'eh-command-palette',
-      label: 'Command Palette',
+      id: "eh-command-palette",
+      label: "Command Palette",
       keybindings: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyP],
       run: handlers.onCommandPalette,
     });
@@ -223,8 +225,8 @@ export function registerKeyBindings(
 
   if (handlers.onFind) {
     editor.addAction({
-      id: 'eh-find',
-      label: 'Find in Files',
+      id: "eh-find",
+      label: "Find in Files",
       keybindings: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyF],
       run: handlers.onFind,
     });
@@ -248,10 +250,12 @@ export function setupMonaco(
   configureTypeScript(monaco);
   setupTypeScriptIntelliSense(monaco);
 
-  const theme = options.theme === 'light' ? 'eh-light' : 'eh-dark';
+  const theme = options.theme === "light" ? "eh-light" : "eh-dark";
   monaco.editor.setTheme(theme);
 
-  editor.updateOptions(getEditorOptions(options) as Monaco.editor.IEditorOptions);
+  editor.updateOptions(
+    getEditorOptions(options) as Monaco.editor.IEditorOptions,
+  );
 
   if (options.handlers) {
     registerKeyBindings(monaco, editor, options.handlers);

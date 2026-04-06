@@ -6,12 +6,12 @@
 // AI가 코드를 인라인으로 제안한다.
 // Tab으로 수락, Escape로 거부.
 
-import { streamChat, getApiKey, getActiveProvider } from '@/lib/ai-providers';
+import { streamChat, getApiKey, getActiveProvider } from "@/lib/ai-providers";
 
 // 디바운스 + 취소 제어
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 let abortController: AbortController | null = null;
-let lastContext = '';
+let lastContext = "";
 
 const DEFAULT_DEBOUNCE_MS = 1500; // AI-2 Damper: 휴지기(Idle) 1.5초 강제 적용
 const MAX_CONTEXT_CHARS = 1500;
@@ -43,20 +43,20 @@ export function trackSuggested(): void {
 // PART 2 — Style Learning
 // ============================================================
 
-const STYLE_STORAGE_KEY = 'code_ghost_style_profile';
+const STYLE_STORAGE_KEY = "code_ghost_style_profile";
 
 interface StyleProfile {
   avgLineLength: number;
-  namingStyle: 'camel' | 'snake' | 'kebab' | 'unknown';
-  useSemicolons: 'yes' | 'no' | 'unknown';
+  namingStyle: "camel" | "snake" | "kebab" | "unknown";
+  useSemicolons: "yes" | "no" | "unknown";
   sampleCount: number;
 }
 
 function getDefaultStyleProfile(): StyleProfile {
   return {
     avgLineLength: 60,
-    namingStyle: 'unknown',
-    useSemicolons: 'unknown',
+    namingStyle: "unknown",
+    useSemicolons: "unknown",
     sampleCount: 0,
   };
 }
@@ -69,11 +69,16 @@ export function loadStyleProfile(): StyleProfile {
     const raw = localStorage.getItem(STYLE_STORAGE_KEY);
     if (!raw) return getDefaultStyleProfile();
     const parsed = JSON.parse(raw);
-    if (typeof parsed !== 'object' || parsed === null) return getDefaultStyleProfile();
+    if (typeof parsed !== "object" || parsed === null)
+      return getDefaultStyleProfile();
     return {
       avgLineLength: Number(parsed.avgLineLength) || 60,
-      namingStyle: ['camel', 'snake', 'kebab'].includes(parsed.namingStyle) ? parsed.namingStyle : 'unknown',
-      useSemicolons: ['yes', 'no'].includes(parsed.useSemicolons) ? parsed.useSemicolons : 'unknown',
+      namingStyle: ["camel", "snake", "kebab"].includes(parsed.namingStyle)
+        ? parsed.namingStyle
+        : "unknown",
+      useSemicolons: ["yes", "no"].includes(parsed.useSemicolons)
+        ? parsed.useSemicolons
+        : "unknown",
       sampleCount: Number(parsed.sampleCount) || 0,
     };
   } catch {
@@ -92,7 +97,9 @@ function saveStyleProfile(profile: StyleProfile): void {
 /**
  * Detect naming convention from an accepted completion.
  */
-function detectNamingStyle(text: string): 'camel' | 'snake' | 'kebab' | 'unknown' {
+function detectNamingStyle(
+  text: string,
+): "camel" | "snake" | "kebab" | "unknown" {
   const identifiers = text.match(/\b[a-zA-Z_$][a-zA-Z0-9_$-]*\b/g) ?? [];
   let camelCount = 0;
   let snakeCount = 0;
@@ -100,19 +107,21 @@ function detectNamingStyle(text: string): 'camel' | 'snake' | 'kebab' | 'unknown
 
   for (const id of identifiers) {
     if (id.length < 4) continue; // Too short to tell
-    if (id.includes('_')) snakeCount++;
-    else if (id.includes('-')) kebabCount++;
+    if (id.includes("_")) snakeCount++;
+    else if (id.includes("-")) kebabCount++;
     else if (/[a-z][A-Z]/.test(id)) camelCount++;
   }
 
-  if (camelCount >= snakeCount && camelCount >= kebabCount && camelCount > 0) return 'camel';
-  if (snakeCount >= camelCount && snakeCount >= kebabCount && snakeCount > 0) return 'snake';
-  if (kebabCount > 0) return 'kebab';
-  return 'unknown';
+  if (camelCount >= snakeCount && camelCount >= kebabCount && camelCount > 0)
+    return "camel";
+  if (snakeCount >= camelCount && snakeCount >= kebabCount && snakeCount > 0)
+    return "snake";
+  if (kebabCount > 0) return "kebab";
+  return "unknown";
 }
 
 /** Track the last accepted completion text for style learning */
-let lastAcceptedText = '';
+let lastAcceptedText = "";
 
 export function setLastAcceptedText(text: string): void {
   lastAcceptedText = text;
@@ -126,29 +135,31 @@ function learnFromAccepted(): void {
   if (!lastAcceptedText) return;
 
   const text = lastAcceptedText;
-  lastAcceptedText = '';
+  lastAcceptedText = "";
 
   const profile = loadStyleProfile();
-  const lines = text.split('\n').filter((l) => l.trim().length > 0);
+  const lines = text.split("\n").filter((l) => l.trim().length > 0);
 
   // Average line length (exponential moving average)
   if (lines.length > 0) {
     const avgLen = lines.reduce((sum, l) => sum + l.length, 0) / lines.length;
     const weight = Math.min(profile.sampleCount, 20);
-    profile.avgLineLength = (profile.avgLineLength * weight + avgLen) / (weight + 1);
+    profile.avgLineLength =
+      (profile.avgLineLength * weight + avgLen) / (weight + 1);
   }
 
   // Naming style
   const detected = detectNamingStyle(text);
-  if (detected !== 'unknown') {
+  if (detected !== "unknown") {
     profile.namingStyle = detected;
   }
 
   // Semicolons
   const hasSemi = /;\s*$/.test(text.trim());
-  const noSemi = lines.length > 0 && lines.every((l) => !l.trim().endsWith(';'));
-  if (hasSemi) profile.useSemicolons = 'yes';
-  else if (noSemi && lines.length >= 2) profile.useSemicolons = 'no';
+  const noSemi =
+    lines.length > 0 && lines.every((l) => !l.trim().endsWith(";"));
+  if (hasSemi) profile.useSemicolons = "yes";
+  else if (noSemi && lines.length >= 2) profile.useSemicolons = "no";
 
   profile.sampleCount++;
   saveStyleProfile(profile);
@@ -159,17 +170,21 @@ function learnFromAccepted(): void {
  */
 function buildStyleHint(): string {
   const profile = loadStyleProfile();
-  if (profile.sampleCount < 3) return '';
+  if (profile.sampleCount < 3) return "";
 
   const parts: string[] = [];
-  parts.push(`Preferred avg line length: ~${Math.round(profile.avgLineLength)} chars.`);
-  if (profile.namingStyle !== 'unknown') {
+  parts.push(
+    `Preferred avg line length: ~${Math.round(profile.avgLineLength)} chars.`,
+  );
+  if (profile.namingStyle !== "unknown") {
     parts.push(`Naming convention: ${profile.namingStyle}Case.`);
   }
-  if (profile.useSemicolons !== 'unknown') {
-    parts.push(`Semicolons: ${profile.useSemicolons === 'yes' ? 'always use' : 'omit'}.`);
+  if (profile.useSemicolons !== "unknown") {
+    parts.push(
+      `Semicolons: ${profile.useSemicolons === "yes" ? "always use" : "omit"}.`,
+    );
   }
-  return '\nUser code style preferences:\n' + parts.join(' ');
+  return "\nUser code style preferences:\n" + parts.join(" ");
 }
 
 // IDENTITY_SEAL: PART-2 | role=style-learning | inputs=accepted completions | outputs=StyleProfile in localStorage
@@ -220,29 +235,32 @@ function getAdaptiveMaxTokens(): number {
  * Returns the type of block opening detected, or null.
  */
 function detectIncompleteBlock(codeBefore: string): string | null {
-  const lastLines = codeBefore.split('\n').slice(-5);
-  const lastNonEmpty = [...lastLines].reverse().find((l) => l.trim().length > 0);
+  const lastLines = codeBefore.split("\n").slice(-5);
+  const lastNonEmpty = [...lastLines]
+    .reverse()
+    .find((l) => l.trim().length > 0);
   if (!lastNonEmpty) return null;
 
   const trimmed = lastNonEmpty.trim();
 
   // function/method opening
-  if (/(?:function\s+\w+|=>)\s*\(\s*[^)]*\)\s*\{?\s*$/.test(trimmed)) return 'function';
-  if (/(?:function\s+\w+|=>\s*)\s*$/.test(trimmed)) return 'function';
+  if (/(?:function\s+\w+|=>)\s*\(\s*[^)]*\)\s*\{?\s*$/.test(trimmed))
+    return "function";
+  if (/(?:function\s+\w+|=>\s*)\s*$/.test(trimmed)) return "function";
 
   // Lines ending with { — a block is opening
-  if (trimmed.endsWith('{')) {
-    if (/\bfunction\b/.test(trimmed)) return 'function';
-    if (/\bclass\b/.test(trimmed)) return 'class';
-    if (/\bif\b/.test(trimmed)) return 'if';
-    if (/\bfor\b/.test(trimmed)) return 'for';
-    if (/\bwhile\b/.test(trimmed)) return 'while';
-    if (/\bswitch\b/.test(trimmed)) return 'switch';
-    return 'block';
+  if (trimmed.endsWith("{")) {
+    if (/\bfunction\b/.test(trimmed)) return "function";
+    if (/\bclass\b/.test(trimmed)) return "class";
+    if (/\bif\b/.test(trimmed)) return "if";
+    if (/\bfor\b/.test(trimmed)) return "for";
+    if (/\bwhile\b/.test(trimmed)) return "while";
+    if (/\bswitch\b/.test(trimmed)) return "switch";
+    return "block";
   }
 
   // Class without body yet
-  if (/\bclass\s+\w+/.test(trimmed) && !trimmed.includes('{')) return 'class';
+  if (/\bclass\s+\w+/.test(trimmed) && !trimmed.includes("{")) return "class";
 
   return null;
 }
@@ -251,29 +269,30 @@ function detectIncompleteBlock(codeBefore: string): string | null {
  * Apply the current indentation level to all lines of a multi-line completion.
  */
 function applyIndentation(completion: string, codeBefore: string): string {
-  const lines = codeBefore.split('\n');
-  const lastLine = lines[lines.length - 1] ?? '';
-  const currentIndent = lastLine.match(/^(\s*)/)?.[1] ?? '';
+  const lines = codeBefore.split("\n");
+  const lastLine = lines[lines.length - 1] ?? "";
+  const currentIndent = lastLine.match(/^(\s*)/)?.[1] ?? "";
 
-  const completionLines = completion.split('\n');
+  const completionLines = completion.split("\n");
   if (completionLines.length <= 1) return completion;
 
   // First line: no extra indent (appended to current line)
   // Subsequent lines: rebase to current indentation level
-  const firstLineIndent = completionLines[0].match(/^(\s*)/)?.[1] ?? '';
+  const firstLineIndent = completionLines[0].match(/^(\s*)/)?.[1] ?? "";
 
   return completionLines
     .map((line, i) => {
       if (i === 0) return line;
-      if (line.trim() === '') return '';
+      if (line.trim() === "") return "";
 
-      const lineIndent = line.match(/^(\s*)/)?.[1] ?? '';
+      const lineIndent = line.match(/^(\s*)/)?.[1] ?? "";
       // Calculate relative indent from first line
       const relative = lineIndent.length - firstLineIndent.length;
-      const targetIndent = currentIndent + ' '.repeat(Math.max(0, relative + 2));
+      const targetIndent =
+        currentIndent + " ".repeat(Math.max(0, relative + 2));
       return targetIndent + line.trim();
     })
-    .join('\n');
+    .join("\n");
 }
 
 // IDENTITY_SEAL: PART-4 | role=multi-line-completion | inputs=codeBefore | outputs=blockType,indentedCompletion
@@ -302,8 +321,14 @@ Completion: total += item.price * item.quantity;\\n  }\\n  return total;\\n}`;
 
 /** Ghost Text 취소 */
 export function cancelGhostText(): void {
-  if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = undefined; }
-  if (abortController) { abortController.abort(); abortController = null; }
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+    debounceTimer = undefined;
+  }
+  if (abortController) {
+    abortController.abort();
+    abortController = null;
+  }
 }
 
 /** Ghost Text 완성 요청 */
@@ -315,7 +340,7 @@ export async function requestGhostCompletion(
 ): Promise<string> {
   const provider = getActiveProvider();
   const apiKey = getApiKey(provider);
-  if (!apiKey) return '';
+  if (!apiKey) return "";
 
   // 컨텍스트 제한
   const before = codeBefore.slice(-MAX_CONTEXT_CHARS);
@@ -323,18 +348,21 @@ export async function requestGhostCompletion(
 
   // 디듀플리케이션 + 캐시
   const contextKey = `${before}|${after}`;
-  if (contextKey === lastContext) return '';
+  if (contextKey === lastContext) return "";
   lastContext = contextKey;
 
   // 캐시 히트
   const cached = completionCache.get(contextKey);
-  if (cached) { trackSuggested(); return cached; }
+  if (cached) {
+    trackSuggested();
+    return cached;
+  }
 
   // Multi-line detection
   const blockType = detectIncompleteBlock(before);
   const multiLineHint = blockType
     ? `\nThe cursor is at the end of an incomplete ${blockType} block. Provide a multi-line completion (up to 10 lines) to complete the block.`
-    : '';
+    : "";
 
   // Style hints
   const styleHint = buildStyleHint();
@@ -354,28 +382,30 @@ ${after}
 ${multiLineHint}
 Complete the code at the cursor position:`;
 
-  let result = '';
+  let result = "";
   try {
     await streamChat({
       systemInstruction: GHOST_SYSTEM,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [{ role: "user", content: prompt }],
       temperature: 0.1,
       maxTokens,
       signal,
-      onChunk: (text: string) => { result += text; },
+      onChunk: (text: string) => {
+        result += text;
+      },
     });
   } catch {
-    return '';
+    return "";
   }
 
   // 클린업: 백틱/마크다운 제거
   let cleaned = result
-    .replace(/^```\w*\n?/, '')
-    .replace(/\n?```$/, '')
+    .replace(/^```\w*\n?/, "")
+    .replace(/\n?```$/, "")
     .trim();
 
   // Apply indentation for multi-line completions
-  if (cleaned.includes('\n')) {
+  if (cleaned.includes("\n")) {
     cleaned = applyIndentation(cleaned, codeBefore);
   }
 
@@ -403,11 +433,16 @@ Complete the code at the cursor position:`;
  * editor.onMount에서 호출한다.
  */
 export function registerGhostTextProvider(
-  monaco: typeof import('monaco-editor'),
-  language: string = '*',
-): import('monaco-editor').IDisposable {
+  monaco: typeof import("monaco-editor"),
+  language: string = "*",
+): import("monaco-editor").IDisposable {
   return monaco.languages.registerInlineCompletionsProvider(language, {
-    provideInlineCompletions: async (model: import('monaco-editor').editor.ITextModel, position: import('monaco-editor').Position, _context: unknown, token: import('monaco-editor').CancellationToken) => {
+    provideInlineCompletions: async (
+      model: import("monaco-editor").editor.ITextModel,
+      position: import("monaco-editor").Position,
+      _context: unknown,
+      token: import("monaco-editor").CancellationToken,
+    ) => {
       cancelGhostText();
 
       // API 키 없으면 스킵
@@ -417,7 +452,10 @@ export function registerGhostTextProvider(
 
       return new Promise((resolve) => {
         debounceTimer = setTimeout(async () => {
-          if (token.isCancellationRequested) { resolve({ items: [] }); return; }
+          if (token.isCancellationRequested) {
+            resolve({ items: [] });
+            return;
+          }
 
           const controller = new AbortController();
           abortController = controller;
@@ -430,7 +468,12 @@ export function registerGhostTextProvider(
           const lang = model.getLanguageId();
 
           try {
-            const completion = await requestGhostCompletion(codeBefore, codeAfter, lang, controller.signal);
+            const completion = await requestGhostCompletion(
+              codeBefore,
+              codeAfter,
+              lang,
+              controller.signal,
+            );
             if (!completion || token.isCancellationRequested) {
               resolve({ items: [] });
               return;
@@ -440,23 +483,29 @@ export function registerGhostTextProvider(
             setLastAcceptedText(completion);
 
             // Calculate end position for multi-line completions
-            const completionLines = completion.split('\n');
-            const endLineNumber = position.lineNumber + completionLines.length - 1;
+            const completionLines = completion.split("\n");
+            const endLineNumber =
+              position.lineNumber + completionLines.length - 1;
             const endColumn =
               completionLines.length === 1
                 ? position.column + completion.length
                 : completionLines[completionLines.length - 1].length + 1;
 
             resolve({
-              items: [{
-                insertText: completion,
-                range: {
-                  startLineNumber: position.lineNumber,
-                  startColumn: position.column,
-                  endLineNumber,
-                  endColumn: completionLines.length === 1 ? position.column : endColumn,
+              items: [
+                {
+                  insertText: completion,
+                  range: {
+                    startLineNumber: position.lineNumber,
+                    startColumn: position.column,
+                    endLineNumber,
+                    endColumn:
+                      completionLines.length === 1
+                        ? position.column
+                        : endColumn,
+                  },
                 },
-              }],
+              ],
             });
           } catch {
             resolve({ items: [] });
@@ -464,7 +513,7 @@ export function registerGhostTextProvider(
         }, debounceMs);
       });
     },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
 }
 

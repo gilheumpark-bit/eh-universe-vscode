@@ -7,19 +7,19 @@ let wakeLock: WakeLockSentinel | null = null;
 
 /** Wake Lock 지원 여부 */
 export function canWakeLock(): boolean {
-  return typeof navigator !== 'undefined' && 'wakeLock' in navigator;
+  return typeof navigator !== "undefined" && "wakeLock" in navigator;
 }
 
 /** 화면 꺼짐 방지 시작 */
 export async function acquireWakeLock(): Promise<boolean> {
   if (!canWakeLock()) return false;
   try {
-    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock = await navigator.wakeLock.request("screen");
     // 탭 다시 활성화되면 자동 재요청
-    wakeLock.addEventListener('release', () => {
+    wakeLock.addEventListener("release", () => {
       wakeLock = null;
     });
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return true;
   } catch {
     return false;
@@ -28,11 +28,13 @@ export async function acquireWakeLock(): Promise<boolean> {
 
 /** 화면 꺼짐 방지 해제 */
 export async function releaseWakeLock(): Promise<void> {
-  document.removeEventListener('visibilitychange', handleVisibilityChange);
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
   if (wakeLock) {
     try {
       await wakeLock.release();
-    } catch { /* already released */ }
+    } catch {
+      /* already released */
+    }
     wakeLock = null;
   }
 }
@@ -44,10 +46,12 @@ export function isWakeLockActive(): boolean {
 
 // 탭 다시 활성화 시 재요청
 async function handleVisibilityChange() {
-  if (document.visibilityState === 'visible' && !wakeLock) {
+  if (document.visibilityState === "visible" && !wakeLock) {
     try {
-      wakeLock = await navigator.wakeLock.request('screen');
-    } catch { /* */ }
+      wakeLock = await navigator.wakeLock.request("screen");
+    } catch {
+      /* */
+    }
   }
 }
 

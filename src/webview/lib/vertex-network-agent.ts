@@ -5,16 +5,35 @@
 // 'userId'와 'planetId' 메타데이터를 이용해 철저하게 검색 권한을 격리합니다.
 // ============================================================
 
-import { SearchServiceClient, DocumentServiceClient } from '@google-cloud/discoveryengine';
-import { logger } from '@/lib/logger';
+import {
+  SearchServiceClient,
+  DocumentServiceClient,
+} from "@google-cloud/discoveryengine";
+import { logger } from "@/lib/logger";
 
-function getProjectId() { return process.env.GCP_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || 'eh-universe'; }
-function getLocation() { return process.env.AGENT_BUILDER_LOCATION || 'global'; }
-function getEngineId() { return process.env.AGENT_BUILDER_NETWORK_ID?.trim(); }
-function getDataStoreId() { return process.env.AGENT_BUILDER_NETWORK_ID?.trim(); }
+function getProjectId() {
+  return (
+    process.env.GCP_PROJECT_ID ||
+    process.env.GOOGLE_CLOUD_PROJECT ||
+    "eh-universe"
+  );
+}
+function getLocation() {
+  return process.env.AGENT_BUILDER_LOCATION || "global";
+}
+function getEngineId() {
+  return process.env.AGENT_BUILDER_NETWORK_ID?.trim();
+}
+function getDataStoreId() {
+  return process.env.AGENT_BUILDER_NETWORK_ID?.trim();
+}
 
-type CreateDocumentRequest = Parameters<DocumentServiceClient["createDocument"]>[0];
-type UpdateDocumentRequest = Parameters<DocumentServiceClient["updateDocument"]>[0];
+type CreateDocumentRequest = Parameters<
+  DocumentServiceClient["createDocument"]
+>[0];
+type UpdateDocumentRequest = Parameters<
+  DocumentServiceClient["updateDocument"]
+>[0];
 type SearchRequest = Parameters<SearchServiceClient["search"]>[0];
 
 export function isNetworkAgentConfigured(): boolean {
@@ -24,7 +43,11 @@ export function isNetworkAgentConfigured(): boolean {
 function parseCredentials() {
   const raw = process.env.VERTEX_AI_CREDENTIALS?.trim();
   if (!raw) return undefined;
-  try { return JSON.parse(raw) as { client_email: string; private_key: string }; } catch { return undefined; }
+  try {
+    return JSON.parse(raw) as { client_email: string; private_key: string };
+  } catch {
+    return undefined;
+  }
 }
 
 let _searchClient: SearchServiceClient | null = null;
@@ -33,7 +56,11 @@ let _docClient: DocumentServiceClient | null = null;
 function getSearch() {
   if (!_searchClient) {
     const creds = parseCredentials();
-    _searchClient = new SearchServiceClient(creds ? { credentials: creds, projectId: getProjectId() } : { projectId: getProjectId() });
+    _searchClient = new SearchServiceClient(
+      creds
+        ? { credentials: creds, projectId: getProjectId() }
+        : { projectId: getProjectId() },
+    );
   }
   return _searchClient;
 }
@@ -41,14 +68,18 @@ function getSearch() {
 function getDocs() {
   if (!_docClient) {
     const creds = parseCredentials();
-    _docClient = new DocumentServiceClient(creds ? { credentials: creds, projectId: getProjectId() } : { projectId: getProjectId() });
+    _docClient = new DocumentServiceClient(
+      creds
+        ? { credentials: creds, projectId: getProjectId() }
+        : { projectId: getProjectId() },
+    );
   }
   return _docClient;
 }
 
 // ── 1. 데이터 밀어넣기 (Ingestion) ──
 // 유저가 행성을 만들거나 설정/글을 쓸 때마다 구글에 전송
-export type NetworkDocumentType = 'universe' | 'translation';
+export type NetworkDocumentType = "universe" | "translation";
 
 export async function ingestNetworkDocument(data: {
   documentId: string; // 포스트 ID 또는 행성 ID
@@ -62,7 +93,7 @@ export async function ingestNetworkDocument(data: {
   translationProjectId?: string;
 }) {
   const dsId = getDataStoreId();
-  if (!dsId) throw new Error('Agent Builder Data Store ID not configured.');
+  if (!dsId) throw new Error("Agent Builder Data Store ID not configured.");
 
   const client = getDocs();
   // 구글 클라우드 공식 DataStore Document 경로 (branch 0이 기본)
@@ -71,16 +102,16 @@ export async function ingestNetworkDocument(data: {
   // Discovery Engine의 Document 양식 (구조화 데이터)
   // Discovery Engine protobuf `structData` is `google.protobuf.Struct`; the client accepts
   // plain fields at runtime — narrow types require an assertion (see TS structData vs IStruct).
-  const docType: NetworkDocumentType = data.documentType ?? 'universe';
+  const docType: NetworkDocumentType = data.documentType ?? "universe";
   const structData: Record<string, string> = {
     title: data.title,
     content: data.content,
     userId: data.userId,
-    planetId: data.planetId || 'global',
-    isPublic: data.isPublic ? 'true' : 'false',
+    planetId: data.planetId || "global",
+    isPublic: data.isPublic ? "true" : "false",
     documentType: docType,
   };
-  if (docType === 'translation' && data.translationProjectId?.trim()) {
+  if (docType === "translation" && data.translationProjectId?.trim()) {
     structData.translationProjectId = data.translationProjectId.trim();
   }
 
@@ -89,7 +120,7 @@ export async function ingestNetworkDocument(data: {
     id: data.documentId,
     structData,
     // protobuf Struct uses `fields`; runtime accepts plain maps — double-assert for TS.
-  } as unknown as CreateDocumentRequest['document'];
+  } as unknown as CreateDocumentRequest["document"];
 
   try {
     // 문서 생성 또는 덮어쓰기
@@ -99,8 +130,12 @@ export async function ingestNetworkDocument(data: {
       documentId: data.documentId,
     };
     await client.createDocument(request).catch(async (e: unknown) => {
-      const code = typeof e === "object" && e !== null && "code" in e ? (e as { code?: unknown }).code : undefined;
-      if (code === 6) { // ALREADY_EXISTS
+      const code =
+        typeof e === "object" && e !== null && "code" in e
+          ? (e as { code?: unknown }).code
+          : undefined;
+      if (code === 6) {
+        // ALREADY_EXISTS
         const updateReq: UpdateDocumentRequest = { document };
         await client.updateDocument(updateReq);
       } else {
@@ -109,7 +144,7 @@ export async function ingestNetworkDocument(data: {
     });
     return true;
   } catch (error) {
-    logger.error('vertex-network-agent/ingest', error);
+    logger.error("vertex-network-agent/ingest", error);
     return false;
   }
 }
@@ -118,17 +153,17 @@ export async function ingestNetworkDocument(data: {
 export async function searchNetworkAgent(
   query: string,
   filters: {
-    userId?: string;  // 유저 본인의 데이터만 검색
+    userId?: string; // 유저 본인의 데이터만 검색
     planetId?: string; // 특정 행성 내부 데이터만 검색
     onlyPublic?: boolean; // 다른 사람의 공개 데이터만 검색
     /** 내 데이터만 볼 때 universe / 번역 프로젝트만 / 필터 없음(전체 내 문서) */
     narrowDocumentType?: NetworkDocumentType;
     translationProjectId?: string;
   },
-  pageSize = 5
+  pageSize = 5,
 ) {
   const engineId = getEngineId();
-  if (!engineId) throw new Error('Agent Builder Engine ID not configured.');
+  if (!engineId) throw new Error("Agent Builder Engine ID not configured.");
 
   const client = getSearch();
   const servingConfig = `projects/${getProjectId()}/locations/${getLocation()}/collections/default_collection/engines/${engineId}/servingConfigs/default_search`;
@@ -149,16 +184,18 @@ export async function searchNetworkAgent(
     filterParts.push(`planetId: "${filters.planetId}"`);
   }
 
-  if (filters.narrowDocumentType === 'translation') {
+  if (filters.narrowDocumentType === "translation") {
     filterParts.push('documentType: "translation"');
     if (filters.translationProjectId?.trim()) {
-      filterParts.push(`translationProjectId: "${filters.translationProjectId.trim()}"`);
+      filterParts.push(
+        `translationProjectId: "${filters.translationProjectId.trim()}"`,
+      );
     }
-  } else if (filters.narrowDocumentType === 'universe') {
+  } else if (filters.narrowDocumentType === "universe") {
     filterParts.push('documentType: "universe"');
   }
 
-  const filterString = filterParts.join(' AND ');
+  const filterString = filterParts.join(" AND ");
 
   const requestBody: SearchRequest = {
     servingConfig,
@@ -187,9 +224,10 @@ export async function searchNetworkAgent(
 
   const [response] = await client.search(requestBody);
 
-  let summary = '';
+  let summary = "";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (response && 'summary' in response) summary = (response.summary as any)?.summaryText || '';
+  if (response && "summary" in response)
+    summary = (response.summary as any)?.summaryText || "";
 
   const results = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -197,9 +235,9 @@ export async function searchNetworkAgent(
   for (const r of rawResults) {
     const doc = r.document?.structData || {};
     results.push({
-      id: r.document?.id || '',
-      title: doc.title || '',
-      snippet: r.document?.derivedStructData?.snippets?.[0]?.snippet || '',
+      id: r.document?.id || "",
+      title: doc.title || "",
+      snippet: r.document?.derivedStructData?.snippets?.[0]?.snippet || "",
       userId: doc.userId,
       planetId: doc.planetId,
       documentType: doc.documentType,

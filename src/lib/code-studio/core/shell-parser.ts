@@ -110,17 +110,33 @@ export function tokenize(input: string): Token[] {
         i += 2;
         if (peek() === "&" && peek(1) === "1") {
           i += 2;
-          tokens.push({ type: "redirect_err_out", value: "2>&1", offset: startOffset });
+          tokens.push({
+            type: "redirect_err_out",
+            value: "2>&1",
+            offset: startOffset,
+          });
         } else {
-          tokens.push({ type: "redirect_err", value: "2>", offset: startOffset });
+          tokens.push({
+            type: "redirect_err",
+            value: "2>",
+            offset: startOffset,
+          });
         }
       } else {
         advance();
         if (peek() === ">") {
           advance();
-          tokens.push({ type: "redirect_append", value: ">>", offset: startOffset });
+          tokens.push({
+            type: "redirect_append",
+            value: ">>",
+            offset: startOffset,
+          });
         } else {
-          tokens.push({ type: "redirect_out", value: ">", offset: startOffset });
+          tokens.push({
+            type: "redirect_out",
+            value: ">",
+            offset: startOffset,
+          });
         }
       }
       continue;
@@ -134,9 +150,14 @@ export function tokenize(input: string): Token[] {
       const c = input[i];
 
       if (
-        c === " " || c === "\t" || c === "\n" ||
-        c === "|" || c === "&" || c === ";" ||
-        c === ">" || (c === "2" && peek(1) === ">")
+        c === " " ||
+        c === "\t" ||
+        c === "\n" ||
+        c === "|" ||
+        c === "&" ||
+        c === ";" ||
+        c === ">" ||
+        (c === "2" && peek(1) === ">")
       ) {
         break;
       }
@@ -144,7 +165,10 @@ export function tokenize(input: string): Token[] {
       // Escape character
       if (c === "\\") {
         i++;
-        if (i < len) { word += input[i]; i++; }
+        if (i < len) {
+          word += input[i];
+          i++;
+        }
         continue;
       }
 
@@ -152,7 +176,10 @@ export function tokenize(input: string): Token[] {
       if (c === "'") {
         isQuoted = true;
         i++;
-        while (i < len && input[i] !== "'") { word += input[i]; i++; }
+        while (i < len && input[i] !== "'") {
+          word += input[i];
+          i++;
+        }
         if (i < len) i++;
         continue;
       }
@@ -162,8 +189,14 @@ export function tokenize(input: string): Token[] {
         isQuoted = true;
         i++;
         while (i < len && input[i] !== '"') {
-          if (input[i] === "\\" && i + 1 < len) { i++; word += input[i]; i++; }
-          else { word += input[i]; i++; }
+          if (input[i] === "\\" && i + 1 < len) {
+            i++;
+            word += input[i];
+            i++;
+          } else {
+            word += input[i];
+            i++;
+          }
         }
         if (i < len) i++;
         continue;
@@ -173,7 +206,10 @@ export function tokenize(input: string): Token[] {
       if (c === "`") {
         isQuoted = true;
         i++;
-        while (i < len && input[i] !== "`") { word += input[i]; i++; }
+        while (i < len && input[i] !== "`") {
+          word += input[i];
+          i++;
+        }
         if (i < len) i++;
         continue;
       }
@@ -183,7 +219,12 @@ export function tokenize(input: string): Token[] {
     }
 
     if (word.length > 0) {
-      tokens.push({ type: "word", value: word, offset: startOffset, quoted: isQuoted });
+      tokens.push({
+        type: "word",
+        value: word,
+        offset: startOffset,
+        quoted: isQuoted,
+      });
     }
   }
 
@@ -212,7 +253,11 @@ export function expandVariables(
 
       if (value !== undefined && value !== "") return value;
       if (op === "-") return fallback ?? "";
-      if (op === "=") { const def = fallback ?? ""; env[varName] = def; return def; }
+      if (op === "=") {
+        const def = fallback ?? "";
+        env[varName] = def;
+        return def;
+      }
       return "";
     },
   );
@@ -231,18 +276,31 @@ export function globToRegex(pattern: string): RegExp {
 
     if (ch === "*") {
       if (pattern[i + 1] === "*") {
-        if (pattern[i + 2] === "/") { regexStr += "(?:.+/)?"; i += 3; }
-        else { regexStr += ".*"; i += 2; }
+        if (pattern[i + 2] === "/") {
+          regexStr += "(?:.+/)?";
+          i += 3;
+        } else {
+          regexStr += ".*";
+          i += 2;
+        }
       } else {
-        regexStr += "[^/]*"; i++;
+        regexStr += "[^/]*";
+        i++;
       }
     } else if (ch === "?") {
-      regexStr += "[^/]"; i++;
+      regexStr += "[^/]";
+      i++;
     } else if (ch === "[") {
       let j = i + 1;
       let bracket = "[";
-      if (j < pattern.length && pattern[j] === "!") { bracket += "^"; j++; }
-      while (j < pattern.length && pattern[j] !== "]") { bracket += pattern[j]; j++; }
+      if (j < pattern.length && pattern[j] === "!") {
+        bracket += "^";
+        j++;
+      }
+      while (j < pattern.length && pattern[j] !== "]") {
+        bracket += pattern[j];
+        j++;
+      }
       bracket += "]";
       regexStr += bracket;
       i = j + 1;
@@ -251,15 +309,20 @@ export function globToRegex(pattern: string): RegExp {
       const alternatives: string[] = [];
       let current = "";
       while (j < pattern.length && pattern[j] !== "}") {
-        if (pattern[j] === ",") { alternatives.push(current); current = ""; }
-        else { current += pattern[j]; }
+        if (pattern[j] === ",") {
+          alternatives.push(current);
+          current = "";
+        } else {
+          current += pattern[j];
+        }
         j++;
       }
       alternatives.push(current);
       regexStr += "(?:" + alternatives.map(escapeRegex).join("|") + ")";
       i = j + 1;
     } else {
-      regexStr += escapeRegex(ch); i++;
+      regexStr += escapeRegex(ch);
+      i++;
     }
   }
 
@@ -371,17 +434,26 @@ export function parseCommandChain(tokens: Token[]): CommandChain {
         break;
       case "redirect_out": {
         const next = tokens[i + 1];
-        if (next?.type === "word") { currentRedirects.push({ type: "out", target: next.value }); i++; }
+        if (next?.type === "word") {
+          currentRedirects.push({ type: "out", target: next.value });
+          i++;
+        }
         break;
       }
       case "redirect_append": {
         const next = tokens[i + 1];
-        if (next?.type === "word") { currentRedirects.push({ type: "append", target: next.value }); i++; }
+        if (next?.type === "word") {
+          currentRedirects.push({ type: "append", target: next.value });
+          i++;
+        }
         break;
       }
       case "redirect_err": {
         const next = tokens[i + 1];
-        if (next?.type === "word") { currentRedirects.push({ type: "err", target: next.value }); i++; }
+        if (next?.type === "word") {
+          currentRedirects.push({ type: "err", target: next.value });
+          i++;
+        }
         break;
       }
       case "redirect_err_out":
@@ -406,8 +478,11 @@ export function parseCommandChain(tokens: Token[]): CommandChain {
 export function joinContinuations(lines: string[]): string {
   let result = "";
   for (const line of lines) {
-    if (line.endsWith("\\")) { result += line.slice(0, -1); }
-    else { result += line + "\n"; }
+    if (line.endsWith("\\")) {
+      result += line.slice(0, -1);
+    } else {
+      result += line + "\n";
+    }
   }
   return result.trimEnd();
 }
@@ -423,12 +498,18 @@ export function isIncomplete(input: string): boolean {
 
   for (let i = 0; i < input.length; i++) {
     const ch = input[i];
-    if (ch === "\\" && i + 1 < input.length) { i++; continue; }
+    if (ch === "\\" && i + 1 < input.length) {
+      i++;
+      continue;
+    }
     if (ch === "'" && !doubleQuote && !backtick) singleQuote = !singleQuote;
-    else if (ch === '"' && !singleQuote && !backtick) doubleQuote = !doubleQuote;
+    else if (ch === '"' && !singleQuote && !backtick)
+      doubleQuote = !doubleQuote;
     else if (ch === "`" && !singleQuote && !doubleQuote) backtick = !backtick;
-    else if (ch === "(" && !singleQuote && !doubleQuote && !backtick) braceDepth++;
-    else if (ch === ")" && !singleQuote && !doubleQuote && !backtick) braceDepth--;
+    else if (ch === "(" && !singleQuote && !doubleQuote && !backtick)
+      braceDepth++;
+    else if (ch === ")" && !singleQuote && !doubleQuote && !backtick)
+      braceDepth--;
   }
 
   return singleQuote || doubleQuote || backtick || braceDepth > 0;
@@ -440,15 +521,52 @@ export interface HighlightSpan {
 }
 
 const HIGHLIGHT_BUILTINS = new Set([
-  "cd", "export", "alias", "unalias", "source", "history", "echo",
-  "pwd", "exit", "set", "unset", "jobs", "fg", "bg", "clear",
-  "help", "type", "env", "let", "eval",
+  "cd",
+  "export",
+  "alias",
+  "unalias",
+  "source",
+  "history",
+  "echo",
+  "pwd",
+  "exit",
+  "set",
+  "unset",
+  "jobs",
+  "fg",
+  "bg",
+  "clear",
+  "help",
+  "type",
+  "env",
+  "let",
+  "eval",
 ]);
 
 const HIGHLIGHT_KNOWN = new Set([
-  "ls", "cat", "mkdir", "rm", "cp", "mv", "touch", "grep", "find",
-  "npm", "npx", "node", "git", "tsc", "eslint", "prettier",
-  "curl", "wget", "tar", "zip", "unzip", "chmod", "chown",
+  "ls",
+  "cat",
+  "mkdir",
+  "rm",
+  "cp",
+  "mv",
+  "touch",
+  "grep",
+  "find",
+  "npm",
+  "npx",
+  "node",
+  "git",
+  "tsc",
+  "eslint",
+  "prettier",
+  "curl",
+  "wget",
+  "tar",
+  "zip",
+  "unzip",
+  "chmod",
+  "chown",
 ]);
 
 /** Produce syntax-highlighted spans for a shell input line. */
@@ -463,7 +581,10 @@ export function highlightShellInput(input: string): HighlightSpan[] {
 
   for (const token of tokens) {
     if (token.offset > lastEnd) {
-      spans.push({ text: input.slice(lastEnd, token.offset), color: "#e6edf3" });
+      spans.push({
+        text: input.slice(lastEnd, token.offset),
+        color: "#e6edf3",
+      });
     }
 
     const raw = input.slice(token.offset, token.offset + token.value.length);

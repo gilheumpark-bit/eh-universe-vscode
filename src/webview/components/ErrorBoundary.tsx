@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 // ============================================================
 // PART 1 — Unified Error Boundary
@@ -7,14 +7,14 @@
 // 'panel' (code-studio panels). Consolidates the former 3 separate
 // ErrorBoundary files into one.
 
-import React, { Component, ComponentType, ErrorInfo } from 'react';
-import { logger } from '@/lib/logger';
-import Link from 'next/link';
-import { L4 } from '@/lib/i18n';
-import type { AppLanguage } from '@/lib/studio-types';
-import { AlertTriangle, RotateCcw, ClipboardCopy } from 'lucide-react';
+import React, { Component, ComponentType, ErrorInfo } from "react";
+import { logger } from "@/lib/logger";
+import Link from "next/link";
+import { L4 } from "@/lib/i18n";
+import type { AppLanguage } from "@/lib/studio-types";
+import { AlertTriangle, RotateCcw, ClipboardCopy } from "lucide-react";
 
-export type ErrorBoundaryVariant = 'full-page' | 'section' | 'panel';
+export type ErrorBoundaryVariant = "full-page" | "section" | "panel";
 
 interface Props {
   children: React.ReactNode;
@@ -40,7 +40,7 @@ interface State {
 // PART 2 — Error Reporting (panel variant ring buffer)
 // ============================================================
 
-const LOG_KEY = '__eh_code_studio_error_log';
+const LOG_KEY = "__eh_code_studio_error_log";
 
 /** Report error to session storage ring buffer (last 50 entries) */
 export function reportError(error: Error, context?: string): void {
@@ -48,12 +48,14 @@ export function reportError(error: Error, context?: string): void {
     timestamp: new Date().toISOString(),
     message: error.message,
     stack: error.stack?.slice(0, 500),
-    context: context ?? 'ErrorBoundary',
-    url: typeof window !== 'undefined' ? window.location.href : '',
+    context: context ?? "ErrorBoundary",
+    url: typeof window !== "undefined" ? window.location.href : "",
   };
 
   try {
-    const existing: unknown[] = JSON.parse(sessionStorage.getItem(LOG_KEY) || '[]');
+    const existing: unknown[] = JSON.parse(
+      sessionStorage.getItem(LOG_KEY) || "[]",
+    );
     existing.push(entry);
     if (existing.length > 50) existing.shift();
     sessionStorage.setItem(LOG_KEY, JSON.stringify(existing));
@@ -61,29 +63,29 @@ export function reportError(error: Error, context?: string): void {
     /* sessionStorage unavailable */
   }
 
-  logger.error('EH Error', `${entry.context}:`, error);
+  logger.error("EH Error", `${entry.context}:`, error);
 }
 
 // Global unhandled error capture (preserves code-studio behavior)
 // These are app-lifetime listeners; cleanup provided for hot-reload / test teardown
 function _onGlobalError(e: ErrorEvent) {
-  reportError(e.error ?? new Error(e.message), 'window.onerror');
+  reportError(e.error ?? new Error(e.message), "window.onerror");
 }
 function _onUnhandledRejection(e: PromiseRejectionEvent) {
   reportError(
     e.reason instanceof Error ? e.reason : new Error(String(e.reason)),
-    'unhandledrejection',
+    "unhandledrejection",
   );
 }
-if (typeof window !== 'undefined') {
-  window.addEventListener('error', _onGlobalError);
-  window.addEventListener('unhandledrejection', _onUnhandledRejection);
+if (typeof window !== "undefined") {
+  window.addEventListener("error", _onGlobalError);
+  window.addEventListener("unhandledrejection", _onUnhandledRejection);
 }
 /** Teardown global listeners (useful in test environments) */
 export function teardownGlobalErrorListeners() {
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('error', _onGlobalError);
-    window.removeEventListener('unhandledrejection', _onUnhandledRejection);
+  if (typeof window !== "undefined") {
+    window.removeEventListener("error", _onGlobalError);
+    window.removeEventListener("unhandledrejection", _onUnhandledRejection);
   }
 }
 
@@ -93,37 +95,49 @@ export function teardownGlobalErrorListeners() {
 // PART 3 — Lang helper (safe for broken contexts)
 // ============================================================
 
-function getSafeLang(): 'ko' | 'en' | 'ja' | 'zh' {
+function getSafeLang(): "ko" | "en" | "ja" | "zh" {
   try {
-    const stored = typeof window !== 'undefined' ? localStorage.getItem('eh-lang') : null;
-    if (stored === 'en' || stored === 'ja' || stored === 'zh') return stored;
-    return 'ko';
-  } catch { return 'ko'; }
+    const stored =
+      typeof window !== "undefined" ? localStorage.getItem("eh-lang") : null;
+    if (stored === "en" || stored === "ja" || stored === "zh") return stored;
+    return "ko";
+  } catch {
+    return "ko";
+  }
 }
 
 // ============================================================
 // PART 4 — Full-Page Fallback UI
 // ============================================================
 
-function FullPageFallback({ error, onRetry }: { error: Error; onRetry: () => void }) {
+function FullPageFallback({
+  error,
+  onRetry,
+}: {
+  error: Error;
+  onRetry: () => void;
+}) {
   const lang = getSafeLang();
 
   return (
-    <div className="flex flex-col items-center justify-center gap-5 p-12 min-h-[50vh]" role="alert">
+    <div
+      className="flex flex-col items-center justify-center gap-5 p-12 min-h-[50vh]"
+      role="alert"
+    >
       <div className="text-red-400 text-xl font-bold">
         {L4(lang, {
-          ko: '문제가 발생했습니다',
-          en: 'Something went wrong',
-          ja: '問題が発生しました',
-          zh: '出现了问题',
+          ko: "문제가 발생했습니다",
+          en: "Something went wrong",
+          ja: "問題が発生しました",
+          zh: "出现了问题",
         })}
       </div>
       <p className="text-text-tertiary text-sm text-center max-w-md">
         {L4(lang, {
-          ko: '예상치 못한 오류가 발생했습니다. 아래 버튼을 눌러 다시 시도하거나, 문제가 지속되면 새로고침해 주세요.',
-          en: 'An unexpected error occurred. Try again or refresh the page if the problem persists.',
-          ja: '予期しないエラーが発生しました。下のボタンで再試行するか、問題が続く場合はページを更新してください。',
-          zh: '发生了意外错误。请点击下方按钮重试，如果问题持续存在，请刷新页面。',
+          ko: "예상치 못한 오류가 발생했습니다. 아래 버튼을 눌러 다시 시도하거나, 문제가 지속되면 새로고침해 주세요.",
+          en: "An unexpected error occurred. Try again or refresh the page if the problem persists.",
+          ja: "予期しないエラーが発生しました。下のボタンで再試行するか、問題が続く場合はページを更新してください。",
+          zh: "发生了意外错误。请点击下方按钮重试，如果问题持续存在，请刷新页面。",
         })}
       </p>
       <pre className="text-gray-300 text-xs bg-black/50 rounded-lg px-4 py-2 max-w-full overflow-auto whitespace-pre-wrap break-all border border-red-500/20">
@@ -134,13 +148,18 @@ function FullPageFallback({ error, onRetry }: { error: Error; onRetry: () => voi
           onClick={onRetry}
           className="px-6 py-2.5 text-sm font-bold rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:scale-[1.03] hover:shadow-lg hover:shadow-red-500/10 active:scale-[0.97] transition-all duration-200"
         >
-          {L4(lang, { ko: '다시 시도', en: 'Retry', ja: '再試行', zh: '重试' })}
+          {L4(lang, { ko: "다시 시도", en: "Retry", ja: "再試行", zh: "重试" })}
         </button>
         <Link
           href="/"
           className="px-6 py-2.5 text-sm font-bold rounded-xl bg-white/5 border border-border text-text-secondary hover:bg-white/10 hover:scale-[1.03] hover:shadow-lg hover:shadow-black/20 active:scale-[0.97] transition-all duration-200"
         >
-          {L4(lang, { ko: '홈으로', en: 'Go Home', ja: 'ホームへ', zh: '回到首页' })}
+          {L4(lang, {
+            ko: "홈으로",
+            en: "Go Home",
+            ja: "ホームへ",
+            zh: "回到首页",
+          })}
         </Link>
       </div>
     </div>
@@ -154,9 +173,15 @@ function FullPageFallback({ error, onRetry }: { error: Error; onRetry: () => voi
 // ============================================================
 
 function SectionFallback({
-  error, onRetry, section, height,
+  error,
+  onRetry,
+  section,
+  height,
 }: {
-  error: Error; onRetry: () => void; section: string; height: number;
+  error: Error;
+  onRetry: () => void;
+  section: string;
+  height: number;
 }) {
   return (
     <div
@@ -168,7 +193,7 @@ function SectionFallback({
         {section} Error
       </div>
       <div className="text-text-tertiary text-[10px] max-w-xs text-center px-4">
-        {error.message?.slice(0, 120) || 'An unexpected error occurred.'}
+        {error.message?.slice(0, 120) || "An unexpected error occurred."}
       </div>
       <button
         onClick={onRetry}
@@ -188,23 +213,29 @@ function SectionFallback({
 // ============================================================
 
 function PanelFallback({
-  error, onRetry, fallbackMessage, onCopy,
+  error,
+  onRetry,
+  fallbackMessage,
+  onCopy,
 }: {
-  error: Error; onRetry: () => void; fallbackMessage?: string; onCopy: () => void;
+  error: Error;
+  onRetry: () => void;
+  fallbackMessage?: string;
+  onCopy: () => void;
 }) {
-  let sanitized = (error.message ?? 'Unknown error')
-    .replace(/(?:[A-Za-z]:)?[/\\][\w./\\-]+/g, '[path]')
-    .replace(/\s+at\s+[\w.<>]+\s*\(.*?\)/g, '');
-  if (sanitized.length > 200) sanitized = sanitized.slice(0, 200) + '...';
+  let sanitized = (error.message ?? "Unknown error")
+    .replace(/(?:[A-Za-z]:)?[/\\][\w./\\-]+/g, "[path]")
+    .replace(/\s+at\s+[\w.<>]+\s*\(.*?\)/g, "");
+  if (sanitized.length > 200) sanitized = sanitized.slice(0, 200) + "...";
 
   return (
     <div className="flex flex-col items-center justify-center gap-3 p-8 text-center bg-bg-primary">
       <AlertTriangle size={32} className="text-amber-400" />
       <p className="text-sm font-semibold text-text-primary">
-        {fallbackMessage ?? 'An error occurred'}
+        {fallbackMessage ?? "An error occurred"}
       </p>
       <p className="text-xs text-text-tertiary max-w-md leading-relaxed">
-        {sanitized.trim() || 'Unknown error'}
+        {sanitized.trim() || "Unknown error"}
       </p>
       {error.stack && (
         <details className="text-[10px] text-text-tertiary max-w-lg w-full">
@@ -248,16 +279,20 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    const variant = this.props.variant ?? 'full-page';
+    const variant = this.props.variant ?? "full-page";
     const label = this.props.section || variant;
-    logger.error('ErrorBoundary', `variant=${variant} section=${label}`, error);
+    logger.error("ErrorBoundary", `variant=${variant} section=${label}`, error);
     if (errorInfo.componentStack) {
-      logger.error('ErrorBoundary', 'Component stack:', errorInfo.componentStack);
+      logger.error(
+        "ErrorBoundary",
+        "Component stack:",
+        errorInfo.componentStack,
+      );
     }
 
     // Panel variant: persist to ring buffer
-    if (variant === 'panel') {
-      reportError(error, 'ErrorBoundary.componentDidCatch');
+    if (variant === "panel") {
+      reportError(error, "ErrorBoundary.componentDidCatch");
     }
 
     this.props.onError?.(error, errorInfo);
@@ -268,18 +303,21 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleCopyError = () => {
-    const msg = this.state.error?.stack ?? this.state.error?.message ?? 'Unknown error';
-    navigator.clipboard.writeText(msg).catch(() => { /* clipboard unavailable */ });
+    const msg =
+      this.state.error?.stack ?? this.state.error?.message ?? "Unknown error";
+    navigator.clipboard.writeText(msg).catch(() => {
+      /* clipboard unavailable */
+    });
   };
 
   render() {
     if (!this.state.error) return this.props.children;
 
-    const variant = this.props.variant ?? 'full-page';
+    const variant = this.props.variant ?? "full-page";
     const error = this.state.error;
 
     switch (variant) {
-      case 'panel':
+      case "panel":
         return (
           <PanelFallback
             error={error}
@@ -288,16 +326,16 @@ export class ErrorBoundary extends Component<Props, State> {
             onCopy={this.handleCopyError}
           />
         );
-      case 'section':
+      case "section":
         return (
           <SectionFallback
             error={error}
             onRetry={this.handleRetry}
-            section={this.props.section || 'Section'}
+            section={this.props.section || "Section"}
             height={this.props.fallbackHeight ?? 120}
           />
         );
-      case 'full-page':
+      case "full-page":
       default:
         return <FullPageFallback error={error} onRetry={this.handleRetry} />;
     }
@@ -317,7 +355,8 @@ export function withErrorBoundary<P extends object>(
   WrappedComponent: ComponentType<P>,
   language?: AppLanguage,
 ) {
-  const displayName = WrappedComponent.displayName || WrappedComponent.name || 'Component';
+  const displayName =
+    WrappedComponent.displayName || WrappedComponent.name || "Component";
 
   const Wrapped = (props: P) => (
     <ErrorBoundary variant="section" language={language}>

@@ -45,13 +45,17 @@ export function estimateTokenCount(text: string): number {
 
   for (const word of words) {
     // Split word further by punctuation boundaries
-    const subTokens = word.split(/([.,!?;:'"()\[\]{}<>\/\\@#$%^&*+=~`|—–\-])/).filter(Boolean);
+    const subTokens = word
+      .split(/([.,!?;:'"()\[\]{}<>\/\\@#$%^&*+=~`|—–\-])/)
+      .filter(Boolean);
 
     for (const sub of subTokens) {
       if (!sub) continue;
 
       // Count Korean characters (each ~1.5 tokens in typical BPE)
-      const koreanChars = (sub.match(/[\uAC00-\uD7AF\u3131-\u3163\u1100-\u11FF]/g) || []).length;
+      const koreanChars = (
+        sub.match(/[\uAC00-\uD7AF\u3131-\u3163\u1100-\u11FF]/g) || []
+      ).length;
       const nonKoreanChars = sub.length - koreanChars;
 
       // Korean: ~1.5 tokens per character
@@ -96,5 +100,7 @@ export function applyTokenBudget(response: string, budget: number): string {
   const cutPoint = response.lastIndexOf(" ", lo);
   const safeCut = cutPoint > 0 ? cutPoint : lo;
 
-  return response.slice(0, safeCut) + "\n\n[NOA: 토큰 예산 초과로 응답이 잘렸습니다]";
+  return (
+    response.slice(0, safeCut) + "\n\n[NOA: 토큰 예산 초과로 응답이 잘렸습니다]"
+  );
 }

@@ -17,7 +17,10 @@ interface Props {
 }
 
 /** Flatten file tree into searchable list */
-function flattenFiles(nodes: FileNode[], prefix = ""): { node: FileNode; path: string }[] {
+function flattenFiles(
+  nodes: FileNode[],
+  prefix = "",
+): { node: FileNode; path: string }[] {
   const result: { node: FileNode; path: string }[] = [];
   for (const n of nodes) {
     const path = prefix ? `${prefix}/${n.name}` : n.name;
@@ -28,7 +31,10 @@ function flattenFiles(nodes: FileNode[], prefix = ""): { node: FileNode; path: s
 }
 
 /** Simple fuzzy match: checks if all query chars appear in order */
-function fuzzyMatch(query: string, target: string): { match: boolean; score: number } {
+function fuzzyMatch(
+  query: string,
+  target: string,
+): { match: boolean; score: number } {
   const q = query.toLowerCase();
   const t = target.toLowerCase();
 
@@ -42,7 +48,13 @@ function fuzzyMatch(query: string, target: string): { match: boolean; score: num
     if (t[ti] === q[qi]) {
       score += 10;
       // Bonus for matching at word boundaries
-      if (ti === 0 || t[ti - 1] === "/" || t[ti - 1] === "." || t[ti - 1] === "-" || t[ti - 1] === "_") {
+      if (
+        ti === 0 ||
+        t[ti - 1] === "/" ||
+        t[ti - 1] === "." ||
+        t[ti - 1] === "-" ||
+        t[ti - 1] === "_"
+      ) {
         score += 5;
       }
       qi++;
@@ -63,7 +75,9 @@ export function QuickOpen({ files, recentFileIds, onOpen, onClose }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   const allFiles = useMemo(() => flattenFiles(files), [files]);
 
@@ -96,7 +110,9 @@ export function QuickOpen({ files, recentFileIds, onOpen, onClose }: Props) {
 
   // Scroll selected item into view
   useEffect(() => {
-    const el = listRef.current?.children[selectedIdx] as HTMLElement | undefined;
+    const el = listRef.current?.children[selectedIdx] as
+      | HTMLElement
+      | undefined;
     el?.scrollIntoView({ block: "nearest" });
   }, [selectedIdx]);
 
@@ -137,7 +153,9 @@ export function QuickOpen({ files, recentFileIds, onOpen, onClose }: Props) {
             placeholder="Type to search files..."
             className="flex-1 bg-transparent text-sm outline-none text-text-primary placeholder:text-text-tertiary"
           />
-          <kbd className="text-[9px] text-text-tertiary bg-white/5 px-1.5 py-0.5 rounded">Esc</kbd>
+          <kbd className="text-[9px] text-text-tertiary bg-white/5 px-1.5 py-0.5 rounded">
+            Esc
+          </kbd>
         </div>
 
         {/* Results list */}
@@ -150,17 +168,25 @@ export function QuickOpen({ files, recentFileIds, onOpen, onClose }: Props) {
             filtered.map((f, i) => (
               <button
                 key={f.node.id}
-                onClick={() => { onOpen(f.node); onClose(); }}
+                onClick={() => {
+                  onOpen(f.node);
+                  onClose();
+                }}
                 className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors
                   ${i === selectedIdx ? "bg-amber-900/22 text-amber-400" : "hover:bg-white/5 text-text-primary"}`}
               >
                 {recentSet.has(f.node.id) ? (
                   <Clock size={12} className="text-amber-400 flex-shrink-0" />
                 ) : (
-                  <FileCode size={12} className={`${fileIconColor(f.node.name)} flex-shrink-0`} />
+                  <FileCode
+                    size={12}
+                    className={`${fileIconColor(f.node.name)} flex-shrink-0`}
+                  />
                 )}
                 <span className="flex-1 text-left truncate">{f.node.name}</span>
-                <span className="text-[9px] text-text-tertiary truncate max-w-[200px]">{f.path}</span>
+                <span className="text-[9px] text-text-tertiary truncate max-w-[200px]">
+                  {f.path}
+                </span>
               </button>
             ))
           )}

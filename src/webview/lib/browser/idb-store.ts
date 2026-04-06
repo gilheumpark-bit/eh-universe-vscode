@@ -4,17 +4,17 @@
 // localStorage: ~5MB / IndexedDB: 디스크의 50%+
 // 번역 메모리, 프로젝트, 세그먼트, 대용량 데이터 저장
 
-const DB_NAME = 'eh-universe';
+const DB_NAME = "eh-universe";
 const DB_VERSION = 1;
 
 // ── Store Names ──
 export const STORES = {
-  TM: 'translation-memory',
-  SEGMENTS: 'translation-segments',
-  PROJECTS: 'projects',
-  MANUSCRIPTS: 'manuscripts',
-  GLOSSARY: 'glossary',
-  SETTINGS: 'settings',
+  TM: "translation-memory",
+  SEGMENTS: "translation-segments",
+  PROJECTS: "projects",
+  MANUSCRIPTS: "manuscripts",
+  GLOSSARY: "glossary",
+  SETTINGS: "settings",
 } as const;
 
 type StoreName = (typeof STORES)[keyof typeof STORES];
@@ -30,11 +30,13 @@ function openDB(): Promise<IDBDatabase> {
       const db = request.result;
       for (const name of Object.values(STORES)) {
         if (!db.objectStoreNames.contains(name)) {
-          const store = db.createObjectStore(name, { keyPath: 'id' });
+          const store = db.createObjectStore(name, { keyPath: "id" });
           // TM에 언어 인덱스
           if (name === STORES.TM) {
-            store.createIndex('by-target-lang', 'targetLang', { unique: false });
-            store.createIndex('by-source', 'source', { unique: false });
+            store.createIndex("by-target-lang", "targetLang", {
+              unique: false,
+            });
+            store.createIndex("by-source", "source", { unique: false });
           }
         }
       }
@@ -47,20 +49,26 @@ function openDB(): Promise<IDBDatabase> {
 
 // ── Generic CRUD ──
 
-export async function idbGet<T>(store: StoreName, key: string): Promise<T | undefined> {
+export async function idbGet<T>(
+  store: StoreName,
+  key: string,
+): Promise<T | undefined> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readonly');
+    const tx = db.transaction(store, "readonly");
     const req = tx.objectStore(store).get(key);
     req.onsuccess = () => resolve(req.result as T | undefined);
     req.onerror = () => reject(req.error);
   });
 }
 
-export async function idbPut<T extends { id: string }>(store: StoreName, value: T): Promise<void> {
+export async function idbPut<T extends { id: string }>(
+  store: StoreName,
+  value: T,
+): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
+    const tx = db.transaction(store, "readwrite");
     tx.objectStore(store).put(value);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
@@ -70,7 +78,7 @@ export async function idbPut<T extends { id: string }>(store: StoreName, value: 
 export async function idbDelete(store: StoreName, key: string): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
+    const tx = db.transaction(store, "readwrite");
     tx.objectStore(store).delete(key);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
@@ -80,7 +88,7 @@ export async function idbDelete(store: StoreName, key: string): Promise<void> {
 export async function idbGetAll<T>(store: StoreName): Promise<T[]> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readonly');
+    const tx = db.transaction(store, "readonly");
     const req = tx.objectStore(store).getAll();
     req.onsuccess = () => resolve(req.result as T[]);
     req.onerror = () => reject(req.error);
@@ -90,7 +98,7 @@ export async function idbGetAll<T>(store: StoreName): Promise<T[]> {
 export async function idbCount(store: StoreName): Promise<number> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readonly');
+    const tx = db.transaction(store, "readonly");
     const req = tx.objectStore(store).count();
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -100,7 +108,7 @@ export async function idbCount(store: StoreName): Promise<number> {
 export async function idbClear(store: StoreName): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
+    const tx = db.transaction(store, "readwrite");
     tx.objectStore(store).clear();
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
@@ -108,11 +116,14 @@ export async function idbClear(store: StoreName): Promise<void> {
 }
 
 /** 배치 삽입 (트랜잭션 1회) */
-export async function idbPutBatch<T extends { id: string }>(store: StoreName, items: T[]): Promise<void> {
+export async function idbPutBatch<T extends { id: string }>(
+  store: StoreName,
+  items: T[],
+): Promise<void> {
   if (items.length === 0) return;
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
+    const tx = db.transaction(store, "readwrite");
     const os = tx.objectStore(store);
     for (const item of items) os.put(item);
     tx.oncomplete = () => resolve();
@@ -128,7 +139,7 @@ export async function idbGetByIndex<T>(
 ): Promise<T[]> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readonly');
+    const tx = db.transaction(store, "readonly");
     const index = tx.objectStore(store).index(indexName);
     const req = index.getAll(value);
     req.onsuccess = () => resolve(req.result as T[]);
@@ -137,7 +148,10 @@ export async function idbGetByIndex<T>(
 }
 
 /** DB 전체 크기 추정 (bytes) */
-export async function idbEstimateSize(): Promise<{ usage: number; quota: number }> {
+export async function idbEstimateSize(): Promise<{
+  usage: number;
+  quota: number;
+}> {
   if (navigator.storage && navigator.storage.estimate) {
     const est = await navigator.storage.estimate();
     return { usage: est.usage || 0, quota: est.quota || 0 };

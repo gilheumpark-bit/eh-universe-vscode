@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { Search, ChevronRight } from "lucide-react";
 
 // ============================================================
@@ -97,7 +103,9 @@ export default function CommandPalette({
 }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set(),
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -159,7 +167,7 @@ export default function CommandPalette({
   // -- Clamp active index when list changes --
   useEffect(() => {
     setActiveIndex((prev) =>
-      flatList.length === 0 ? 0 : Math.min(prev, flatList.length - 1)
+      flatList.length === 0 ? 0 : Math.min(prev, flatList.length - 1),
     );
   }, [flatList]);
 
@@ -176,7 +184,7 @@ export default function CommandPalette({
       onExecute(cmd.id);
       onClose();
     },
-    [onExecute, onClose]
+    [onExecute, onClose],
   );
 
   // -- Keyboard handler --
@@ -185,15 +193,11 @@ export default function CommandPalette({
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setActiveIndex((prev) =>
-            prev < flatList.length - 1 ? prev + 1 : 0
-          );
+          setActiveIndex((prev) => (prev < flatList.length - 1 ? prev + 1 : 0));
           break;
         case "ArrowUp":
           e.preventDefault();
-          setActiveIndex((prev) =>
-            prev > 0 ? prev - 1 : flatList.length - 1
-          );
+          setActiveIndex((prev) => (prev > 0 ? prev - 1 : flatList.length - 1));
           break;
         case "Enter":
           e.preventDefault();
@@ -205,7 +209,7 @@ export default function CommandPalette({
           break;
       }
     },
-    [flatList, activeIndex, execute, onClose]
+    [flatList, activeIndex, execute, onClose],
   );
 
   if (!open) return null;
@@ -275,61 +279,66 @@ export default function CommandPalette({
                   className="flex w-full items-center gap-1.5 px-3 pb-1 pt-2 hover:bg-white/[0.03] transition-colors cursor-pointer"
                   aria-expanded={!collapsedGroups.has(category)}
                 >
-                  <ChevronRight className={`h-3 w-3 text-text-tertiary transition-transform duration-150 ${collapsedGroups.has(category) ? "" : "rotate-90"}`} />
+                  <ChevronRight
+                    className={`h-3 w-3 text-text-tertiary transition-transform duration-150 ${collapsedGroups.has(category) ? "" : "rotate-90"}`}
+                  />
                   <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">
                     {category}
                   </span>
-                  <span className="ml-auto font-mono text-[9px] text-text-tertiary/50">{cmds.length}</span>
+                  <span className="ml-auto font-mono text-[9px] text-text-tertiary/50">
+                    {cmds.length}
+                  </span>
                 </button>
 
                 {/* Command items — hidden when collapsed */}
-                {!collapsedGroups.has(category) && cmds.map((cmd) => {
-                  renderIndex++;
-                  const isActive = renderIndex === activeIndex;
+                {!collapsedGroups.has(category) &&
+                  cmds.map((cmd) => {
+                    renderIndex++;
+                    const isActive = renderIndex === activeIndex;
 
-                  return (
-                    <div
-                      key={cmd.id}
-                      role="option"
-                      aria-selected={isActive}
-                      data-active={isActive}
-                      className={`mx-1 flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 transition-colors ${
-                        isActive
-                          ? "bg-accent-green/12 text-text-primary"
-                          : "text-text-secondary hover:bg-white/[0.04]"
-                      }`}
-                      onClick={() => execute(cmd)}
-                      onMouseEnter={() =>
-                        setActiveIndex(
-                          flatList.findIndex((c) => c.id === cmd.id)
-                        )
-                      }
-                    >
-                      {/* Icon */}
-                      {cmd.icon && (
-                        <span
-                          className={`flex h-4 w-4 shrink-0 items-center justify-center ${
-                            isActive
-                              ? "text-accent-green"
-                              : "text-text-tertiary"
-                          }`}
-                        >
-                          {cmd.icon}
+                    return (
+                      <div
+                        key={cmd.id}
+                        role="option"
+                        aria-selected={isActive}
+                        data-active={isActive}
+                        className={`mx-1 flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 transition-colors ${
+                          isActive
+                            ? "bg-accent-green/12 text-text-primary"
+                            : "text-text-secondary hover:bg-white/[0.04]"
+                        }`}
+                        onClick={() => execute(cmd)}
+                        onMouseEnter={() =>
+                          setActiveIndex(
+                            flatList.findIndex((c) => c.id === cmd.id),
+                          )
+                        }
+                      >
+                        {/* Icon */}
+                        {cmd.icon && (
+                          <span
+                            className={`flex h-4 w-4 shrink-0 items-center justify-center ${
+                              isActive
+                                ? "text-accent-green"
+                                : "text-text-tertiary"
+                            }`}
+                          >
+                            {cmd.icon}
+                          </span>
+                        )}
+
+                        {/* Label */}
+                        <span className="truncate font-mono text-[12px]">
+                          {cmd.label}
                         </span>
-                      )}
 
-                      {/* Label */}
-                      <span className="truncate font-mono text-[12px]">
-                        {cmd.label}
-                      </span>
-
-                      {/* Shortcut badge */}
-                      {cmd.shortcut && (
-                        <ShortcutBadge shortcut={cmd.shortcut} />
-                      )}
-                    </div>
-                  );
-                })}
+                        {/* Shortcut badge */}
+                        {cmd.shortcut && (
+                          <ShortcutBadge shortcut={cmd.shortcut} />
+                        )}
+                      </div>
+                    );
+                  })}
               </div>
             ))
           )}

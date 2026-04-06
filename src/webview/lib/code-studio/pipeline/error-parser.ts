@@ -3,8 +3,13 @@
 // ============================================================
 // TypeScript 컴파일러 에러, ESLint 에러, 런타임 에러를 구조화된 포맷으로 파싱.
 
-export type ErrorSource = 'typescript' | 'eslint' | 'runtime' | 'build' | 'unknown';
-export type ErrorSeverity = 'error' | 'warning' | 'info';
+export type ErrorSource =
+  | "typescript"
+  | "eslint"
+  | "runtime"
+  | "build"
+  | "unknown";
+export type ErrorSeverity = "error" | "warning" | "info";
 
 export interface ParsedError {
   source: ErrorSource;
@@ -26,13 +31,13 @@ const TS_WARNING_REGEX = /^(.+?)\((\d+),(\d+)\):\s+warning\s+(TS\d+):\s+(.+)$/;
 
 function parseTypeScriptErrors(output: string): ParsedError[] {
   const errors: ParsedError[] = [];
-  for (const line of output.split('\n')) {
+  for (const line of output.split("\n")) {
     const trimmed = line.trim();
     const errMatch = trimmed.match(TS_ERROR_REGEX);
     if (errMatch) {
       errors.push({
-        source: 'typescript',
-        severity: 'error',
+        source: "typescript",
+        severity: "error",
         file: errMatch[1],
         line: parseInt(errMatch[2], 10),
         column: parseInt(errMatch[3], 10),
@@ -45,8 +50,8 @@ function parseTypeScriptErrors(output: string): ParsedError[] {
     const warnMatch = trimmed.match(TS_WARNING_REGEX);
     if (warnMatch) {
       errors.push({
-        source: 'typescript',
-        severity: 'warning',
+        source: "typescript",
+        severity: "warning",
         file: warnMatch[1],
         line: parseInt(warnMatch[2], 10),
         column: parseInt(warnMatch[3], 10),
@@ -70,9 +75,9 @@ const ESLINT_FILE_REGEX = /^([/\\].+|[A-Z]:\\.+)$/;
 
 function parseESLintErrors(output: string): ParsedError[] {
   const errors: ParsedError[] = [];
-  let currentFile = '';
+  let currentFile = "";
 
-  for (const line of output.split('\n')) {
+  for (const line of output.split("\n")) {
     const trimmed = line.trim();
 
     if (ESLINT_FILE_REGEX.test(trimmed)) {
@@ -83,8 +88,8 @@ function parseESLintErrors(output: string): ParsedError[] {
     const match = trimmed.match(ESLINT_REGEX);
     if (match && currentFile) {
       errors.push({
-        source: 'eslint',
-        severity: match[3] === 'error' ? 'error' : 'warning',
+        source: "eslint",
+        severity: match[3] === "error" ? "error" : "warning",
         file: currentFile,
         line: parseInt(match[1], 10),
         column: parseInt(match[2], 10),
@@ -103,13 +108,13 @@ const RUNTIME_ERROR_REGEX = /^(\w*Error):\s+(.+)$/;
 
 function parseRuntimeErrors(output: string): ParsedError[] {
   const errors: ParsedError[] = [];
-  const lines = output.split('\n');
+  const lines = output.split("\n");
 
   for (let i = 0; i < lines.length; i++) {
     const errorMatch = lines[i].match(RUNTIME_ERROR_REGEX);
     if (errorMatch) {
       // Look for first stack frame
-      let file = 'unknown';
+      let file = "unknown";
       let line = 0;
       let column = 0;
 
@@ -124,14 +129,14 @@ function parseRuntimeErrors(output: string): ParsedError[] {
       }
 
       errors.push({
-        source: 'runtime',
-        severity: 'error',
+        source: "runtime",
+        severity: "error",
         file,
         line,
         column,
         code: errorMatch[1],
         message: errorMatch[2],
-        raw: lines.slice(i, Math.min(i + 5, lines.length)).join('\n'),
+        raw: lines.slice(i, Math.min(i + 5, lines.length)).join("\n"),
       });
     }
   }
@@ -156,7 +161,7 @@ export function parseErrors(output: string): ParsedError[] {
 
   // Deduplicate by file+line+message
   const seen = new Set<string>();
-  return errors.filter(e => {
+  return errors.filter((e) => {
     const key = `${e.file}:${e.line}:${e.message}`;
     if (seen.has(key)) return false;
     seen.add(key);
@@ -165,17 +170,26 @@ export function parseErrors(output: string): ParsedError[] {
 }
 
 /** Parse with explicit source hint */
-export function parseErrorsWithSource(output: string, source: ErrorSource): ParsedError[] {
+export function parseErrorsWithSource(
+  output: string,
+  source: ErrorSource,
+): ParsedError[] {
   switch (source) {
-    case 'typescript': return parseTypeScriptErrors(output);
-    case 'eslint': return parseESLintErrors(output);
-    case 'runtime': return parseRuntimeErrors(output);
-    default: return parseErrors(output);
+    case "typescript":
+      return parseTypeScriptErrors(output);
+    case "eslint":
+      return parseESLintErrors(output);
+    case "runtime":
+      return parseRuntimeErrors(output);
+    default:
+      return parseErrors(output);
   }
 }
 
 /** Group errors by file */
-export function groupErrorsByFile(errors: ParsedError[]): Map<string, ParsedError[]> {
+export function groupErrorsByFile(
+  errors: ParsedError[],
+): Map<string, ParsedError[]> {
   const grouped = new Map<string, ParsedError[]>();
   for (const err of errors) {
     const list = grouped.get(err.file) ?? [];
@@ -186,11 +200,17 @@ export function groupErrorsByFile(errors: ParsedError[]): Map<string, ParsedErro
 }
 
 /** Get error/warning counts */
-export function errorSummary(errors: ParsedError[]): { errors: number; warnings: number; info: number } {
-  let e = 0, w = 0, inf = 0;
+export function errorSummary(errors: ParsedError[]): {
+  errors: number;
+  warnings: number;
+  info: number;
+} {
+  let e = 0,
+    w = 0,
+    inf = 0;
   for (const err of errors) {
-    if (err.severity === 'error') e++;
-    else if (err.severity === 'warning') w++;
+    if (err.severity === "error") e++;
+    else if (err.severity === "warning") w++;
     else inf++;
   }
   return { errors: e, warnings: w, info: inf };

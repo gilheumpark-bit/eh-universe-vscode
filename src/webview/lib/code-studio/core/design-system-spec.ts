@@ -336,7 +336,7 @@ export const ANTIPATTERNS = `
  * Do NOT inject into all agents — only UI pipeline.
  */
 export const DESIGN_SYSTEM_SPEC = [
-  '## Design System Spec v8.0 (Hybrid) — Project-Aligned UI Rules (mandatory)\n',
+  "## Design System Spec v8.0 (Hybrid) — Project-Aligned UI Rules (mandatory)\n",
   WCAG_LUMINANCE_LOOKUP,
   BRAND_COLOR_CORRECTION,
   DESIGN_TOKENS,
@@ -345,7 +345,7 @@ export const DESIGN_SYSTEM_SPEC = [
   MOTION_RULES,
   COMPONENT_STATE_MATRIX,
   ANTIPATTERNS,
-].join('\n\n');
+].join("\n\n");
 
 // ============================================================
 // PART 10 — Compact Spec (for non-primary-UI agents)
@@ -407,7 +407,8 @@ export const DESIGN_SYSTEM_COMPACT = `
 /**
  * Minimal design instruction (~100 tokens) for fallback/generic prompts.
  */
-export const DESIGN_SYSTEM_MINIMAL = `When generating UI code: use project semantic token classes (bg-bg-primary, text-text-primary, border-border, accent-*). Reuse existing component classes (.premium-button, .ds-card, .ds-input, .badge-*) instead of building from scratch. Use lucide-react icons. Min touch target 44px. No raw Tailwind colors (bg-blue-500 etc). No outline:none (global focus-visible handles it).`.trim();
+export const DESIGN_SYSTEM_MINIMAL =
+  `When generating UI code: use project semantic token classes (bg-bg-primary, text-text-primary, border-border, accent-*). Reuse existing component classes (.premium-button, .ds-card, .ds-input, .badge-*) instead of building from scratch. Use lucide-react icons. Min touch target 44px. No raw Tailwind colors (bg-blue-500 etc). No outline:none (global focus-visible handles it).`.trim();
 
 // IDENTITY_SEAL: PART-10 | role=compact-minimal-specs | inputs=none | outputs=DESIGN_SYSTEM_COMPACT,DESIGN_SYSTEM_MINIMAL
 

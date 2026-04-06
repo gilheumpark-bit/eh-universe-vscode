@@ -15,20 +15,48 @@ interface KeywordRule {
 
 const SCALE_RULES: readonly KeywordRule[] = [
   // 은밀/우회
-  { pattern: /몰래|비밀|우회|백도어|뒷문/g, weight: 0.25, cap: 2, label: "STEALTH_KW" },
-  { pattern: /ignore\s*(all\s*)?rules/gi, weight: 0.9, cap: 1, label: "RULE_IGNORE" },
-  { pattern: /override\s*safety/gi, weight: 0.8, cap: 1, label: "SAFETY_OVERRIDE" },
-  { pattern: /jailbreak|bypass|escaped/gi, weight: 0.7, cap: 2, label: "BYPASS_EN" },
-  
+  {
+    pattern: /몰래|비밀|우회|백도어|뒷문/g,
+    weight: 0.25,
+    cap: 2,
+    label: "STEALTH_KW",
+  },
+  {
+    pattern: /ignore\s*(all\s*)?rules/gi,
+    weight: 0.9,
+    cap: 1,
+    label: "RULE_IGNORE",
+  },
+  {
+    pattern: /override\s*safety/gi,
+    weight: 0.8,
+    cap: 1,
+    label: "SAFETY_OVERRIDE",
+  },
+  {
+    pattern: /jailbreak|bypass|escaped/gi,
+    weight: 0.7,
+    cap: 2,
+    label: "BYPASS_EN",
+  },
+
   // 특수 기호 활용 우회 (예: ⓐⓓⓜⓘⓝ)
   { pattern: /[ⓐ-ⓩⓀ-Ⓩ]/g, weight: 0.5, cap: 1, label: "DECO_OBFUSCATION" },
-  { pattern: /([a-zA-Z\s])\1{3,}/g, weight: 0.3, cap: 1, label: "REPETITION_OBFUSCATION" }
+  {
+    pattern: /([a-zA-Z\s])\1{3,}/g,
+    weight: 0.3,
+    cap: 1,
+    label: "REPETITION_OBFUSCATION",
+  },
 ] as const;
 
-const TH_VETO = 0.80;
+const TH_VETO = 0.8;
 const TH_HOLD = 0.35;
 
-function evaluatePatterns(text: string, rules: readonly KeywordRule[]): { score: number; reasons: string[] } {
+function evaluatePatterns(
+  text: string,
+  rules: readonly KeywordRule[],
+): { score: number; reasons: string[] } {
   let score = 0;
   const reasons: string[] = [];
 

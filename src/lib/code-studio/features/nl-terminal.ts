@@ -48,18 +48,27 @@ function extractTerminalId(input: string): number | null {
 const PATTERNS: PatternRule[] = [
   // ── Direct shell passthrough: user typed an actual command ──
   {
-    pattern: /^(npm\s+\S+.*|npx\s+\S+.*|yarn\s+\S+.*|pnpm\s+\S+.*|node\s+\S+.*|git\s+\S+.*|cd\s+\S+.*|mkdir\s+\S+.*|rm\s+\S+.*|ls\b.*|cat\s+\S+.*|echo\s+.*)$/i,
+    pattern:
+      /^(npm\s+\S+.*|npx\s+\S+.*|yarn\s+\S+.*|pnpm\s+\S+.*|node\s+\S+.*|git\s+\S+.*|cd\s+\S+.*|mkdir\s+\S+.*|rm\s+\S+.*|ls\b.*|cat\s+\S+.*|echo\s+.*)$/i,
     build: (m) => ({ type: "shell", terminalId: null, command: m[1].trim() }),
   },
 
   // ── Korean: npm 설치 ──
   {
     pattern: /npm\s*설치(?:해줘|해|하자|좀)?\s+(.+)/i,
-    build: (m) => ({ type: "shell", terminalId: null, command: `npm install ${m[1].trim()}` }),
+    build: (m) => ({
+      type: "shell",
+      terminalId: null,
+      command: `npm install ${m[1].trim()}`,
+    }),
   },
   {
     pattern: /(.+?)\s*설치(?:해줘|해|하자|좀)?$/i,
-    build: (m) => ({ type: "shell", terminalId: null, command: `npm install ${m[1].trim()}` }),
+    build: (m) => ({
+      type: "shell",
+      terminalId: null,
+      command: `npm install ${m[1].trim()}`,
+    }),
   },
 
   // ── Korean: 서버/빌드/테스트 ──
@@ -73,7 +82,11 @@ const PATTERNS: PatternRule[] = [
   },
   {
     pattern: /빌드\s*(?:해|하자|해줘|돌려|실행)?/i,
-    build: () => ({ type: "shell", terminalId: null, command: "npm run build" }),
+    build: () => ({
+      type: "shell",
+      terminalId: null,
+      command: "npm run build",
+    }),
   },
   {
     pattern: /테스트\s*(?:해|하자|해줘|돌려|실행)?/i,
@@ -85,7 +98,11 @@ const PATTERNS: PatternRule[] = [
   },
   {
     pattern: /포맷\s*(?:해|하자|해줘|돌려|실행)?/i,
-    build: () => ({ type: "shell", terminalId: null, command: "npm run format" }),
+    build: () => ({
+      type: "shell",
+      terminalId: null,
+      command: "npm run format",
+    }),
   },
 
   // ── English: run/start/stop ──
@@ -99,7 +116,11 @@ const PATTERNS: PatternRule[] = [
   },
   {
     pattern: /^build(?:\s+(?:the\s+)?project)?$/i,
-    build: () => ({ type: "shell", terminalId: null, command: "npm run build" }),
+    build: () => ({
+      type: "shell",
+      terminalId: null,
+      command: "npm run build",
+    }),
   },
   {
     pattern: /^(?:run\s+)?tests?$/i,
@@ -113,7 +134,11 @@ const PATTERNS: PatternRule[] = [
   // ── English: install ──
   {
     pattern: /^install\s+(.+)/i,
-    build: (m) => ({ type: "shell", terminalId: null, command: `npm install ${m[1].trim()}` }),
+    build: (m) => ({
+      type: "shell",
+      terminalId: null,
+      command: `npm install ${m[1].trim()}`,
+    }),
   },
 
   // ── English: list files ──
@@ -129,25 +154,45 @@ const PATTERNS: PatternRule[] = [
   // ── File actions ──
   {
     pattern: /^create\s+(?:a\s+)?(?:new\s+)?file\s+(?:called\s+)?(.+)/i,
-    build: (m) => ({ type: "action", action: "createFile", params: { name: m[1].trim() } }),
+    build: (m) => ({
+      type: "action",
+      action: "createFile",
+      params: { name: m[1].trim() },
+    }),
   },
   {
     pattern: /^(?:새\s*)?파일\s*(?:만들어|생성)(?:줘)?\s+(.+)/i,
-    build: (m) => ({ type: "action", action: "createFile", params: { name: m[1].trim() } }),
+    build: (m) => ({
+      type: "action",
+      action: "createFile",
+      params: { name: m[1].trim() },
+    }),
   },
   {
     pattern: /^(.+?)\s*파일\s*(?:만들어|생성)(?:줘)?$/i,
-    build: (m) => ({ type: "action", action: "createFile", params: { name: m[1].trim() } }),
+    build: (m) => ({
+      type: "action",
+      action: "createFile",
+      params: { name: m[1].trim() },
+    }),
   },
 
   // ── Delete file ──
   {
     pattern: /^delete\s+(?:the\s+)?file\s+(.+)/i,
-    build: (m) => ({ type: "action", action: "deleteFile", params: { name: m[1].trim() } }),
+    build: (m) => ({
+      type: "action",
+      action: "deleteFile",
+      params: { name: m[1].trim() },
+    }),
   },
   {
     pattern: /^(.+?)\s*파일\s*(?:삭제|지워)(?:줘)?$/i,
-    build: (m) => ({ type: "action", action: "deleteFile", params: { name: m[1].trim() } }),
+    build: (m) => ({
+      type: "action",
+      action: "deleteFile",
+      params: { name: m[1].trim() },
+    }),
   },
 ];
 
@@ -182,7 +227,10 @@ export function parseNLCommand(input: string): NLCommandResult {
     cleaned = cleaned.replace(re, "").trim();
   }
   // Remove Korean postpositions left over: 에서, 에, 에다
-  cleaned = cleaned.replace(/^에서\s*/, "").replace(/^에\s*/, "").trim();
+  cleaned = cleaned
+    .replace(/^에서\s*/, "")
+    .replace(/^에\s*/, "")
+    .trim();
 
   // Try each pattern
   for (const rule of PATTERNS) {

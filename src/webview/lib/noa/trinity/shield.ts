@@ -15,24 +15,57 @@ interface KeywordRule {
 
 const SHIELD_RULES: readonly KeywordRule[] = [
   // P0: Code/System Injection
-  { pattern: /<script.*?>.*?<\/script>/gi, weight: 0.8, cap: 1, label: "XSS_INJECTION" },
-  { pattern: /OR\s+['"]?\d+['"]?\s*=\s*['"]?\d+/gi, weight: 0.9, label: "SQL_INJECTION", cap: 1 },
-  { pattern: /(eval|system|exec|spawn)\s*\(.*?\)/gi, weight: 0.7, label: "RCE_PATTERN", cap: 1 },
+  {
+    pattern: /<script.*?>.*?<\/script>/gi,
+    weight: 0.8,
+    cap: 1,
+    label: "XSS_INJECTION",
+  },
+  {
+    pattern: /OR\s+['"]?\d+['"]?\s*=\s*['"]?\d+/gi,
+    weight: 0.9,
+    label: "SQL_INJECTION",
+    cap: 1,
+  },
+  {
+    pattern: /(eval|system|exec|spawn)\s*\(.*?\)/gi,
+    weight: 0.7,
+    label: "RCE_PATTERN",
+    cap: 1,
+  },
   { pattern: /javascript:/gi, weight: 0.5, label: "JS_PROTOCOL", cap: 2 },
-  
+
   // P1: Direct Attack Keywords
-  { pattern: /해킹|침투|탈취|공격|무기/g, weight: 0.25, cap: 2, label: "ATTACK_KW" },
-  { pattern: /exploit|injection|bypass|root|admin/gi, weight: 0.25, cap: 2, label: "EXPL_KW" },
-  
+  {
+    pattern: /해킹|침투|탈취|공격|무기/g,
+    weight: 0.25,
+    cap: 2,
+    label: "ATTACK_KW",
+  },
+  {
+    pattern: /exploit|injection|bypass|root|admin/gi,
+    weight: 0.25,
+    cap: 2,
+    label: "EXPL_KW",
+  },
+
   // P2: Data Leak Patterns
   { pattern: /\d{3}-\d{3,4}-\d{4}/g, weight: 0.6, label: "PII_PHONE", cap: 1 },
-  { pattern: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, weight: 0.5, label: "PII_EMAIL", cap: 1 }
+  {
+    pattern: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+    weight: 0.5,
+    label: "PII_EMAIL",
+    cap: 1,
+  },
 ] as const;
 
 const TH_VETO = 0.85;
-const TH_HOLD = 0.40;
+const TH_HOLD = 0.4;
 
-function evaluatePatterns(text: string, rules: readonly KeywordRule[]): { score: number; reasons: string[] } {
+function evaluatePatterns(
+  text: string,
+  rules: readonly KeywordRule[],
+): { score: number; reasons: string[] } {
   let score = 0;
   const reasons: string[] = [];
 

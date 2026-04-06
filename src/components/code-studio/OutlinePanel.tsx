@@ -29,14 +29,14 @@ export type { OutlinePanelProps };
 // ============================================================
 
 const KIND_META: Record<string, { abbr: string; color: string }> = {
-  function: { abbr: "fn", color: "#7c9cf5" },   // blue
-  class:    { abbr: "C",  color: "#f5c542" },    // yellow
-  interface:{ abbr: "I",  color: "#4ade80" },     // green
-  type:     { abbr: "T",  color: "#c084fc" },     // purple
-  const:    { abbr: "c",  color: "#7c9cf5" },     // blue
-  enum:     { abbr: "E",  color: "#f5c542" },     // yellow
-  method:   { abbr: "m",  color: "#7c9cf5" },     // blue
-  property: { abbr: "p",  color: "#9ca3af" },     // gray
+  function: { abbr: "fn", color: "#7c9cf5" }, // blue
+  class: { abbr: "C", color: "#f5c542" }, // yellow
+  interface: { abbr: "I", color: "#4ade80" }, // green
+  type: { abbr: "T", color: "#c084fc" }, // purple
+  const: { abbr: "c", color: "#7c9cf5" }, // blue
+  enum: { abbr: "E", color: "#f5c542" }, // yellow
+  method: { abbr: "m", color: "#7c9cf5" }, // blue
+  property: { abbr: "p", color: "#9ca3af" }, // gray
 };
 
 // IDENTITY_SEAL: PART-2 | role=SymbolMeta | inputs=none | outputs=KIND_META
@@ -54,14 +54,25 @@ function extractSymbols(code: string): OutlineSymbol[] {
     const trimmed = lines[i].trim();
 
     // Skip comments
-    if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*")) {
+    if (
+      trimmed.startsWith("//") ||
+      trimmed.startsWith("*") ||
+      trimmed.startsWith("/*")
+    ) {
       continue;
     }
 
     // Class
-    const classMatch = trimmed.match(/(?:export\s+)?(?:abstract\s+)?class\s+(\w+)/);
+    const classMatch = trimmed.match(
+      /(?:export\s+)?(?:abstract\s+)?class\s+(\w+)/,
+    );
     if (classMatch) {
-      currentClass = { name: classMatch[1], kind: "class", line: i + 1, children: [] };
+      currentClass = {
+        name: classMatch[1],
+        kind: "class",
+        line: i + 1,
+        children: [],
+      };
       symbols.push(currentClass);
       continue;
     }
@@ -88,14 +99,18 @@ function extractSymbols(code: string): OutlineSymbol[] {
     }
 
     // Top-level function
-    const funcMatch = trimmed.match(/(?:export\s+)?(?:async\s+)?function\s+(\w+)/);
+    const funcMatch = trimmed.match(
+      /(?:export\s+)?(?:async\s+)?function\s+(\w+)/,
+    );
     if (funcMatch && !currentClass) {
       symbols.push({ name: funcMatch[1], kind: "function", line: i + 1 });
       continue;
     }
 
     // Arrow function (top-level const)
-    const arrowMatch = trimmed.match(/(?:export\s+)?const\s+(\w+)\s*=\s*(?:async\s*)?\(/);
+    const arrowMatch = trimmed.match(
+      /(?:export\s+)?const\s+(\w+)\s*=\s*(?:async\s*)?\(/,
+    );
     if (arrowMatch && !currentClass) {
       symbols.push({ name: arrowMatch[1], kind: "const", line: i + 1 });
       continue;
@@ -111,7 +126,11 @@ function extractSymbols(code: string): OutlineSymbol[] {
         methodMatch[1] !== "while" &&
         methodMatch[1] !== "switch"
       ) {
-        currentClass.children?.push({ name: methodMatch[1], kind: "method", line: i + 1 });
+        currentClass.children?.push({
+          name: methodMatch[1],
+          kind: "method",
+          line: i + 1,
+        });
       }
       // End of class heuristic
       if (/^\}/.test(trimmed)) currentClass = null;
@@ -157,9 +176,15 @@ function SymbolRow({
       >
         {hasChildren ? (
           expanded ? (
-            <ChevronDown size={10} className="text-text-secondary flex-shrink-0" />
+            <ChevronDown
+              size={10}
+              className="text-text-secondary flex-shrink-0"
+            />
           ) : (
-            <ChevronRight size={10} className="text-text-secondary flex-shrink-0" />
+            <ChevronRight
+              size={10}
+              className="text-text-secondary flex-shrink-0"
+            />
           )
         ) : (
           <span className="w-2.5 flex-shrink-0" />
@@ -202,7 +227,11 @@ function SymbolRow({
 // PART 5 — OutlinePanel Component
 // ============================================================
 
-export function OutlinePanel({ code, language: _language, onNavigate }: OutlinePanelProps) {
+export function OutlinePanel({
+  code,
+  language: _language,
+  onNavigate,
+}: OutlinePanelProps) {
   const symbols = useMemo(() => extractSymbols(code), [code]);
   const [allCollapsed, setAllCollapsed] = useState(false);
 

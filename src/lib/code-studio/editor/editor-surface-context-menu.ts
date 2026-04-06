@@ -7,7 +7,10 @@ import type * as Monaco from "monaco-editor";
 
 export function attachEditorSurfaceContextMenu(
   editor: Monaco.editor.IStandaloneCodeEditor,
-  onOpen: (pos: { x: number; y: number }, target: Monaco.editor.IStandaloneCodeEditor) => void,
+  onOpen: (
+    pos: { x: number; y: number },
+    target: Monaco.editor.IStandaloneCodeEditor,
+  ) => void,
 ): Monaco.IDisposable {
   return editor.onContextMenu((e) => {
     e.event.preventDefault();

@@ -4,7 +4,13 @@
 // 브라우저 IDE 환경에서 배포 시뮬레이션 UI를 제공합니다.
 // WebContainer 연동 시 실제 빌드/배포로 전환 가능.
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+} from "react";
 import {
   Upload,
   Download,
@@ -98,7 +104,7 @@ type Labels = (typeof LABELS)[keyof typeof LABELS];
 
 function flattenFilesWithPath(
   nodes: FileNode[],
-  prefix: string = ""
+  prefix: string = "",
 ): { path: string; content: string }[] {
   const result: { path: string; content: string }[] = [];
   for (const node of nodes) {
@@ -230,7 +236,11 @@ interface DeploySimulationProps {
   onDeployComplete: (record: DeployRecord) => void;
 }
 
-function DeploySimulation({ files, t, onDeployComplete }: DeploySimulationProps) {
+function DeploySimulation({
+  files,
+  t,
+  onDeployComplete,
+}: DeploySimulationProps) {
   const [steps, setSteps] = useState<DeployStep[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -264,12 +274,16 @@ function DeploySimulation({ files, t, onDeployComplete }: DeploySimulationProps)
       });
 
       timerRef.current = setTimeout(() => {
-        const hasError = currentIndex === t.steps.length - 1 && Math.random() < 0.1;
+        const hasError =
+          currentIndex === t.steps.length - 1 && Math.random() < 0.1;
 
         setSteps((prev) => {
           const next = prev.map((s, i) => {
             if (i === currentIndex) {
-              return { ...s, status: hasError ? ("error" as const) : ("done" as const) };
+              return {
+                ...s,
+                status: hasError ? ("error" as const) : ("done" as const),
+              };
             }
             return s;
           });
@@ -335,10 +349,16 @@ function DeploySimulation({ files, t, onDeployComplete }: DeploySimulationProps)
                   <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-border/40" />
                 )}
                 {step.status === "running" && (
-                  <Loader2 size={14} className="shrink-0 animate-spin text-accent-amber" />
+                  <Loader2
+                    size={14}
+                    className="shrink-0 animate-spin text-accent-amber"
+                  />
                 )}
                 {step.status === "done" && (
-                  <CheckCircle size={14} className="shrink-0 text-accent-green" />
+                  <CheckCircle
+                    size={14}
+                    className="shrink-0 text-accent-green"
+                  />
                 )}
                 {step.status === "error" && (
                   <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-accent-red text-[9px] font-bold text-white">
@@ -448,7 +468,12 @@ export default function DeployPanel({ files, language }: DeployPanelProps) {
     });
   }, []);
 
-  const tabs: { id: TabId; label: string; icon: React.ReactNode; count?: number }[] = [
+  const tabs: {
+    id: TabId;
+    label: string;
+    icon: React.ReactNode;
+    count?: number;
+  }[] = [
     {
       id: "export",
       label: t.export,
@@ -473,7 +498,9 @@ export default function DeployPanel({ files, language }: DeployPanelProps) {
       <div className="flex items-center gap-1.5 text-[9px] text-amber-300 bg-amber-950/30 px-3 py-1 border-b border-white/[0.08]">
         <Upload size={12} className="text-amber-400 shrink-0" />
         <span className="font-medium">(시뮬레이션 / Simulated)</span>
-        <span className="text-text-tertiary ml-1">— export files or connect a real deploy target</span>
+        <span className="text-text-tertiary ml-1">
+          — export files or connect a real deploy target
+        </span>
       </div>
       {/* Tab bar */}
       <div className="flex border-b border-border/30">

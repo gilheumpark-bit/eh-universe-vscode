@@ -5,8 +5,19 @@
 // ============================================================
 
 import { useState } from "react";
-import { Cpu, ToggleLeft, ToggleRight, BarChart3, Settings } from "lucide-react";
-import { PROVIDERS, PROVIDER_LIST_UI, getApiKey, type ProviderId } from "@/lib/ai-providers";
+import {
+  Cpu,
+  ToggleLeft,
+  ToggleRight,
+  BarChart3,
+  Settings,
+} from "lucide-react";
+import {
+  PROVIDERS,
+  PROVIDER_LIST_UI,
+  getApiKey,
+  type ProviderId,
+} from "@/lib/ai-providers";
 import { useLang } from "@/lib/LangContext";
 import { L4 } from "@/lib/i18n";
 
@@ -46,16 +57,27 @@ function ProviderCard({
 
   return (
     <div className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/2 px-3 py-2">
-      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: provider.color }} />
+      <span
+        className="h-3 w-3 rounded-full"
+        style={{ backgroundColor: provider.color }}
+      />
       <div className="flex-1">
         <div className="text-sm text-white">{provider.name}</div>
         <div className="text-[10px] text-gray-500">
-          {hasKey ? L4(lang, { ko: "설정됨", en: "Configured" }) : L4(lang, { ko: "미설정", en: "Not configured" })} | {provider.capabilities.costTier}
+          {hasKey
+            ? L4(lang, { ko: "설정됨", en: "Configured" })
+            : L4(lang, { ko: "미설정", en: "Not configured" })}{" "}
+          | {provider.capabilities.costTier}
         </div>
       </div>
-      <span className={`h-2 w-2 rounded-full ${hasKey ? "bg-green-400" : "bg-gray-600"}`} />
+      <span
+        className={`h-2 w-2 rounded-full ${hasKey ? "bg-green-400" : "bg-gray-600"}`}
+      />
       {onConfigure && (
-        <button onClick={onConfigure} className="p-1 text-gray-500 hover:text-text-primary transition-colors">
+        <button
+          onClick={onConfigure}
+          className="p-1 text-gray-500 hover:text-text-primary transition-colors"
+        >
           <Settings size={12} />
         </button>
       )}
@@ -91,12 +113,17 @@ function FeatureCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-white">{feature.name}</span>
-          <span className="text-[10px] text-gray-600 uppercase">{feature.category}</span>
+          <span className="text-[10px] text-gray-600 uppercase">
+            {feature.category}
+          </span>
         </div>
-        <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">{feature.description}</p>
+        <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">
+          {feature.description}
+        </p>
         {feature.usageCount > 0 && (
           <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-gray-600">
-            <BarChart3 size={10} /> {feature.usageCount} {L4(lang, { ko: "회 사용", en: "uses" })}
+            <BarChart3 size={10} /> {feature.usageCount}{" "}
+            {L4(lang, { ko: "회 사용", en: "uses" })}
           </span>
         )}
       </div>
@@ -117,13 +144,28 @@ function FeatureCard({
 // PART 4 — Main Hub Component
 // ============================================================
 
-export default function AIHub({ features, onToggleFeature, onConfigureProvider }: AIHubProps) {
+export default function AIHub({
+  features,
+  onToggleFeature,
+  onConfigureProvider,
+}: AIHubProps) {
   const { lang } = useLang();
-  const [categoryFilter, setCategoryFilter] = useState<AIFeature["category"] | "all">("all");
+  const [categoryFilter, setCategoryFilter] = useState<
+    AIFeature["category"] | "all"
+  >("all");
 
-  const categories: Array<AIFeature["category"] | "all"> = ["all", "generation", "analysis", "automation", "security"];
+  const categories: Array<AIFeature["category"] | "all"> = [
+    "all",
+    "generation",
+    "analysis",
+    "automation",
+    "security",
+  ];
 
-  const filtered = categoryFilter === "all" ? features : features.filter((f) => f.category === categoryFilter);
+  const filtered =
+    categoryFilter === "all"
+      ? features
+      : features.filter((f) => f.category === categoryFilter);
 
   const totalEnabled = features.filter((f) => f.enabled).length;
   const totalUsage = features.reduce((s, f) => s + f.usageCount, 0);
@@ -134,23 +176,36 @@ export default function AIHub({ features, onToggleFeature, onConfigureProvider }
       <div className="border-b border-white/5 px-4 py-3">
         <div className="flex items-center gap-2 text-white">
           <Cpu size={18} />
-          <h2 className="text-lg font-semibold">{L4(lang, { ko: "AI 허브", en: "AI Hub" })}</h2>
+          <h2 className="text-lg font-semibold">
+            {L4(lang, { ko: "AI 허브", en: "AI Hub" })}
+          </h2>
         </div>
         <div className="mt-1 flex items-center gap-4 text-xs text-gray-500">
-          <span>{totalEnabled}/{features.length} {L4(lang, { ko: "개 기능 활성화됨", en: "features enabled" })}</span>
-          <span>{totalUsage} {L4(lang, { ko: "회 누적 사용", en: "total uses" })}</span>
+          <span>
+            {totalEnabled}/{features.length}{" "}
+            {L4(lang, { ko: "개 기능 활성화됨", en: "features enabled" })}
+          </span>
+          <span>
+            {totalUsage} {L4(lang, { ko: "회 누적 사용", en: "total uses" })}
+          </span>
         </div>
       </div>
 
       {/* Providers */}
       <div className="border-b border-white/5 p-4">
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">{L4(lang, { ko: "제공자", en: "Providers" })}</h3>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+          {L4(lang, { ko: "제공자", en: "Providers" })}
+        </h3>
         <div className="grid grid-cols-2 gap-2">
           {PROVIDER_LIST_UI.map((p) => (
             <ProviderCard
               key={p.id}
               providerId={p.id as ProviderId}
-              onConfigure={onConfigureProvider ? () => onConfigureProvider(p.id as ProviderId) : undefined}
+              onConfigure={
+                onConfigureProvider
+                  ? () => onConfigureProvider(p.id as ProviderId)
+                  : undefined
+              }
               lang={lang}
             />
           ))}

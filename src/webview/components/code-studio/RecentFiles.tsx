@@ -37,7 +37,11 @@ function getBaseName(fileName: string): string {
   return fileName.split("/").pop() ?? fileName;
 }
 
-export default function RecentFiles({ files, onOpen, onClear }: RecentFilesProps) {
+export default function RecentFiles({
+  files,
+  onOpen,
+  onClear,
+}: RecentFilesProps) {
   if (files.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-sm text-gray-500">
@@ -50,7 +54,9 @@ export default function RecentFiles({ files, onOpen, onClear }: RecentFilesProps
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Recent Files</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+          Recent Files
+        </span>
         <button
           onClick={onClear}
           title="Clear history"
@@ -73,7 +79,11 @@ export default function RecentFiles({ files, onOpen, onClear }: RecentFilesProps
               <FileText size={14} className={colorClass} />
               <div className="flex flex-col items-start truncate">
                 <span className="truncate">{base}</span>
-                {dir && <span className="text-[10px] text-gray-600 truncate">{dir}</span>}
+                {dir && (
+                  <span className="text-[10px] text-gray-600 truncate">
+                    {dir}
+                  </span>
+                )}
               </div>
               <span className="ml-auto whitespace-nowrap text-[10px] text-gray-600">
                 {formatRelativeTime(f.timestamp)}

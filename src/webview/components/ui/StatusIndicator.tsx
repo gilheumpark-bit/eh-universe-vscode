@@ -10,29 +10,32 @@ import { Wifi, WifiOff, HardDrive, Cpu } from "lucide-react";
 export function StatusIndicator() {
   const [isOffline, setIsOffline] = useState(false);
   const [storagePercent, setStoragePercent] = useState(0);
-  const [storageLabel, setStorageLabel] = useState('');
+  const [storageLabel, setStorageLabel] = useState("");
 
   useEffect(() => {
     const onOnline = () => setIsOffline(false);
     const onOffline = () => setIsOffline(true);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync initial online state on mount; no cascading risk
     setIsOffline(!navigator.onLine);
-    window.addEventListener('online', onOnline);
-    window.addEventListener('offline', onOffline);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
 
     // 스토리지 사용량
     if (navigator.storage?.estimate) {
-      navigator.storage.estimate().then(({ usage = 0, quota = 0 }) => {
-        const pct = quota > 0 ? Math.round((usage / quota) * 100) : 0;
-        setStoragePercent(pct);
-        const mb = (usage / 1e6).toFixed(1);
-        setStorageLabel(`${mb} MB`);
-      }).catch(() => {});
+      navigator.storage
+        .estimate()
+        .then(({ usage = 0, quota = 0 }) => {
+          const pct = quota > 0 ? Math.round((usage / quota) * 100) : 0;
+          setStoragePercent(pct);
+          const mb = (usage / 1e6).toFixed(1);
+          setStorageLabel(`${mb} MB`);
+        })
+        .catch(() => {});
     }
 
     return () => {
-      window.removeEventListener('online', onOnline);
-      window.removeEventListener('offline', onOffline);
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
     };
   }, []);
 
@@ -50,36 +53,52 @@ export function StatusIndicator() {
 }
 
 /** 소형 상태 뱃지 (헤더/사이드바에 삽입용) */
-export function StatusBadge({ showStorage = false }: { showStorage?: boolean }) {
+export function StatusBadge({
+  showStorage = false,
+}: {
+  showStorage?: boolean;
+}) {
   const [isOffline, setIsOffline] = useState(false);
-  const [storageLabel, setStorageLabel] = useState('');
+  const [storageLabel, setStorageLabel] = useState("");
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync initial online state on mount; no cascading risk
     setIsOffline(!navigator.onLine);
     const on = () => setIsOffline(false);
     const off = () => setIsOffline(true);
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
 
     if (showStorage && navigator.storage?.estimate) {
-      navigator.storage.estimate().then(({ usage = 0 }) => {
-        setStorageLabel(`${(usage / 1e6).toFixed(0)}MB`);
-      }).catch(() => {});
+      navigator.storage
+        .estimate()
+        .then(({ usage = 0 }) => {
+          setStorageLabel(`${(usage / 1e6).toFixed(0)}MB`);
+        })
+        .catch(() => {});
     }
 
-    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
   }, [showStorage]);
 
   return (
     <div className="flex items-center gap-2 text-[10px] font-mono text-text-tertiary">
       {isOffline ? (
-        <span className="flex items-center gap-1 text-accent-red"><WifiOff size={10} /> offline</span>
+        <span className="flex items-center gap-1 text-accent-red">
+          <WifiOff size={10} /> offline
+        </span>
       ) : (
-        <span className="flex items-center gap-1"><Wifi size={10} className="text-accent-green" /></span>
+        <span className="flex items-center gap-1">
+          <Wifi size={10} className="text-accent-green" />
+        </span>
       )}
       {showStorage && storageLabel && (
-        <span className="flex items-center gap-1"><HardDrive size={10} /> {storageLabel}</span>
+        <span className="flex items-center gap-1">
+          <HardDrive size={10} /> {storageLabel}
+        </span>
       )}
     </div>
   );

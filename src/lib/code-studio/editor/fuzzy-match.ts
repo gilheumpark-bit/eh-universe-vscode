@@ -46,7 +46,8 @@ export function fuzzyMatch(
       if (i === 0) score += 10;
       else {
         const prev = target[i - 1];
-        if (prev === '_' || prev === '-' || prev === '/' || prev === '.') score += 10;
+        if (prev === "_" || prev === "-" || prev === "/" || prev === ".")
+          score += 10;
         else if (/[a-z]/.test(prev) && /[A-Z]/.test(target[i])) score += 8;
       }
 
@@ -78,19 +79,25 @@ export function highlightMatches(target: string, positions: number[]): string {
   if (positions.length === 0) return target;
 
   const posSet = new Set(positions);
-  let result = '';
+  let result = "";
   let inMark = false;
 
   for (let i = 0; i < target.length; i++) {
     if (posSet.has(i)) {
-      if (!inMark) { result += '<mark>'; inMark = true; }
+      if (!inMark) {
+        result += "<mark>";
+        inMark = true;
+      }
       result += target[i];
     } else {
-      if (inMark) { result += '</mark>'; inMark = false; }
+      if (inMark) {
+        result += "</mark>";
+        inMark = false;
+      }
       result += target[i];
     }
   }
-  if (inMark) result += '</mark>';
+  if (inMark) result += "</mark>";
 
   return result;
 }

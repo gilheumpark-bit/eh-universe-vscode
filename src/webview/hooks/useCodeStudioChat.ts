@@ -8,14 +8,18 @@
 // PART 1 — Types
 // ============================================================
 
-import { useState, useCallback, useRef } from 'react';
-import { streamChat, type ChatMsg } from '@/lib/ai-providers';
-import { saveChatSession, loadChatSession, type StoredChatSession } from '@/lib/code-studio/core/store';
-import { DESIGN_SYSTEM_MINIMAL } from '@/lib/code-studio/core/design-system-spec';
+import { useState, useCallback, useRef } from "react";
+import { streamChat, type ChatMsg } from "@/lib/ai-providers";
+import {
+  saveChatSession,
+  loadChatSession,
+  type StoredChatSession,
+} from "@/lib/code-studio/core/store";
+import { DESIGN_SYSTEM_MINIMAL } from "@/lib/code-studio/core/design-system-spec";
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: number;
   mentions?: string[]; // resolved @mentions
@@ -61,7 +65,8 @@ function resolveMentions(
   resolver?: (mention: string) => string | null,
 ): { resolved: string; mentions: string[] } {
   const mentions = extractMentions(content);
-  if (!resolver || mentions.length === 0) return { resolved: content, mentions };
+  if (!resolver || mentions.length === 0)
+    return { resolved: content, mentions };
 
   let resolved = content;
   for (const m of mentions) {
@@ -84,7 +89,9 @@ function generateId(): string {
 }
 
 /** Chat hook for Code Studio: streaming AI responses, @mention resolution, session persistence, and abort support */
-export function useCodeStudioChat(options: UseCodeStudioChatOptions = {}): UseCodeStudioChatReturn {
+export function useCodeStudioChat(
+  options: UseCodeStudioChatOptions = {},
+): UseCodeStudioChatReturn {
   const {
     sessionId = `session-${Date.now()}`,
     systemInstruction = `You are an expert software engineer assistant integrated into Code Studio.\n${DESIGN_SYSTEM_MINIMAL}`,
@@ -96,81 +103,93 @@ export function useCodeStudioChat(options: UseCodeStudioChatOptions = {}): UseCo
   const [currentSessionId, setCurrentSessionId] = useState(sessionId);
   const abortRef = useRef<AbortController | null>(null);
 
-  const sendMessage = useCallback(async (content: string) => {
-    if (!content.trim() || isStreaming) return;
+  const sendMessage = useCallback(
+    async (content: string) => {
+      if (!content.trim() || isStreaming) return;
 
-    const { resolved, mentions } = resolveMentions(content, onMentionResolve);
+      const { resolved, mentions } = resolveMentions(content, onMentionResolve);
 
-    const userMsg: ChatMessage = {
-      id: generateId(),
-      role: 'user',
-      content,
-      timestamp: Date.now(),
-      mentions,
-    };
+      const userMsg: ChatMessage = {
+        id: generateId(),
+        role: "user",
+        content,
+        timestamp: Date.now(),
+        mentions,
+      };
 
-    setMessages((prev) => [...prev, userMsg]);
+      setMessages((prev) => [...prev, userMsg]);
 
-    const assistantMsg: ChatMessage = {
-      id: generateId(),
-      role: 'assistant',
-      content: '',
-      timestamp: Date.now(),
-    };
-    setMessages((prev) => [...prev, assistantMsg]);
+      const assistantMsg: ChatMessage = {
+        id: generateId(),
+        role: "assistant",
+        content: "",
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, assistantMsg]);
 
-    setIsStreaming(true);
-    const controller = new AbortController();
-    abortRef.current = controller;
+      setIsStreaming(true);
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    try {
-      const chatHistory: ChatMsg[] = messages.map((m) => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-      }));
-      chatHistory.push({ role: 'user', content: resolved });
+      try {
+        const chatHistory: ChatMsg[] = messages.map((m) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        }));
+        chatHistory.push({ role: "user", content: resolved });
 
-      await streamChat({
-        systemInstruction,
-        messages: chatHistory,
-        signal: controller.signal,
-        isChatMode: true,
-        onChunk: (chunk) => {
+        await streamChat({
+          systemInstruction,
+          messages: chatHistory,
+          signal: controller.signal,
+          isChatMode: true,
+          onChunk: (chunk) => {
+            setMessages((prev) => {
+              const last = prev[prev.length - 1];
+              if (last?.role === "assistant") {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...last, content: last.content + chunk },
+                ];
+              }
+              return prev;
+            });
+          },
+        });
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          // User aborted - mark the partial response
           setMessages((prev) => {
             const last = prev[prev.length - 1];
-            if (last?.role === 'assistant') {
-              return [...prev.slice(0, -1), { ...last, content: last.content + chunk }];
+            if (last?.role === "assistant" && !last.content) {
+              return prev.slice(0, -1); // Remove empty assistant message
             }
             return prev;
           });
-        },
-      });
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        // User aborted - mark the partial response
-        setMessages((prev) => {
-          const last = prev[prev.length - 1];
-          if (last?.role === 'assistant' && !last.content) {
-            return prev.slice(0, -1); // Remove empty assistant message
-          }
-          return prev;
-        });
-      } else {
-        setMessages((prev) => {
-          const last = prev[prev.length - 1];
-          if (last?.role === 'assistant') {
-            const errText = err instanceof Error ? err.message : 'Unknown error';
-            const appendText = last.content ? `\n\n[Error] ${errText}` : `[Error] ${errText}`;
-            return [...prev.slice(0, -1), { ...last, content: last.content + appendText }];
-          }
-          return prev;
-        });
+        } else {
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.role === "assistant") {
+              const errText =
+                err instanceof Error ? err.message : "Unknown error";
+              const appendText = last.content
+                ? `\n\n[Error] ${errText}`
+                : `[Error] ${errText}`;
+              return [
+                ...prev.slice(0, -1),
+                { ...last, content: last.content + appendText },
+              ];
+            }
+            return prev;
+          });
+        }
+      } finally {
+        setIsStreaming(false);
+        abortRef.current = null;
       }
-    } finally {
-      setIsStreaming(false);
-      abortRef.current = null;
-    }
-  }, [messages, isStreaming, systemInstruction, onMentionResolve]);
+    },
+    [messages, isStreaming, systemInstruction, onMentionResolve],
+  );
 
   const abort = useCallback(() => {
     abortRef.current?.abort();
@@ -187,7 +206,7 @@ export function useCodeStudioChat(options: UseCodeStudioChatOptions = {}): UseCo
       setMessages(
         session.messages.map((m) => ({
           id: generateId(),
-          role: m.role as 'user' | 'assistant',
+          role: m.role as "user" | "assistant",
           content: m.content,
           timestamp: m.timestamp,
         })),
@@ -198,7 +217,7 @@ export function useCodeStudioChat(options: UseCodeStudioChatOptions = {}): UseCo
   const saveSession = useCallback(async () => {
     const session: StoredChatSession = {
       id: currentSessionId,
-      title: messages[0]?.content.slice(0, 50) || 'New Chat',
+      title: messages[0]?.content.slice(0, 50) || "New Chat",
       messages: messages.map((m) => ({
         role: m.role,
         content: m.content,

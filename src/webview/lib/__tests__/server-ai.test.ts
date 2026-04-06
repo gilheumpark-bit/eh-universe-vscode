@@ -10,34 +10,34 @@
 // PART 1 — isServerProviderId (pure type guard, no env dependency)
 // ============================================================
 
-describe('isServerProviderId', () => {
-  let isServerProviderId: typeof import('@/lib/server-ai').isServerProviderId;
+describe("isServerProviderId", () => {
+  let isServerProviderId: typeof import("@/lib/server-ai").isServerProviderId;
 
   beforeAll(() => {
-    ({ isServerProviderId } = require('@/lib/server-ai'));
+    ({ isServerProviderId } = require("@/lib/server-ai"));
   });
 
   it.each([
-    'gemini',
-    'openai',
-    'claude',
-    'groq',
-    'mistral',
-    'ollama',
-    'lmstudio',
+    "gemini",
+    "openai",
+    "claude",
+    "groq",
+    "mistral",
+    "ollama",
+    "lmstudio",
   ])('returns true for valid provider "%s"', (id) => {
     expect(isServerProviderId(id)).toBe(true);
   });
 
-  it.each(['gpt4', 'anthropic', 'GEMINI', 'Ollama', '', 'unknown'])(
+  it.each(["gpt4", "anthropic", "GEMINI", "Ollama", "", "unknown"])(
     'returns false for invalid string "%s"',
     (id) => {
       expect(isServerProviderId(id)).toBe(false);
     },
   );
 
-  it.each([null, undefined, 42, true, {}, [], Symbol('gemini')])(
-    'returns false for non-string value %p',
+  it.each([null, undefined, 42, true, {}, [], Symbol("gemini")])(
+    "returns false for non-string value %p",
     (val) => {
       expect(isServerProviderId(val)).toBe(false);
     },
@@ -48,7 +48,7 @@ describe('isServerProviderId', () => {
 // PART 2 — resolveServerProviderKey
 // ============================================================
 
-describe('resolveServerProviderKey', () => {
+describe("resolveServerProviderKey", () => {
   const ENV_BACKUP = { ...process.env };
 
   afterEach(() => {
@@ -57,70 +57,72 @@ describe('resolveServerProviderKey', () => {
   });
 
   function loadModule() {
-    return require('@/lib/server-ai') as typeof import('@/lib/server-ai');
+    return require("@/lib/server-ai") as typeof import("@/lib/server-ai");
   }
 
-  it('returns client key when provided for hosted provider', () => {
-    process.env.OPENAI_API_KEY = 'env-key';
+  it("returns client key when provided for hosted provider", () => {
+    process.env.OPENAI_API_KEY = "env-key";
     const { resolveServerProviderKey } = loadModule();
-    expect(resolveServerProviderKey('openai', 'client-key')).toBe('client-key');
+    expect(resolveServerProviderKey("openai", "client-key")).toBe("client-key");
   });
 
-  it('trims whitespace from client key', () => {
+  it("trims whitespace from client key", () => {
     const { resolveServerProviderKey } = loadModule();
-    expect(resolveServerProviderKey('openai', '  my-key  ')).toBe('my-key');
+    expect(resolveServerProviderKey("openai", "  my-key  ")).toBe("my-key");
   });
 
-  it('falls back to env key when client key is empty string', () => {
-    process.env.OPENAI_API_KEY = 'env-key';
+  it("falls back to env key when client key is empty string", () => {
+    process.env.OPENAI_API_KEY = "env-key";
     const { resolveServerProviderKey } = loadModule();
-    expect(resolveServerProviderKey('openai', '')).toBe('env-key');
+    expect(resolveServerProviderKey("openai", "")).toBe("env-key");
   });
 
-  it('falls back to env key when client key is whitespace only', () => {
-    process.env.GEMINI_API_KEY = 'gem-env';
+  it("falls back to env key when client key is whitespace only", () => {
+    process.env.GEMINI_API_KEY = "gem-env";
     const { resolveServerProviderKey } = loadModule();
-    expect(resolveServerProviderKey('gemini', '   ')).toBe('gem-env');
+    expect(resolveServerProviderKey("gemini", "   ")).toBe("gem-env");
   });
 
-  it('falls back to env key when client key is undefined', () => {
-    process.env.GROQ_API_KEY = 'groq-env';
+  it("falls back to env key when client key is undefined", () => {
+    process.env.GROQ_API_KEY = "groq-env";
     const { resolveServerProviderKey } = loadModule();
-    expect(resolveServerProviderKey('groq', undefined)).toBe('groq-env');
+    expect(resolveServerProviderKey("groq", undefined)).toBe("groq-env");
   });
 
-  it('falls back to env key when client key is non-string', () => {
-    process.env.MISTRAL_API_KEY = 'mistral-env';
+  it("falls back to env key when client key is non-string", () => {
+    process.env.MISTRAL_API_KEY = "mistral-env";
     const { resolveServerProviderKey } = loadModule();
-    expect(resolveServerProviderKey('mistral', 12345)).toBe('mistral-env');
+    expect(resolveServerProviderKey("mistral", 12345)).toBe("mistral-env");
   });
 
-  it('returns undefined when neither client key nor env key exists', () => {
+  it("returns undefined when neither client key nor env key exists", () => {
     delete process.env.OPENAI_API_KEY;
     const { resolveServerProviderKey } = loadModule();
-    expect(resolveServerProviderKey('openai')).toBeUndefined();
+    expect(resolveServerProviderKey("openai")).toBeUndefined();
   });
 
-  it('ignores client key for ollama (local provider) and uses env', () => {
-    process.env.OLLAMA_API_URL = 'http://localhost:11434';
+  it("ignores client key for ollama (local provider) and uses env", () => {
+    process.env.OLLAMA_API_URL = "http://localhost:11434";
     const { resolveServerProviderKey } = loadModule();
-    expect(
-      resolveServerProviderKey('ollama', 'http://attacker.com'),
-    ).toBe('http://localhost:11434');
+    expect(resolveServerProviderKey("ollama", "http://attacker.com")).toBe(
+      "http://localhost:11434",
+    );
   });
 
-  it('ignores client key for lmstudio (local provider) and uses env', () => {
-    process.env.LMSTUDIO_API_URL = 'http://localhost:1234';
+  it("ignores client key for lmstudio (local provider) and uses env", () => {
+    process.env.LMSTUDIO_API_URL = "http://localhost:1234";
     const { resolveServerProviderKey } = loadModule();
-    expect(
-      resolveServerProviderKey('lmstudio', 'http://attacker.com'),
-    ).toBe('http://localhost:1234');
+    expect(resolveServerProviderKey("lmstudio", "http://attacker.com")).toBe(
+      "http://localhost:1234",
+    );
   });
 
-  it('returns undefined for local provider when env is not set', () => {
+  it("returns undefined for local provider when env is not set", () => {
     delete process.env.OLLAMA_API_URL;
     const { resolveServerProviderKey } = loadModule();
-    expect(resolveServerProviderKey('ollama', 'http://attacker.com')).toBeUndefined();
+    expect(
+      resolveServerProviderKey("ollama", "http://attacker.com"),
+    ).toBeUndefined();
   });
 });
 
@@ -128,7 +130,7 @@ describe('resolveServerProviderKey', () => {
 // PART 3 — hasServerProviderCredentials
 // ============================================================
 
-describe('hasServerProviderCredentials', () => {
+describe("hasServerProviderCredentials", () => {
   const ENV_BACKUP = { ...process.env };
 
   afterEach(() => {
@@ -137,32 +139,33 @@ describe('hasServerProviderCredentials', () => {
   });
 
   function loadModule() {
-    return require('@/lib/server-ai') as typeof import('@/lib/server-ai');
+    return require("@/lib/server-ai") as typeof import("@/lib/server-ai");
   }
 
-  it('returns true for Gemini when Vertex AI env is configured', () => {
+  it("returns true for Gemini when Vertex AI env is configured", () => {
     delete process.env.GEMINI_API_KEY;
-    process.env.USE_VERTEX_AI = 'true';
-    process.env.GCP_PROJECT_ID = 'eh-universe';
-    process.env.VERTEX_AI_CREDENTIALS = '{"client_email":"vertex@example.com","private_key":"test"}';
+    process.env.USE_VERTEX_AI = "true";
+    process.env.GCP_PROJECT_ID = "eh-universe";
+    process.env.VERTEX_AI_CREDENTIALS =
+      '{"client_email":"vertex@example.com","private_key":"test"}';
     const { hasServerProviderCredentials } = loadModule();
-    expect(hasServerProviderCredentials('gemini')).toBe(true);
+    expect(hasServerProviderCredentials("gemini")).toBe(true);
   });
 
-  it('returns false for Gemini when neither API key nor Vertex AI is configured', () => {
+  it("returns false for Gemini when neither API key nor Vertex AI is configured", () => {
     delete process.env.GEMINI_API_KEY;
     delete process.env.USE_VERTEX_AI;
     delete process.env.GCP_PROJECT_ID;
     delete process.env.VERTEX_AI_CREDENTIALS;
     delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
     const { hasServerProviderCredentials } = loadModule();
-    expect(hasServerProviderCredentials('gemini')).toBe(false);
+    expect(hasServerProviderCredentials("gemini")).toBe(false);
   });
 
-  it('returns true for non-Gemini providers when server env exists', () => {
-    process.env.OPENAI_API_KEY = 'openai-env';
+  it("returns true for non-Gemini providers when server env exists", () => {
+    process.env.OPENAI_API_KEY = "openai-env";
     const { hasServerProviderCredentials } = loadModule();
-    expect(hasServerProviderCredentials('openai')).toBe(true);
+    expect(hasServerProviderCredentials("openai")).toBe(true);
   });
 });
 
@@ -170,7 +173,7 @@ describe('hasServerProviderCredentials', () => {
 // PART 3 — getHostedProviderAvailability
 // ============================================================
 
-describe('getHostedProviderAvailability', () => {
+describe("getHostedProviderAvailability", () => {
   const ENV_BACKUP = { ...process.env };
 
   afterEach(() => {
@@ -179,10 +182,10 @@ describe('getHostedProviderAvailability', () => {
   });
 
   function loadModule() {
-    return require('@/lib/server-ai') as typeof import('@/lib/server-ai');
+    return require("@/lib/server-ai") as typeof import("@/lib/server-ai");
   }
 
-  it('returns all false when no env keys are set', () => {
+  it("returns all false when no env keys are set", () => {
     delete process.env.GEMINI_API_KEY;
     delete process.env.OPENAI_API_KEY;
     delete process.env.CLAUDE_API_KEY;
@@ -207,11 +210,11 @@ describe('getHostedProviderAvailability', () => {
     });
   });
 
-  it('returns true only for providers with env keys set', () => {
+  it("returns true only for providers with env keys set", () => {
     delete process.env.GEMINI_API_KEY;
-    process.env.OPENAI_API_KEY = 'ok';
+    process.env.OPENAI_API_KEY = "ok";
     delete process.env.CLAUDE_API_KEY;
-    process.env.GROQ_API_KEY = 'ok';
+    process.env.GROQ_API_KEY = "ok";
     delete process.env.MISTRAL_API_KEY;
     delete process.env.OLLAMA_API_URL;
     delete process.env.LMSTUDIO_API_URL;
@@ -230,20 +233,27 @@ describe('getHostedProviderAvailability', () => {
     expect(result.lmstudio).toBe(false);
   });
 
-  it('includes all seven provider keys in the result', () => {
+  it("includes all seven provider keys in the result", () => {
     const { getHostedProviderAvailability } = loadModule();
     const result = getHostedProviderAvailability();
     const keys = Object.keys(result).sort();
-    expect(keys).toEqual(
-      ['claude', 'gemini', 'groq', 'lmstudio', 'mistral', 'ollama', 'openai'],
-    );
+    expect(keys).toEqual([
+      "claude",
+      "gemini",
+      "groq",
+      "lmstudio",
+      "mistral",
+      "ollama",
+      "openai",
+    ]);
   });
 
-  it('marks Gemini as hosted when Vertex AI env is configured', () => {
+  it("marks Gemini as hosted when Vertex AI env is configured", () => {
     delete process.env.GEMINI_API_KEY;
-    process.env.USE_VERTEX_AI = 'true';
-    process.env.GCP_PROJECT_ID = 'eh-universe';
-    process.env.VERTEX_AI_CREDENTIALS = '{"client_email":"vertex@example.com","private_key":"test"}';
+    process.env.USE_VERTEX_AI = "true";
+    process.env.GCP_PROJECT_ID = "eh-universe";
+    process.env.VERTEX_AI_CREDENTIALS =
+      '{"client_email":"vertex@example.com","private_key":"test"}';
     const { getHostedProviderAvailability } = loadModule();
     const result = getHostedProviderAvailability();
     expect(result.gemini).toBe(true);
@@ -254,7 +264,7 @@ describe('getHostedProviderAvailability', () => {
 // PART 5 — getFirstHostedProvider
 // ============================================================
 
-describe('getFirstHostedProvider', () => {
+describe("getFirstHostedProvider", () => {
   const ENV_BACKUP = { ...process.env };
 
   afterEach(() => {
@@ -263,10 +273,10 @@ describe('getFirstHostedProvider', () => {
   });
 
   function loadModule() {
-    return require('@/lib/server-ai') as typeof import('@/lib/server-ai');
+    return require("@/lib/server-ai") as typeof import("@/lib/server-ai");
   }
 
-  it('returns null when no provider keys are set', () => {
+  it("returns null when no provider keys are set", () => {
     delete process.env.GEMINI_API_KEY;
     delete process.env.OPENAI_API_KEY;
     delete process.env.CLAUDE_API_KEY;
@@ -282,9 +292,9 @@ describe('getFirstHostedProvider', () => {
     expect(getFirstHostedProvider()).toBeNull();
   });
 
-  it('returns the first available provider (gemini is first in the list)', () => {
-    process.env.GEMINI_API_KEY = 'gk';
-    process.env.OPENAI_API_KEY = 'ok';
+  it("returns the first available provider (gemini is first in the list)", () => {
+    process.env.GEMINI_API_KEY = "gk";
+    process.env.OPENAI_API_KEY = "ok";
     delete process.env.CLAUDE_API_KEY;
     delete process.env.GROQ_API_KEY;
     delete process.env.MISTRAL_API_KEY;
@@ -295,13 +305,13 @@ describe('getFirstHostedProvider', () => {
     delete process.env.VERTEX_AI_CREDENTIALS;
     delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
     const { getFirstHostedProvider } = loadModule();
-    expect(getFirstHostedProvider()).toBe('gemini');
+    expect(getFirstHostedProvider()).toBe("gemini");
   });
 
-  it('skips unavailable providers and returns the first available one', () => {
+  it("skips unavailable providers and returns the first available one", () => {
     delete process.env.GEMINI_API_KEY;
     delete process.env.OPENAI_API_KEY;
-    process.env.CLAUDE_API_KEY = 'ck';
+    process.env.CLAUDE_API_KEY = "ck";
     delete process.env.GROQ_API_KEY;
     delete process.env.MISTRAL_API_KEY;
     delete process.env.OLLAMA_API_URL;
@@ -311,26 +321,26 @@ describe('getFirstHostedProvider', () => {
     delete process.env.VERTEX_AI_CREDENTIALS;
     delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
     const { getFirstHostedProvider } = loadModule();
-    expect(getFirstHostedProvider()).toBe('claude');
+    expect(getFirstHostedProvider()).toBe("claude");
   });
 
-  it('can return a local provider if it is the only one configured', () => {
+  it("can return a local provider if it is the only one configured", () => {
     delete process.env.GEMINI_API_KEY;
     delete process.env.OPENAI_API_KEY;
     delete process.env.CLAUDE_API_KEY;
     delete process.env.GROQ_API_KEY;
     delete process.env.MISTRAL_API_KEY;
-    process.env.OLLAMA_API_URL = 'http://localhost:11434';
+    process.env.OLLAMA_API_URL = "http://localhost:11434";
     delete process.env.LMSTUDIO_API_URL;
     delete process.env.USE_VERTEX_AI;
     delete process.env.GCP_PROJECT_ID;
     delete process.env.VERTEX_AI_CREDENTIALS;
     delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
     const { getFirstHostedProvider } = loadModule();
-    expect(getFirstHostedProvider()).toBe('ollama');
+    expect(getFirstHostedProvider()).toBe("ollama");
   });
 
-  it('returns Gemini first when Vertex AI is the only hosted config', () => {
+  it("returns Gemini first when Vertex AI is the only hosted config", () => {
     delete process.env.GEMINI_API_KEY;
     delete process.env.OPENAI_API_KEY;
     delete process.env.CLAUDE_API_KEY;
@@ -338,10 +348,11 @@ describe('getFirstHostedProvider', () => {
     delete process.env.MISTRAL_API_KEY;
     delete process.env.OLLAMA_API_URL;
     delete process.env.LMSTUDIO_API_URL;
-    process.env.USE_VERTEX_AI = 'true';
-    process.env.GCP_PROJECT_ID = 'eh-universe';
-    process.env.VERTEX_AI_CREDENTIALS = '{"client_email":"vertex@example.com","private_key":"test"}';
+    process.env.USE_VERTEX_AI = "true";
+    process.env.GCP_PROJECT_ID = "eh-universe";
+    process.env.VERTEX_AI_CREDENTIALS =
+      '{"client_email":"vertex@example.com","private_key":"test"}';
     const { getFirstHostedProvider } = loadModule();
-    expect(getFirstHostedProvider()).toBe('gemini');
+    expect(getFirstHostedProvider()).toBe("gemini");
   });
 });

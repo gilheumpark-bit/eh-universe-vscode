@@ -4,8 +4,23 @@
 // PART 1 — Imports & Types
 // ============================================================
 
-import { useState, useRef, useCallback, useEffect, type MouseEvent as ReactMouseEvent, useMemo } from "react";
-import { ZoomIn, ZoomOut, Maximize2, Download, Plus, Trash2, Move } from "lucide-react";
+import {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  type MouseEvent as ReactMouseEvent,
+  useMemo,
+} from "react";
+import {
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Download,
+  Plus,
+  Trash2,
+  Move,
+} from "lucide-react";
 import { useCodeStudioT } from "@/lib/use-code-studio-translations";
 
 export interface CanvasNode {
@@ -78,9 +93,22 @@ function ConnectionLine({
 
   return (
     <g>
-      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#4b5563" strokeWidth={1.5} markerEnd="url(#arrowhead)" />
+      <line
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke="#4b5563"
+        strokeWidth={1.5}
+        markerEnd="url(#arrowhead)"
+      />
       {label && (
-        <text x={mx} y={my - 6} textAnchor="middle" className="fill-gray-500 text-[10px]">
+        <text
+          x={mx}
+          y={my - 6}
+          textAnchor="middle"
+          className="fill-gray-500 text-[10px]"
+        >
           {label}
         </text>
       )}
@@ -151,7 +179,14 @@ function NodeBox({
         className="cursor-move"
         onMouseDown={handleMouseDown}
       />
-      <rect x={node.x} y={node.y} width={node.width} height={4} rx={2} fill={color} />
+      <rect
+        x={node.x}
+        y={node.y}
+        width={node.width}
+        height={4}
+        rx={2}
+        fill={color}
+      />
       <text
         x={node.x + node.width / 2}
         y={node.y + node.height / 2 + 4}
@@ -273,7 +308,13 @@ export default function CanvasPanel({
   const handleNodeDrag = (id: string, dx: number, dy: number) => {
     onNodesChange(
       nodes.map((n) =>
-        n.id === id ? { ...n, x: snapToGrid(n.x + dx / zoom), y: snapToGrid(n.y + dy / zoom) } : n,
+        n.id === id
+          ? {
+              ...n,
+              x: snapToGrid(n.x + dx / zoom),
+              y: snapToGrid(n.y + dy / zoom),
+            }
+          : n,
       ),
     );
   };
@@ -295,7 +336,9 @@ export default function CanvasPanel({
   const deleteSelected = () => {
     if (!selectedId) return;
     onNodesChange(nodes.filter((n) => n.id !== selectedId));
-    onConnectionsChange(connections.filter((c) => c.from !== selectedId && c.to !== selectedId));
+    onConnectionsChange(
+      connections.filter((c) => c.from !== selectedId && c.to !== selectedId),
+    );
     setSelectedId(null);
   };
 
@@ -312,38 +355,79 @@ export default function CanvasPanel({
     setContainerSize({ w: rect.width, h: rect.height });
     return () => ro.disconnect();
   }, []);
-  const viewBox = useMemo(() => ({
-    x: -offset.x / zoom,
-    y: -offset.y / zoom,
-    w: containerSize.w,
-    h: containerSize.h,
-  }), [offset.x, offset.y, zoom, containerSize]);
+  const viewBox = useMemo(
+    () => ({
+      x: -offset.x / zoom,
+      y: -offset.y / zoom,
+      w: containerSize.w,
+      h: containerSize.h,
+    }),
+    [offset.x, offset.y, zoom, containerSize],
+  );
 
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-[#12121a]">
+    <div
+      ref={containerRef}
+      className="relative h-full w-full overflow-hidden bg-[#12121a]"
+    >
       {/* Toolbar */}
       <div className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-lg border border-white/10 bg-[#1e1e2e] p-1">
-        <button onClick={() => setZoom((z) => Math.min(z + 0.2, MAX_ZOOM))} className="p-1 text-gray-400 hover:text-white" title={t.canvasZoomIn} aria-label={t.canvasZoomIn}>
+        <button
+          onClick={() => setZoom((z) => Math.min(z + 0.2, MAX_ZOOM))}
+          className="p-1 text-gray-400 hover:text-white"
+          title={t.canvasZoomIn}
+          aria-label={t.canvasZoomIn}
+        >
           <ZoomIn size={14} />
         </button>
-        <span className="px-1 text-[10px] text-gray-500">{Math.round(zoom * 100)}%</span>
-        <button onClick={() => setZoom((z) => Math.max(z - 0.2, MIN_ZOOM))} className="p-1 text-gray-400 hover:text-white" title={t.canvasZoomOut} aria-label={t.canvasZoomOut}>
+        <span className="px-1 text-[10px] text-gray-500">
+          {Math.round(zoom * 100)}%
+        </span>
+        <button
+          onClick={() => setZoom((z) => Math.max(z - 0.2, MIN_ZOOM))}
+          className="p-1 text-gray-400 hover:text-white"
+          title={t.canvasZoomOut}
+          aria-label={t.canvasZoomOut}
+        >
           <ZoomOut size={14} />
         </button>
         <div className="mx-1 h-4 w-px bg-white/10" />
-        <button onClick={() => { setZoom(1); setOffset({ x: 0, y: 0 }); }} className="p-1 text-gray-400 hover:text-white" title={t.canvasResetView} aria-label={t.canvasResetView}>
+        <button
+          onClick={() => {
+            setZoom(1);
+            setOffset({ x: 0, y: 0 });
+          }}
+          className="p-1 text-gray-400 hover:text-white"
+          title={t.canvasResetView}
+          aria-label={t.canvasResetView}
+        >
           <Maximize2 size={14} />
         </button>
-        <button onClick={addNode} className="p-1 text-gray-400 hover:text-white" title={t.canvasAddNode} aria-label={t.canvasAddNode}>
+        <button
+          onClick={addNode}
+          className="p-1 text-gray-400 hover:text-white"
+          title={t.canvasAddNode}
+          aria-label={t.canvasAddNode}
+        >
           <Plus size={14} />
         </button>
         {selectedId && (
-          <button onClick={deleteSelected} className="p-1 text-gray-400 hover:text-red-400" title={t.canvasDeleteNode} aria-label={t.canvasDeleteNode}>
+          <button
+            onClick={deleteSelected}
+            className="p-1 text-gray-400 hover:text-red-400"
+            title={t.canvasDeleteNode}
+            aria-label={t.canvasDeleteNode}
+          >
             <Trash2 size={14} />
           </button>
         )}
         {onExportImage && (
-          <button onClick={onExportImage} className="p-1 text-gray-400 hover:text-white" title={t.canvasExportImage} aria-label={t.canvasExportImage}>
+          <button
+            onClick={onExportImage}
+            className="p-1 text-gray-400 hover:text-white"
+            title={t.canvasExportImage}
+            aria-label={t.canvasExportImage}
+          >
             <Download size={14} />
           </button>
         )}
@@ -358,18 +442,37 @@ export default function CanvasPanel({
         style={{ cursor: isPanning ? "grabbing" : "default" }}
       >
         <defs>
-          <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <marker
+            id="arrowhead"
+            markerWidth="8"
+            markerHeight="6"
+            refX="8"
+            refY="3"
+            orient="auto"
+          >
             <polygon points="0 0, 8 3, 0 6" fill="#4b5563" />
           </marker>
-          <pattern id="grid" width={GRID_SIZE * zoom} height={GRID_SIZE * zoom} patternUnits="userSpaceOnUse"
-            x={offset.x % (GRID_SIZE * zoom)} y={offset.y % (GRID_SIZE * zoom)}>
+          <pattern
+            id="grid"
+            width={GRID_SIZE * zoom}
+            height={GRID_SIZE * zoom}
+            patternUnits="userSpaceOnUse"
+            x={offset.x % (GRID_SIZE * zoom)}
+            y={offset.y % (GRID_SIZE * zoom)}
+          >
             <circle cx={1} cy={1} r={0.5} fill="#ffffff08" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#grid)" />
         <g transform={`translate(${offset.x},${offset.y}) scale(${zoom})`}>
           {connections.map((c) => (
-            <ConnectionLine key={c.id} from={c.from} to={c.to} label={c.label} nodes={nodes} />
+            <ConnectionLine
+              key={c.id}
+              from={c.from}
+              to={c.to}
+              label={c.label}
+              nodes={nodes}
+            />
           ))}
           {nodes.map((n) => (
             <NodeBox

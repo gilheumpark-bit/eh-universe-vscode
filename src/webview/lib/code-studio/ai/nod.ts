@@ -128,7 +128,7 @@ export function buildNodDiagnosisPrompt(error: string, code?: string): string {
 에러 메시지:
 ${error}
 
-${code ? `관련 코드:\n\`\`\`\n${code.slice(0, 2000)}\n\`\`\`` : ''}
+${code ? `관련 코드:\n\`\`\`\n${code.slice(0, 2000)}\n\`\`\`` : ""}
 
 위 에러를 진단해주세요:
 1. 쉬운 말로 뭐가 잘못됐는지 설명
@@ -143,25 +143,35 @@ export function buildNodVerificationPrompt(gateResults: {
   gate2?: { typeErrors: number; lintErrors: number };
   gate3?: { buildSuccess: boolean; testsPassed: number; testsFailed: number };
 }): string {
-  const parts = ['[NOD 검증 결과 설명 요청]\n'];
+  const parts = ["[NOD 검증 결과 설명 요청]\n"];
 
   if (gateResults.gate1) {
-    parts.push(`Gate 1 (구조 검사): 빈 코드 ${gateResults.gate1.hollowCount}건 발견`);
-    if (gateResults.gate1.issues.length > 0) parts.push(`  문제: ${gateResults.gate1.issues.slice(0, 5).join(', ')}`);
+    parts.push(
+      `Gate 1 (구조 검사): 빈 코드 ${gateResults.gate1.hollowCount}건 발견`,
+    );
+    if (gateResults.gate1.issues.length > 0)
+      parts.push(`  문제: ${gateResults.gate1.issues.slice(0, 5).join(", ")}`);
   }
   if (gateResults.gate2) {
-    parts.push(`Gate 2 (문법 검사): 타입 에러 ${gateResults.gate2.typeErrors}건, 린트 에러 ${gateResults.gate2.lintErrors}건`);
+    parts.push(
+      `Gate 2 (문법 검사): 타입 에러 ${gateResults.gate2.typeErrors}건, 린트 에러 ${gateResults.gate2.lintErrors}건`,
+    );
   }
   if (gateResults.gate3) {
-    parts.push(`Gate 3 (실행 테스트): 빌드 ${gateResults.gate3.buildSuccess ? '성공' : '실패'}, 테스트 ${gateResults.gate3.testsPassed}건 통과 / ${gateResults.gate3.testsFailed}건 실패`);
+    parts.push(
+      `Gate 3 (실행 테스트): 빌드 ${gateResults.gate3.buildSuccess ? "성공" : "실패"}, 테스트 ${gateResults.gate3.testsPassed}건 통과 / ${gateResults.gate3.testsFailed}건 실패`,
+    );
   }
 
-  parts.push('\n위 결과를 비개발자가 이해할 수 있게 쉬운 말로 설명해주세요.');
-  return parts.join('\n');
+  parts.push("\n위 결과를 비개발자가 이해할 수 있게 쉬운 말로 설명해주세요.");
+  return parts.join("\n");
 }
 
 /** 자연어 수정 요청을 NOD 프롬프트로 변환 */
-export function buildNodModifyPrompt(request: string, currentCode: string): string {
+export function buildNodModifyPrompt(
+  request: string,
+  currentCode: string,
+): string {
   return `[NOD 수정 요청]
 
 사용자 요청: "${request}"

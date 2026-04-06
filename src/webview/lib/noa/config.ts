@@ -97,7 +97,11 @@ export const DEFAULT_DAILY_RISK_BUDGET = 100;
 // ============================================================
 
 function makeGrades(): readonly GradeEntry[] {
-  const levels: readonly { level: GradeLevel; floor: number; ceiling: number }[] = [
+  const levels: readonly {
+    level: GradeLevel;
+    floor: number;
+    ceiling: number;
+  }[] = [
     { level: "Platinum", floor: -999, ceiling: 0 },
     { level: "Gold", floor: 0, ceiling: 8 },
     { level: "LightGold", floor: 8, ceiling: 15 },

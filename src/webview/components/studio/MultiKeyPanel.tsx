@@ -2,9 +2,24 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import {
-  Key, Plus, Trash2, RotateCcw, Zap, Shield, Eye, EyeOff,
-  Activity, DollarSign, ChevronDown, ChevronRight, CheckCircle2,
-  AlertTriangle, Loader2, Settings2, Layers, BarChart3,
+  Key,
+  Plus,
+  Trash2,
+  RotateCcw,
+  Zap,
+  Shield,
+  Eye,
+  EyeOff,
+  Activity,
+  DollarSign,
+  ChevronDown,
+  ChevronRight,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
+  Settings2,
+  Layers,
+  BarChart3,
 } from "lucide-react";
 import {
   type ProviderId,
@@ -24,17 +39,26 @@ import { PROVIDERS, PROVIDER_LIST_UI, testApiKey } from "@/lib/ai-providers";
 // PART 1 — Constants & Labels
 // ============================================================
 
-const ROLE_LABELS: Record<AgentRole, { ko: string; en: string; icon: string }> = {
-  writer:       { ko: "집필", en: "Writer", icon: "✍️" },
-  reviewer:     { ko: "리뷰", en: "Reviewer", icon: "🔍" },
-  translator:   { ko: "번역", en: "Translator", icon: "🌐" },
-  worldbuilder: { ko: "세계관", en: "Worldbuilder", icon: "🌌" },
-  coder:        { ko: "코드", en: "Coder", icon: "</>" },
-  analyst:      { ko: "분석", en: "Analyst", icon: "📊" },
-  general:      { ko: "범용", en: "General", icon: "⚡" },
-};
+const ROLE_LABELS: Record<AgentRole, { ko: string; en: string; icon: string }> =
+  {
+    writer: { ko: "집필", en: "Writer", icon: "✍️" },
+    reviewer: { ko: "리뷰", en: "Reviewer", icon: "🔍" },
+    translator: { ko: "번역", en: "Translator", icon: "🌐" },
+    worldbuilder: { ko: "세계관", en: "Worldbuilder", icon: "🌌" },
+    coder: { ko: "코드", en: "Coder", icon: "</>" },
+    analyst: { ko: "분석", en: "Analyst", icon: "📊" },
+    general: { ko: "범용", en: "General", icon: "⚡" },
+  };
 
-const ROLES: AgentRole[] = ["general", "writer", "reviewer", "translator", "worldbuilder", "coder", "analyst"];
+const ROLES: AgentRole[] = [
+  "general",
+  "writer",
+  "reviewer",
+  "translator",
+  "worldbuilder",
+  "coder",
+  "analyst",
+];
 
 const PROVIDER_COLORS: Record<ProviderId, string> = {
   gemini: "#4285f4",
@@ -61,9 +85,14 @@ type TestState = "idle" | "testing" | "success" | "error";
 // PART 3 — Main Component
 // ============================================================
 
-const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose }) => {
+const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({
+  language = "ko",
+  onClose,
+}) => {
   const ko = language === "ko";
-  const [config, setConfig] = useState<MultiKeyConfig>(() => loadMultiKeyConfig());
+  const [config, setConfig] = useState<MultiKeyConfig>(() =>
+    loadMultiKeyConfig(),
+  );
   const [expandedSlot, setExpandedSlot] = useState<string | null>(null);
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [testStates, setTestStates] = useState<Record<string, TestState>>({});
@@ -81,19 +110,25 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
     saveMultiKeyConfig(next);
   }, []);
 
-  const updateSlot = useCallback((slotId: string, patch: Partial<KeySlot>) => {
-    persist({
-      ...config,
-      slots: config.slots.map((s) =>
-        s.id === slotId ? { ...s, ...patch } : s
-      ),
-    });
-  }, [config, persist]);
+  const updateSlot = useCallback(
+    (slotId: string, patch: Partial<KeySlot>) => {
+      persist({
+        ...config,
+        slots: config.slots.map((s) =>
+          s.id === slotId ? { ...s, ...patch } : s,
+        ),
+      });
+    },
+    [config, persist],
+  );
 
-  const handleProviderChange = useCallback((slotId: string, provider: ProviderId) => {
-    const defaultModel = PROVIDERS[provider]?.defaultModel ?? "default";
-    updateSlot(slotId, { provider, model: defaultModel });
-  }, [updateSlot]);
+  const handleProviderChange = useCallback(
+    (slotId: string, provider: ProviderId) => {
+      const defaultModel = PROVIDERS[provider]?.defaultModel ?? "default";
+      updateSlot(slotId, { provider, model: defaultModel });
+    },
+    [updateSlot],
+  );
 
   const handleKeyTest = useCallback(async (slot: KeySlot) => {
     if (!slot.apiKey.trim()) return;
@@ -106,20 +141,26 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
     }
   }, []);
 
-  const handleResetUsage = useCallback((slotId: string) => {
-    persist(resetSlotUsage(config, slotId));
-  }, [config, persist]);
+  const handleResetUsage = useCallback(
+    (slotId: string) => {
+      persist(resetSlotUsage(config, slotId));
+    },
+    [config, persist],
+  );
 
-  const handleClearSlot = useCallback((slotId: string) => {
-    const idx = config.slots.findIndex((s) => s.id === slotId);
-    if (idx === -1) return;
-    persist({
-      ...config,
-      slots: config.slots.map((s) =>
-        s.id === slotId ? createEmptySlot(idx + 1) : s
-      ),
-    });
-  }, [config, persist]);
+  const handleClearSlot = useCallback(
+    (slotId: string) => {
+      const idx = config.slots.findIndex((s) => s.id === slotId);
+      if (idx === -1) return;
+      persist({
+        ...config,
+        slots: config.slots.map((s) =>
+          s.id === slotId ? createEmptySlot(idx + 1) : s,
+        ),
+      });
+    },
+    [config, persist],
+  );
 
   const toggleExpand = useCallback((slotId: string) => {
     setExpandedSlot((prev) => (prev === slotId ? null : slotId));
@@ -151,7 +192,10 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
             <BarChart3 className="w-4 h-4 text-gray-400" />
           </button>
           {onClose && (
-            <button onClick={onClose} className="p-1.5 rounded hover:bg-white/10 transition-colors text-gray-400 hover:text-white">
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+            >
               ✕
             </button>
           )}
@@ -166,8 +210,12 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
         <div className="px-4 py-3 border-b border-white/10 bg-bg-secondary">
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center">
-              <div className="text-lg font-bold text-emerald-400">{totalUsage.calls.toLocaleString()}</div>
-              <div className="text-[10px] text-gray-500 uppercase">{ko ? "총 호출" : "Total Calls"}</div>
+              <div className="text-lg font-bold text-emerald-400">
+                {totalUsage.calls.toLocaleString()}
+              </div>
+              <div className="text-[10px] text-gray-500 uppercase">
+                {ko ? "총 호출" : "Total Calls"}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-lg font-bold text-blue-400">
@@ -177,11 +225,17 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
                     ? `${(totalUsage.tokens / 1_000).toFixed(1)}K`
                     : totalUsage.tokens}
               </div>
-              <div className="text-[10px] text-gray-500 uppercase">{ko ? "총 토큰" : "Total Tokens"}</div>
+              <div className="text-[10px] text-gray-500 uppercase">
+                {ko ? "총 토큰" : "Total Tokens"}
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-amber-400">${totalUsage.cost.toFixed(4)}</div>
-              <div className="text-[10px] text-gray-500 uppercase">{ko ? "추정 비용" : "Est. Cost"}</div>
+              <div className="text-lg font-bold text-amber-400">
+                ${totalUsage.cost.toFixed(4)}
+              </div>
+              <div className="text-[10px] text-gray-500 uppercase">
+                {ko ? "추정 비용" : "Est. Cost"}
+              </div>
             </div>
           </div>
 
@@ -191,7 +245,9 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
               <input
                 type="checkbox"
                 checked={config.crossValidation}
-                onChange={(e) => persist({ ...config, crossValidation: e.target.checked })}
+                onChange={(e) =>
+                  persist({ ...config, crossValidation: e.target.checked })
+                }
                 className="accent-emerald-500"
               />
               <Shield className="w-3.5 h-3.5 text-purple-400" />
@@ -201,7 +257,9 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
               <input
                 type="checkbox"
                 checked={config.parallelExecution}
-                onChange={(e) => persist({ ...config, parallelExecution: e.target.checked })}
+                onChange={(e) =>
+                  persist({ ...config, parallelExecution: e.target.checked })
+                }
                 className="accent-emerald-500"
               />
               <Zap className="w-3.5 h-3.5 text-accent-amber" />
@@ -211,11 +269,15 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
               <span>{ko ? "최대" : "Max"}</span>
               <select
                 value={config.maxParallel}
-                onChange={(e) => persist({ ...config, maxParallel: Number(e.target.value) })}
+                onChange={(e) =>
+                  persist({ ...config, maxParallel: Number(e.target.value) })
+                }
                 className="bg-transparent border border-white/10 rounded px-1 py-0.5 text-gray-300 text-xs"
               >
                 {[2, 3, 4, 5].map((n) => (
-                  <option key={n} value={n}>{n}</option>
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
                 ))}
               </select>
             </div>
@@ -249,13 +311,18 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
                 onClick={() => toggleExpand(slot.id)}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-white/5 rounded-lg transition-colors"
               >
-                {isExpanded
-                  ? <ChevronDown className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                  : <ChevronRight className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                }
+                {isExpanded ? (
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                )}
                 <div
                   className="w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: isActive ? PROVIDER_COLORS[slot.provider] : "#374151" }}
+                  style={{
+                    backgroundColor: isActive
+                      ? PROVIDER_COLORS[slot.provider]
+                      : "#374151",
+                  }}
                 />
                 <span className="text-xs font-mono text-gray-400 shrink-0">
                   {slot.id.replace("slot-", "#")}
@@ -293,11 +360,18 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
                       </label>
                       <select
                         value={slot.provider}
-                        onChange={(e) => handleProviderChange(slot.id, e.target.value as ProviderId)}
+                        onChange={(e) =>
+                          handleProviderChange(
+                            slot.id,
+                            e.target.value as ProviderId,
+                          )
+                        }
                         className="w-full bg-bg-tertiary border border-white/10 rounded px-2 py-1.5 text-xs text-gray-200"
                       >
                         {PROVIDER_LIST_UI.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -307,11 +381,15 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
                       </label>
                       <select
                         value={slot.model}
-                        onChange={(e) => updateSlot(slot.id, { model: e.target.value })}
+                        onChange={(e) =>
+                          updateSlot(slot.id, { model: e.target.value })
+                        }
                         className="w-full bg-bg-tertiary border border-white/10 rounded px-2 py-1.5 text-xs text-gray-200"
                       >
                         {(providerDef?.models ?? []).map((m) => (
-                          <option key={m} value={m}>{m}</option>
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -325,8 +403,12 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
                     <input
                       type="text"
                       value={slot.label}
-                      onChange={(e) => updateSlot(slot.id, { label: e.target.value })}
-                      placeholder={ko ? "예: 빠른 생성용" : "e.g. Fast generation"}
+                      onChange={(e) =>
+                        updateSlot(slot.id, { label: e.target.value })
+                      }
+                      placeholder={
+                        ko ? "예: 빠른 생성용" : "e.g. Fast generation"
+                      }
                       className="w-full bg-bg-tertiary border border-white/10 rounded px-2 py-1.5 text-xs text-gray-200 placeholder:text-white/50"
                     />
                   </div>
@@ -341,28 +423,44 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
                         <input
                           type={showKeys[slot.id] ? "text" : "password"}
                           value={slot.apiKey}
-                          onChange={(e) => updateSlot(slot.id, { apiKey: e.target.value })}
+                          onChange={(e) =>
+                            updateSlot(slot.id, { apiKey: e.target.value })
+                          }
                           placeholder={providerDef?.placeholder ?? ""}
                           className="w-full bg-bg-tertiary border border-white/10 rounded px-2 py-1.5 text-xs text-gray-200 pr-8 font-mono placeholder:text-white/50"
                         />
                         <button
-                          onClick={() => setShowKeys((p) => ({ ...p, [slot.id]: !p[slot.id] }))}
+                          onClick={() =>
+                            setShowKeys((p) => ({
+                              ...p,
+                              [slot.id]: !p[slot.id],
+                            }))
+                          }
                           className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
                         >
-                          {showKeys[slot.id]
-                            ? <EyeOff className="w-3.5 h-3.5" />
-                            : <Eye className="w-3.5 h-3.5" />
-                          }
+                          {showKeys[slot.id] ? (
+                            <EyeOff className="w-3.5 h-3.5" />
+                          ) : (
+                            <Eye className="w-3.5 h-3.5" />
+                          )}
                         </button>
                       </div>
                       <button
                         onClick={() => handleKeyTest(slot)}
-                        disabled={!slot.apiKey.trim() || testState === "testing"}
+                        disabled={
+                          !slot.apiKey.trim() || testState === "testing"
+                        }
                         className="px-2.5 py-1.5 rounded border border-white/10 text-xs hover:bg-white/5 disabled:opacity-40 transition-colors flex items-center gap-1"
                       >
-                        {testState === "testing" && <Loader2 className="w-3 h-3 animate-spin" />}
-                        {testState === "success" && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
-                        {testState === "error" && <AlertTriangle className="w-3 h-3 text-red-400" />}
+                        {testState === "testing" && (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        )}
+                        {testState === "success" && (
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                        )}
+                        {testState === "error" && (
+                          <AlertTriangle className="w-3 h-3 text-red-400" />
+                        )}
                         {testState === "idle" && <Key className="w-3 h-3" />}
                         {ko ? "테스트" : "Test"}
                       </button>
@@ -377,12 +475,17 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
                       </label>
                       <select
                         value={slot.assignedRole}
-                        onChange={(e) => updateSlot(slot.id, { assignedRole: e.target.value as AgentRole })}
+                        onChange={(e) =>
+                          updateSlot(slot.id, {
+                            assignedRole: e.target.value as AgentRole,
+                          })
+                        }
                         className="w-full bg-bg-tertiary border border-white/10 rounded px-2 py-1.5 text-xs text-gray-200"
                       >
                         {ROLES.map((r) => (
                           <option key={r} value={r}>
-                            {ROLE_LABELS[r].icon} {ko ? ROLE_LABELS[r].ko : ROLE_LABELS[r].en}
+                            {ROLE_LABELS[r].icon}{" "}
+                            {ko ? ROLE_LABELS[r].ko : ROLE_LABELS[r].en}
                           </option>
                         ))}
                       </select>
@@ -392,14 +495,23 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
                         <input
                           type="checkbox"
                           checked={slot.enabled}
-                          onChange={(e) => updateSlot(slot.id, { enabled: e.target.checked })}
+                          onChange={(e) =>
+                            updateSlot(slot.id, { enabled: e.target.checked })
+                          }
                           className="accent-emerald-500"
                         />
-                        <span className={slot.enabled ? "text-emerald-400" : "text-gray-500"}>
-                          {slot.enabled
-                            ? (ko ? "활성" : "Active")
-                            : (ko ? "비활성" : "Disabled")
+                        <span
+                          className={
+                            slot.enabled ? "text-emerald-400" : "text-gray-500"
                           }
+                        >
+                          {slot.enabled
+                            ? ko
+                              ? "활성"
+                              : "Active"
+                            : ko
+                              ? "비활성"
+                              : "Disabled"}
                         </span>
                       </label>
                     </div>
@@ -423,25 +535,39 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
                       </div>
                       <div className="grid grid-cols-3 gap-2 text-center">
                         <div>
-                          <div className="text-xs font-mono text-white">{slot.usage.totalCalls}</div>
-                          <div className="text-[9px] text-gray-600">{ko ? "호출" : "Calls"}</div>
+                          <div className="text-xs font-mono text-white">
+                            {slot.usage.totalCalls}
+                          </div>
+                          <div className="text-[9px] text-gray-600">
+                            {ko ? "호출" : "Calls"}
+                          </div>
                         </div>
                         <div>
                           <div className="text-xs font-mono text-white">
-                            {((slot.usage.totalInputTokens + slot.usage.totalOutputTokens) / 1000).toFixed(1)}K
+                            {(
+                              (slot.usage.totalInputTokens +
+                                slot.usage.totalOutputTokens) /
+                              1000
+                            ).toFixed(1)}
+                            K
                           </div>
-                          <div className="text-[9px] text-gray-600">{ko ? "토큰" : "Tokens"}</div>
+                          <div className="text-[9px] text-gray-600">
+                            {ko ? "토큰" : "Tokens"}
+                          </div>
                         </div>
                         <div>
                           <div className="text-xs font-mono text-amber-400">
                             ${slot.usage.estimatedCostUSD.toFixed(4)}
                           </div>
-                          <div className="text-[9px] text-gray-600">{ko ? "비용" : "Cost"}</div>
+                          <div className="text-[9px] text-gray-600">
+                            {ko ? "비용" : "Cost"}
+                          </div>
                         </div>
                       </div>
                       {slot.usage.lastUsed && (
                         <div className="text-[9px] text-gray-600 text-right mt-1">
-                          {ko ? "마지막" : "Last"}: {new Date(slot.usage.lastUsed).toLocaleString()}
+                          {ko ? "마지막" : "Last"}:{" "}
+                          {new Date(slot.usage.lastUsed).toLocaleString()}
                         </div>
                       )}
                     </div>
@@ -473,8 +599,7 @@ const MultiKeyPanel: React.FC<MultiKeyPanelProps> = ({ language = "ko", onClose 
           <DollarSign className="w-3 h-3" />
           {ko
             ? "API 키는 브라우저에 저장됩니다. 과금은 각 프로바이더 계정에서 직접 발생합니다."
-            : "Keys stored locally. Costs billed directly to your provider accounts."
-          }
+            : "Keys stored locally. Costs billed directly to your provider accounts."}
         </div>
       </div>
     </div>

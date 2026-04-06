@@ -15,19 +15,47 @@ interface KeywordRule {
 
 const SWORD_RULES: readonly KeywordRule[] = [
   // 논리적 과신
-  { pattern: /무조건|반드시|절대|즉시|확실|100%/g, weight: 0.15, cap: 3, label: "OVER_CONFIDENCE" },
-  { pattern: /guaranteed|always|never\s*fails/gi, weight: 0.20, cap: 2, label: "EN_ASSERTION" },
-  
+  {
+    pattern: /무조건|반드시|절대|즉시|확실|100%/g,
+    weight: 0.15,
+    cap: 3,
+    label: "OVER_CONFIDENCE",
+  },
+  {
+    pattern: /guaranteed|always|never\s*fails/gi,
+    weight: 0.2,
+    cap: 2,
+    label: "EN_ASSERTION",
+  },
+
   // 권한 사칭/탈취 시도
-  { pattern: /유지[관리]?\s*모드|관리자\s*권한|시스템\s*재부팅/g, weight: 0.6, cap: 1, label: "SYS_IMPERSONATION" },
-  { pattern: /ignore\s*(all\s*)?previous\s*(instructions|directions)/gi, weight: 0.9, cap: 1, label: "PROMPT_INJECTION" },
-  { pattern: /you\s*are\s*now\s*a\s*unfiltered/gi, weight: 0.8, cap: 1, label: "ROLE_UNFILTERED" }
+  {
+    pattern: /유지[관리]?\s*모드|관리자\s*권한|시스템\s*재부팅/g,
+    weight: 0.6,
+    cap: 1,
+    label: "SYS_IMPERSONATION",
+  },
+  {
+    pattern: /ignore\s*(all\s*)?previous\s*(instructions|directions)/gi,
+    weight: 0.9,
+    cap: 1,
+    label: "PROMPT_INJECTION",
+  },
+  {
+    pattern: /you\s*are\s*now\s*a\s*unfiltered/gi,
+    weight: 0.8,
+    cap: 1,
+    label: "ROLE_UNFILTERED",
+  },
 ] as const;
 
-const TH_VETO = 0.80;
+const TH_VETO = 0.8;
 const TH_HOLD = 0.35;
 
-function evaluatePatterns(text: string, rules: readonly KeywordRule[]): { score: number; reasons: string[] } {
+function evaluatePatterns(
+  text: string,
+  rules: readonly KeywordRule[],
+): { score: number; reasons: string[] } {
   let score = 0;
   const reasons: string[] = [];
 
@@ -60,14 +88,19 @@ export function evaluateSword(text: string): EgoResult {
   // 느낌표 남발 패널티 (3개 이상)
   const exclamCount = (text.match(/!/g) || []).length;
   if (exclamCount >= 3) {
-    score = Math.min(1.0, score + 0.10);
+    score = Math.min(1.0, score + 0.1);
     reasons.push(`느낌표(×${exclamCount})`);
   }
 
   // 명령형 어미 패널티
   const trimmed = text.trim();
-  if (trimmed.endsWith("해줘") || trimmed.endsWith("해라") || trimmed.endsWith("하세요") || trimmed.endsWith("실행해")) {
-    score = Math.min(1.0, score + 0.10);
+  if (
+    trimmed.endsWith("해줘") ||
+    trimmed.endsWith("해라") ||
+    trimmed.endsWith("하세요") ||
+    trimmed.endsWith("실행해")
+  ) {
+    score = Math.min(1.0, score + 0.1);
     reasons.push("명령형어미");
   }
 

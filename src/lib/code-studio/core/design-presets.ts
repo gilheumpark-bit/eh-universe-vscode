@@ -9,14 +9,17 @@ export interface DesignPreset {
   id: DesignPresetId;
   name: string;
   nameKo: string;
-  defaultTheme: 'dark' | 'light';
-  colorTheme?: 'bright' | 'beige';
+  defaultTheme: "dark" | "light";
+  colorTheme?: "bright" | "beige";
   prompt: string;
 }
 
 export const DESIGN_PRESETS: Record<DesignPresetId, DesignPreset> = {
   1: {
-    id: 1, name: 'IDE / Coding App', nameKo: 'IDE / 코딩 앱', defaultTheme: 'dark',
+    id: 1,
+    name: "IDE / Coding App",
+    nameKo: "IDE / 코딩 앱",
+    defaultTheme: "dark",
     prompt: `[PRESET-1: IDE / Coding App]
 Theme: data-theme="dark" (Archive base)
 Font: font-mono (var(--font-mono)) mandatory for code areas
@@ -36,7 +39,11 @@ REFERENCE: VS Code Web, Linear, Warp Terminal — information-dense, minimal pad
   },
 
   2: {
-    id: 2, name: 'Landing Page / Marketing', nameKo: '랜딩페이지 / 마케팅', defaultTheme: 'light', colorTheme: 'bright',
+    id: 2,
+    name: "Landing Page / Marketing",
+    nameKo: "랜딩페이지 / 마케팅",
+    defaultTheme: "light",
+    colorTheme: "bright",
     prompt: `[PRESET-2: Landing Page / Marketing]
 Theme: data-theme="light" + data-color-theme="bright"
 Layout: Hero → Features(3-col) → Social Proof → Pricing → CTA → Footer
@@ -55,7 +62,10 @@ REFERENCE: Stripe, Vercel, Framer — generous whitespace, clear type hierarchy.
   },
 
   3: {
-    id: 3, name: 'Dashboard / Admin', nameKo: '대시보드 / 어드민', defaultTheme: 'light',
+    id: 3,
+    name: "Dashboard / Admin",
+    nameKo: "대시보드 / 어드민",
+    defaultTheme: "light",
     prompt: `[PRESET-3: Dashboard / Admin]
 Theme: data-theme="light" (dark sidebar via bg-bg-primary in archive base allowed)
 Layout: Sidebar(240px) | TopBar(56px) | KPI Row(4-col) | Chart | Table
@@ -72,7 +82,11 @@ REFERENCE: Vercel Analytics, Planetscale — tabular-nums, small data labels, du
   },
 
   4: {
-    id: 4, name: 'E-Commerce / Shopping', nameKo: '이커머스 / 쇼핑몰', defaultTheme: 'light', colorTheme: 'bright',
+    id: 4,
+    name: "E-Commerce / Shopping",
+    nameKo: "이커머스 / 쇼핑몰",
+    defaultTheme: "light",
+    colorTheme: "bright",
     prompt: `[PRESET-4: E-Commerce / Shopping]
 Theme: data-theme="light" + data-color-theme="bright"
 Layout: Header | Product Grid(4→2col) | Detail(60/40) | Cart | Checkout
@@ -90,7 +104,10 @@ REFERENCE: Apple Store, Musinsa — image-dominant, generous whitespace, price e
   },
 
   5: {
-    id: 5, name: 'SaaS / Web Service', nameKo: 'SaaS / 웹 서비스', defaultTheme: 'light',
+    id: 5,
+    name: "SaaS / Web Service",
+    nameKo: "SaaS / 웹 서비스",
+    defaultTheme: "light",
     prompt: `[PRESET-5: SaaS / Web Service]
 Theme: data-theme="light"
 Layout: TopNav(56px) | Sidebar(240px) | Main
@@ -142,7 +159,12 @@ export function detectPreset(message: string): DesignPresetId | null {
   if (/\b(ide|에디터|editor|terminal|터미널|코딩)\b/.test(lower)) return 1;
   if (/\b(랜딩|landing|hero|마케팅|marketing)\b/.test(lower)) return 2;
   if (/\b(대시보드|dashboard|admin|어드민|analytics)\b/.test(lower)) return 3;
-  if (/\b(이커머스|e-?commerce|쇼핑|shopping|상품|product|장바구니|cart)\b/.test(lower)) return 4;
+  if (
+    /\b(이커머스|e-?commerce|쇼핑|shopping|상품|product|장바구니|cart)\b/.test(
+      lower,
+    )
+  )
+    return 4;
   if (/\b(saas|서비스|pricing|온보딩|onboarding)\b/.test(lower)) return 5;
 
   return null;
@@ -155,7 +177,7 @@ export function detectPreset(message: string): DesignPresetId | null {
 export function buildPresetPrompt(presetId: DesignPresetId | null): string {
   const id = presetId ?? 2;
   const preset = DESIGN_PRESETS[id];
-  const header = presetId === null ? DESIGN_FALLBACK + '\n\n' : '';
+  const header = presetId === null ? DESIGN_FALLBACK + "\n\n" : "";
   return `${header}${preset.prompt}`;
 }
 

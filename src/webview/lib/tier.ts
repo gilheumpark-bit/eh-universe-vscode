@@ -2,22 +2,22 @@
 // PART 1 — Tier definitions
 // ============================================================
 
-export type UserTier = 'free' | 'pro';
+export type UserTier = "free" | "pro";
 
 export interface TierLimits {
-  aiGenerationsPerMonth: number;      // -1 = unlimited
-  providers: string[];                // allowed provider IDs
+  aiGenerationsPerMonth: number; // -1 = unlimited
+  providers: string[]; // allowed provider IDs
   driveSync: boolean;
-  exportWatermark: boolean;           // true = watermark on free
-  maxProjects: number;                // -1 = unlimited
+  exportWatermark: boolean; // true = watermark on free
+  maxProjects: number; // -1 = unlimited
   worldSimFull: boolean;
-  engineReportDetail: boolean;        // false = summary only
+  engineReportDetail: boolean; // false = summary only
 }
 
 const TIER_CONFIG: Record<UserTier, TierLimits> = {
   free: {
     aiGenerationsPerMonth: 20,
-    providers: ['gemini'],
+    providers: ["gemini"],
     driveSync: false,
     exportWatermark: true,
     maxProjects: 1,
@@ -26,7 +26,7 @@ const TIER_CONFIG: Record<UserTier, TierLimits> = {
   },
   pro: {
     aiGenerationsPerMonth: -1,
-    providers: ['gemini', 'openai', 'claude', 'groq', 'mistral'],
+    providers: ["gemini", "openai", "claude", "groq", "mistral"],
     driveSync: true,
     exportWatermark: false,
     maxProjects: -1,
@@ -39,14 +39,14 @@ const TIER_CONFIG: Record<UserTier, TierLimits> = {
 // PART 2 — Tier state management
 // ============================================================
 
-const TIER_KEY = 'noa_user_tier';
-const GEN_COUNT_KEY = 'noa_gen_count';
-const GEN_MONTH_KEY = 'noa_gen_month';
+const TIER_KEY = "noa_user_tier";
+const GEN_COUNT_KEY = "noa_gen_count";
+const GEN_MONTH_KEY = "noa_gen_month";
 
 /** @returns Current user tier from localStorage, defaults to 'free' */
 export function getUserTier(): UserTier {
-  if (typeof window === 'undefined') return 'free';
-  return (localStorage.getItem(TIER_KEY) as UserTier) || 'free';
+  if (typeof window === "undefined") return "free";
+  return (localStorage.getItem(TIER_KEY) as UserTier) || "free";
 }
 
 /** Persist user tier selection to localStorage */
@@ -65,29 +65,29 @@ export function getTierLimits(tier?: UserTier): TierLimits {
 
 function getCurrentMonth(): string {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
 /** @returns Current month's AI generation count, auto-resetting on month change */
 export function getGenerationCount(): number {
-  if (typeof window === 'undefined') return 0;
+  if (typeof window === "undefined") return 0;
   const month = localStorage.getItem(GEN_MONTH_KEY);
   if (month !== getCurrentMonth()) {
     // Reset counter on new month
     localStorage.setItem(GEN_MONTH_KEY, getCurrentMonth());
-    localStorage.setItem(GEN_COUNT_KEY, '0');
+    localStorage.setItem(GEN_COUNT_KEY, "0");
     return 0;
   }
-  return parseInt(localStorage.getItem(GEN_COUNT_KEY) || '0', 10);
+  return parseInt(localStorage.getItem(GEN_COUNT_KEY) || "0", 10);
 }
 
 /** Increment and return the current month's AI generation count */
 export function incrementGenerationCount(): number {
-  if (typeof window === 'undefined') return 0;
+  if (typeof window === "undefined") return 0;
   const month = getCurrentMonth();
   if (localStorage.getItem(GEN_MONTH_KEY) !== month) {
     localStorage.setItem(GEN_MONTH_KEY, month);
-    localStorage.setItem(GEN_COUNT_KEY, '0');
+    localStorage.setItem(GEN_COUNT_KEY, "0");
   }
   const next = getGenerationCount() + 1;
   localStorage.setItem(GEN_COUNT_KEY, String(next));

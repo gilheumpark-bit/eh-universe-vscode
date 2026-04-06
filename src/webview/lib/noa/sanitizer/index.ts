@@ -9,8 +9,16 @@ import { reassembleJamo } from "./jamo-map";
 import { detectOmniBypass } from "./omni-regex";
 
 const OMNI_WATCH_KEYWORDS = [
-  "해킹", "원금보장", "확정수익", "부작용없음", "도박",
-  "살상", "테러", "마약", "폭탄", "자살",
+  "해킹",
+  "원금보장",
+  "확정수익",
+  "부작용없음",
+  "도박",
+  "살상",
+  "테러",
+  "마약",
+  "폭탄",
+  "자살",
 ] as const;
 
 /**
@@ -26,25 +34,45 @@ export function sanitizeInput(text: string): SanitizeResult {
   // Step 1: Zero-Width Purge
   const { cleaned: step1, removed } = purgeZeroWidth(text);
   if (removed > 0) {
-    changes.push({ type: "zero-width", position: 0, original: `(${removed} chars)`, replacement: "" });
+    changes.push({
+      type: "zero-width",
+      position: 0,
+      original: `(${removed} chars)`,
+      replacement: "",
+    });
   }
 
   // Step 2: Jamo Reassembly + NFC
   const step2 = reassembleJamo(step1);
   if (step2 !== step1) {
-    changes.push({ type: "jamo", position: 0, original: step1.slice(0, 30), replacement: step2.slice(0, 30) });
+    changes.push({
+      type: "jamo",
+      position: 0,
+      original: step1.slice(0, 30),
+      replacement: step2.slice(0, 30),
+    });
   }
 
   // Step 3: NFKC Normalization
   const step3 = step2.normalize("NFKC");
   if (step3 !== step2) {
-    changes.push({ type: "nfkc", position: 0, original: "(normalized)", replacement: "(NFKC)" });
+    changes.push({
+      type: "nfkc",
+      position: 0,
+      original: "(normalized)",
+      replacement: "(NFKC)",
+    });
   }
 
   // Step 4: OMNI Bypass Detection
   const omniHits = detectOmniBypass(step3, OMNI_WATCH_KEYWORDS);
   for (const hit of omniHits) {
-    changes.push({ type: "omni", position: 0, original: hit, replacement: `[OMNI:${hit}]` });
+    changes.push({
+      type: "omni",
+      position: 0,
+      original: hit,
+      replacement: `[OMNI:${hit}]`,
+    });
   }
 
   return {

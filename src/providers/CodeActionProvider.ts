@@ -3,7 +3,7 @@
 // ============================================================
 // 빨간 줄 난 곳에 전구 💡 표시 + 원클릭 수리.
 
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
 // Step 35~36: CodeActionProvider 인터페이스 구현
 export class QuillCodeActionProvider implements vscode.CodeActionProvider {
@@ -21,10 +21,12 @@ export class QuillCodeActionProvider implements vscode.CodeActionProvider {
 
     for (const diagnostic of context.diagnostics) {
       // CS Quill이 생성한 Diagnostic만 처리
-      if (!diagnostic.source?.startsWith('CS Quill')) continue;
+      if (!diagnostic.source?.startsWith("CS Quill")) continue;
 
       // Step 39: fix 데이터 확인
-      const fix = (diagnostic as any)._quillFix as { range: { startLine: number; endLine: number }; newText: string } | undefined;
+      const fix = (diagnostic as any)._quillFix as
+        | { range: { startLine: number; endLine: number }; newText: string }
+        | undefined;
 
       if (fix && fix.newText) {
         // Step 40: CodeAction 생성
@@ -36,10 +38,12 @@ export class QuillCodeActionProvider implements vscode.CodeActionProvider {
         // Step 41~42: WorkspaceEdit 생성 + replace
         const edit = new vscode.WorkspaceEdit();
         const fixRange = new vscode.Range(
-          Math.max(0, fix.range.startLine - 1), 0,
-          Math.max(0, fix.range.endLine), 0,
+          Math.max(0, fix.range.startLine - 1),
+          0,
+          Math.max(0, fix.range.endLine),
+          0,
         );
-        edit.replace(document.uri, fixRange, fix.newText + '\n');
+        edit.replace(document.uri, fixRange, fix.newText + "\n");
         action.edit = edit;
 
         action.diagnostics = [diagnostic];
@@ -56,8 +60,12 @@ export class QuillCodeActionProvider implements vscode.CodeActionProvider {
       const suppressEdit = new vscode.WorkspaceEdit();
       const lineIdx = diagnostic.range.start.line;
       const lineText = document.lineAt(lineIdx).text;
-      const indent = lineText.match(/^\s*/)?.[0] ?? '';
-      suppressEdit.insert(document.uri, new vscode.Position(lineIdx, 0), `${indent}// cs-quill-ignore: ${diagnostic.code ?? diagnostic.message.slice(0, 30)}\n`);
+      const indent = lineText.match(/^\s*/)?.[0] ?? "";
+      suppressEdit.insert(
+        document.uri,
+        new vscode.Position(lineIdx, 0),
+        `${indent}// cs-quill-ignore: ${diagnostic.code ?? diagnostic.message.slice(0, 30)}\n`,
+      );
       suppressAction.edit = suppressEdit;
       suppressAction.diagnostics = [diagnostic];
 

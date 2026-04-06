@@ -16,7 +16,7 @@ export interface ConstraintSchema {
   requiredFields: string[];
 }
 
-export type GuillotineVerdict = 'PASS' | 'HOLD' | 'KILL';
+export type GuillotineVerdict = "PASS" | "HOLD" | "KILL";
 
 export interface GuillotineResult {
   verdict: GuillotineVerdict;
@@ -38,53 +38,75 @@ export interface GuillotineResult {
 
 /** 내장 스키마: 수학 계산 요청 */
 export const MATH_CALCULATION_SCHEMA: ConstraintSchema = {
-  name: 'MathCalculation',
+  name: "MathCalculation",
   schema: {
-    type: 'object',
+    type: "object",
     properties: {
-      intent_category: { type: 'string', enum: ['MATH_CALCULATION', 'DB_RETRIEVAL', 'LOGIC_VALIDATION'] },
-      extracted_constraints: {
-        type: 'object',
-        properties: {
-          l_min: { type: ['number', 'null'] },
-          l_max: { type: ['number', 'null'] },
-          target_entities: { type: 'array', items: { type: 'string' } },
-        },
-        required: ['l_min', 'l_max', 'target_entities'],
+      intent_category: {
+        type: "string",
+        enum: ["MATH_CALCULATION", "DB_RETRIEVAL", "LOGIC_VALIDATION"],
       },
-      missing_critical_variables: { type: 'array', items: { type: 'string' } },
+      extracted_constraints: {
+        type: "object",
+        properties: {
+          l_min: { type: ["number", "null"] },
+          l_max: { type: ["number", "null"] },
+          target_entities: { type: "array", items: { type: "string" } },
+        },
+        required: ["l_min", "l_max", "target_entities"],
+      },
+      missing_critical_variables: { type: "array", items: { type: "string" } },
     },
-    required: ['intent_category', 'extracted_constraints', 'missing_critical_variables'],
+    required: [
+      "intent_category",
+      "extracted_constraints",
+      "missing_critical_variables",
+    ],
     additionalProperties: false,
   },
-  requiredFields: ['intent_category', 'extracted_constraints', 'missing_critical_variables'],
+  requiredFields: [
+    "intent_category",
+    "extracted_constraints",
+    "missing_critical_variables",
+  ],
 };
 
 /** 내장 스키마: 소설 생성 파라미터 */
 export const NOVEL_GENERATION_SCHEMA: ConstraintSchema = {
-  name: 'NovelGeneration',
+  name: "NovelGeneration",
   schema: {
-    type: 'object',
+    type: "object",
     properties: {
-      intent_category: { type: 'string', enum: ['SCENE_GENERATION', 'CHARACTER_CREATION', 'WORLD_BUILDING'] },
-      extracted_constraints: {
-        type: 'object',
-        properties: {
-          genre: { type: ['string', 'null'] },
-          tone: { type: ['string', 'null'] },
-          char_count_min: { type: ['number', 'null'] },
-          char_count_max: { type: ['number', 'null'] },
-          pov: { type: ['string', 'null'] },
-          tension_level: { type: ['number', 'null'] },
-        },
-        required: ['genre', 'char_count_min', 'char_count_max'],
+      intent_category: {
+        type: "string",
+        enum: ["SCENE_GENERATION", "CHARACTER_CREATION", "WORLD_BUILDING"],
       },
-      missing_critical_variables: { type: 'array', items: { type: 'string' } },
+      extracted_constraints: {
+        type: "object",
+        properties: {
+          genre: { type: ["string", "null"] },
+          tone: { type: ["string", "null"] },
+          char_count_min: { type: ["number", "null"] },
+          char_count_max: { type: ["number", "null"] },
+          pov: { type: ["string", "null"] },
+          tension_level: { type: ["number", "null"] },
+        },
+        required: ["genre", "char_count_min", "char_count_max"],
+      },
+      missing_critical_variables: { type: "array", items: { type: "string" } },
     },
-    required: ['intent_category', 'extracted_constraints', 'missing_critical_variables'],
+    required: [
+      "intent_category",
+      "extracted_constraints",
+      "missing_critical_variables",
+    ],
     additionalProperties: false,
   },
-  requiredFields: ['intent_category', 'extracted_constraints', 'missing_critical_variables'],
+  requiredFields: [
+    "intent_category",
+    "extracted_constraints",
+    "missing_critical_variables",
+  ],
 };
 
 /**
@@ -99,15 +121,18 @@ export function validateConstrainedOutput(
   let parsed: Record<string, unknown>;
   try {
     // LLM이 마크다운 코드블록으로 감쌀 수 있으므로 추출
-    const jsonMatch = rawOutput.match(/```(?:json)?\s*([\s\S]*?)```/) ?? [null, rawOutput];
+    const jsonMatch = rawOutput.match(/```(?:json)?\s*([\s\S]*?)```/) ?? [
+      null,
+      rawOutput,
+    ];
     const jsonStr = (jsonMatch[1] ?? rawOutput).trim();
     parsed = JSON.parse(jsonStr);
   } catch {
     return {
-      verdict: 'KILL',
+      verdict: "KILL",
       extracted: null,
       missingVariables: [],
-      violations: ['JSON 파싱 실패 — LLM이 스키마 외 텍스트를 생성함'],
+      violations: ["JSON 파싱 실패 — LLM이 스키마 외 텍스트를 생성함"],
     };
   }
 
@@ -120,22 +145,24 @@ export function validateConstrainedOutput(
   }
   if (missingFields.length > 0) {
     return {
-      verdict: 'KILL',
+      verdict: "KILL",
       extracted: parsed,
       missingVariables: [],
-      violations: missingFields.map(f => `필수 필드 누락: ${f}`),
+      violations: missingFields.map((f) => `필수 필드 누락: ${f}`),
     };
   }
 
   // Step 3: additionalProperties 검사
   const allowedKeys = new Set(schema.requiredFields);
-  const extraKeys = Object.keys(parsed).filter(k => !allowedKeys.has(k));
+  const extraKeys = Object.keys(parsed).filter((k) => !allowedKeys.has(k));
   if (extraKeys.length > 0) {
     return {
-      verdict: 'KILL',
+      verdict: "KILL",
       extracted: parsed,
       missingVariables: [],
-      violations: extraKeys.map(k => `허용되지 않은 필드: ${k} (미사여구 의심)`),
+      violations: extraKeys.map(
+        (k) => `허용되지 않은 필드: ${k} (미사여구 의심)`,
+      ),
     };
   }
 
@@ -145,23 +172,26 @@ export function validateConstrainedOutput(
     // AUTO-CORRECT: 누락 변수에 표준값 제안
     const suggestions: Record<string, unknown> = {};
     for (const v of missingVars) {
-      if (typeof v === 'string') {
+      if (typeof v === "string") {
         suggestions[v] = getDefaultValue(v);
       }
     }
 
     return {
-      verdict: 'HOLD',
+      verdict: "HOLD",
       extracted: parsed,
-      missingVariables: missingVars.filter((v): v is string => typeof v === 'string'),
+      missingVariables: missingVars.filter(
+        (v): v is string => typeof v === "string",
+      ),
       violations: [],
-      autoCorrectSuggestions: Object.keys(suggestions).length > 0 ? suggestions : undefined,
+      autoCorrectSuggestions:
+        Object.keys(suggestions).length > 0 ? suggestions : undefined,
     };
   }
 
   // Step 5: 모든 검증 통과
   return {
-    verdict: 'PASS',
+    verdict: "PASS",
     extracted: parsed,
     missingVariables: [],
     violations: [],
@@ -171,14 +201,14 @@ export function validateConstrainedOutput(
 /** 누락 변수의 표준값 반환 (AUTO-CORRECT용) */
 function getDefaultValue(variableName: string): unknown {
   const defaults: Record<string, unknown> = {
-    l_max: 100000000,       // 1억 (기본 상한선)
-    l_min: 0,               // 0 (기본 하한선)
-    char_count_min: 4000,   // 4000자 (소설 기본)
-    char_count_max: 6000,   // 6000자
-    tension_level: 5,       // 중간 긴장도
-    genre: 'GENERAL',
-    tone: 'NEUTRAL',
-    pov: 'THIRD_PERSON',
+    l_max: 100000000, // 1억 (기본 상한선)
+    l_min: 0, // 0 (기본 하한선)
+    char_count_min: 4000, // 4000자 (소설 기본)
+    char_count_max: 6000, // 6000자
+    tension_level: 5, // 중간 긴장도
+    genre: "GENERAL",
+    tone: "NEUTRAL",
+    pov: "THIRD_PERSON",
   };
   return defaults[variableName] ?? null;
 }

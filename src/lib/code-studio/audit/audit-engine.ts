@@ -4,27 +4,53 @@
 // Runs all 16 areas, combines scores, generates final report.
 
 import type {
-  AuditContext, AuditReport, AuditAreaResult, AuditCategoryResult,
-  AuditUrgentItem, AuditGrade, AuditCategory, AuditSeverity,
-} from './audit-types';
-import { CATEGORY_WEIGHTS, AREA_TO_CATEGORY } from './audit-types';
+  AuditContext,
+  AuditReport,
+  AuditAreaResult,
+  AuditCategoryResult,
+  AuditUrgentItem,
+  AuditGrade,
+  AuditCategory,
+  AuditSeverity,
+} from "./audit-types";
+import { CATEGORY_WEIGHTS, AREA_TO_CATEGORY } from "./audit-types";
 
-import { auditOperations, auditComplexity, auditArchitecture, auditDependencies } from './audit-code-health';
-import { auditTesting, auditErrorHandling, auditFeatureCompleteness, auditDocumentation } from './audit-quality';
-import { auditDesignSystem, auditAccessibility, auditUXQuality, auditI18n } from './audit-ux';
-import { auditSecurity, auditPerformance, auditAPIHealth, auditEnvConfig } from './audit-infra';
+import {
+  auditOperations,
+  auditComplexity,
+  auditArchitecture,
+  auditDependencies,
+} from "./audit-code-health";
+import {
+  auditTesting,
+  auditErrorHandling,
+  auditFeatureCompleteness,
+  auditDocumentation,
+} from "./audit-quality";
+import {
+  auditDesignSystem,
+  auditAccessibility,
+  auditUXQuality,
+  auditI18n,
+} from "./audit-ux";
+import {
+  auditSecurity,
+  auditPerformance,
+  auditAPIHealth,
+  auditEnvConfig,
+} from "./audit-infra";
 
 // ============================================================
 // PART 1 — Grade Helper
 // ============================================================
 
 function gradeFromScore(s: number): AuditGrade {
-  if (s >= 95) return 'S';
-  if (s >= 85) return 'A';
-  if (s >= 70) return 'B';
-  if (s >= 55) return 'C';
-  if (s >= 40) return 'D';
-  return 'F';
+  if (s >= 95) return "S";
+  if (s >= 85) return "A";
+  if (s >= 70) return "B";
+  if (s >= 55) return "C";
+  if (s >= 40) return "D";
+  return "F";
 }
 
 // IDENTITY_SEAL: PART-1 | role=grade-helper | inputs=score | outputs=AuditGrade
@@ -33,12 +59,19 @@ function gradeFromScore(s: number): AuditGrade {
 // PART 2 — Category Aggregation
 // ============================================================
 
-function buildCategoryResult(category: AuditCategory, areas: AuditAreaResult[]): AuditCategoryResult {
-  const categoryAreas = areas.filter(a => AREA_TO_CATEGORY[a.area] === category);
+function buildCategoryResult(
+  category: AuditCategory,
+  areas: AuditAreaResult[],
+): AuditCategoryResult {
+  const categoryAreas = areas.filter(
+    (a) => AREA_TO_CATEGORY[a.area] === category,
+  );
   if (categoryAreas.length === 0) {
-    return { category, score: 0, grade: 'F', areas: [] };
+    return { category, score: 0, grade: "F", areas: [] };
   }
-  const avgScore = Math.round(categoryAreas.reduce((s, a) => s + a.score, 0) / categoryAreas.length);
+  const avgScore = Math.round(
+    categoryAreas.reduce((s, a) => s + a.score, 0) / categoryAreas.length,
+  );
   return {
     category,
     score: avgScore,
@@ -53,13 +86,22 @@ function buildCategoryResult(category: AuditCategory, areas: AuditAreaResult[]):
 // PART 3 — Urgent Items Extraction
 // ============================================================
 
-function extractUrgentItems(areas: AuditAreaResult[], limit: number = 10): AuditUrgentItem[] {
+function extractUrgentItems(
+  areas: AuditAreaResult[],
+  limit: number = 10,
+): AuditUrgentItem[] {
   const severityOrder: Record<AuditSeverity, number> = {
-    critical: 0, high: 1, medium: 2, low: 3, info: 4,
+    critical: 0,
+    high: 1,
+    medium: 2,
+    low: 3,
+    info: 4,
   };
 
-  const allFindings = areas.flatMap(a => a.findings);
-  const sorted = [...allFindings].sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+  const allFindings = areas.flatMap((a) => a.findings);
+  const sorted = [...allFindings].sort(
+    (a, b) => severityOrder[a.severity] - severityOrder[b.severity],
+  );
 
   return sorted.slice(0, limit).map((f, i) => ({
     rank: i + 1,
@@ -93,75 +135,96 @@ export function runProjectAudit(
   }
 
   // A. Code Health
-  progress('operations');
+  progress("operations");
   const operations = auditOperations(ctx);
-  progress('complexity');
+  progress("complexity");
   const complexity = auditComplexity(ctx);
-  progress('architecture');
+  progress("architecture");
   const architecture = auditArchitecture(ctx);
-  progress('dependencies');
+  progress("dependencies");
   const dependencies = auditDependencies(ctx);
 
   // B. Quality
-  progress('testing');
+  progress("testing");
   const testing = auditTesting(ctx);
-  progress('error-handling');
+  progress("error-handling");
   const errorHandling = auditErrorHandling(ctx);
-  progress('feature-completeness');
+  progress("feature-completeness");
   const featureCompleteness = auditFeatureCompleteness(ctx);
-  progress('documentation');
+  progress("documentation");
   const documentation = auditDocumentation(ctx);
 
   // C. User Experience
-  progress('design-system');
+  progress("design-system");
   const designSystem = auditDesignSystem(ctx);
-  progress('accessibility');
+  progress("accessibility");
   const accessibility = auditAccessibility(ctx);
-  progress('ux-quality');
+  progress("ux-quality");
   const uxQuality = auditUXQuality(ctx);
-  progress('i18n');
+  progress("i18n");
   const i18n = auditI18n(ctx);
 
   // D. Infra & Security
-  progress('security');
+  progress("security");
   const security = auditSecurity(ctx);
-  progress('performance');
+  progress("performance");
   const perf = auditPerformance(ctx);
-  progress('api-health');
+  progress("api-health");
   const apiHealth = auditAPIHealth(ctx);
-  progress('env-config');
+  progress("env-config");
   const envConfig = auditEnvConfig(ctx);
 
   const allAreas: AuditAreaResult[] = [
-    operations, complexity, architecture, dependencies,
-    testing, errorHandling, featureCompleteness, documentation,
-    designSystem, accessibility, uxQuality, i18n,
-    security, perf, apiHealth, envConfig,
+    operations,
+    complexity,
+    architecture,
+    dependencies,
+    testing,
+    errorHandling,
+    featureCompleteness,
+    documentation,
+    designSystem,
+    accessibility,
+    uxQuality,
+    i18n,
+    security,
+    perf,
+    apiHealth,
+    envConfig,
   ];
 
   // Build categories
   const categories: AuditCategoryResult[] = [
-    buildCategoryResult('code-health', allAreas),
-    buildCategoryResult('quality', allAreas),
-    buildCategoryResult('user-experience', allAreas),
-    buildCategoryResult('infra-security', allAreas),
+    buildCategoryResult("code-health", allAreas),
+    buildCategoryResult("quality", allAreas),
+    buildCategoryResult("user-experience", allAreas),
+    buildCategoryResult("infra-security", allAreas),
   ];
 
   // Weighted total score
   const totalScore = Math.round(
-    categories.reduce((s, c) => s + c.score * (CATEGORY_WEIGHTS[c.category] ?? 0.25), 0),
+    categories.reduce(
+      (s, c) => s + c.score * (CATEGORY_WEIGHTS[c.category] ?? 0.25),
+      0,
+    ),
   );
 
   // Hard gate: security critical → fail
-  const securityCriticals = security.findings.filter(f => f.severity === 'critical');
+  const securityCriticals = security.findings.filter(
+    (f) => f.severity === "critical",
+  );
   const hardGateFail = securityCriticals.length > 0;
   const hardGateReason = hardGateFail
-    ? `보안 CRITICAL ${securityCriticals.length}건: ${securityCriticals.map(f => f.rule).join(', ')}`
+    ? `보안 CRITICAL ${securityCriticals.length}건: ${securityCriticals.map((f) => f.rule).join(", ")}`
     : undefined;
 
   // Finding counts
   const findingsBySeverity: Record<AuditSeverity, number> = {
-    critical: 0, high: 0, medium: 0, low: 0, info: 0,
+    critical: 0,
+    high: 0,
+    medium: 0,
+    low: 0,
+    info: 0,
   };
   for (const a of allAreas) {
     for (const f of a.findings) {
@@ -173,11 +236,14 @@ export function runProjectAudit(
   const duration = Math.round(performance.now() - startTime);
 
   return {
-    id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `audit_${Date.now()}`,
+    id:
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `audit_${Date.now()}`,
     timestamp: Date.now(),
-    version: '1.0.0',
+    version: "1.0.0",
     totalScore: hardGateFail ? Math.min(totalScore, 30) : totalScore,
-    totalGrade: hardGateFail ? 'F' : gradeFromScore(totalScore),
+    totalGrade: hardGateFail ? "F" : gradeFromScore(totalScore),
     hardGateFail,
     hardGateReason,
     categories,
@@ -196,80 +262,178 @@ export function runProjectAudit(
 // PART 5 — Report Formatter (Text)
 // ============================================================
 
-export function formatAuditReport(report: AuditReport, lang: 'ko' | 'en' = 'ko'): string {
-  const labels = lang === 'ko'
-    ? { title: '프로젝트 감사 보고서', score: '종합 점수', areas: '영역', checks: '검사', findings: '발견', urgent: '시급 항목', hardGate: '하드 게이트', pass: '통과', fail: '실패', duration: '소요 시간', category: '카테고리' }
-    : { title: 'PROJECT AUDIT REPORT', score: 'Total Score', areas: 'Areas', checks: 'Checks', findings: 'Findings', urgent: 'Urgent Items', hardGate: 'Hard Gate', pass: 'PASS', fail: 'FAIL', duration: 'Duration', category: 'Category' };
+export function formatAuditReport(
+  report: AuditReport,
+  lang: "ko" | "en" = "ko",
+): string {
+  const labels =
+    lang === "ko"
+      ? {
+          title: "프로젝트 감사 보고서",
+          score: "종합 점수",
+          areas: "영역",
+          checks: "검사",
+          findings: "발견",
+          urgent: "시급 항목",
+          hardGate: "하드 게이트",
+          pass: "통과",
+          fail: "실패",
+          duration: "소요 시간",
+          category: "카테고리",
+        }
+      : {
+          title: "PROJECT AUDIT REPORT",
+          score: "Total Score",
+          areas: "Areas",
+          checks: "Checks",
+          findings: "Findings",
+          urgent: "Urgent Items",
+          hardGate: "Hard Gate",
+          pass: "PASS",
+          fail: "FAIL",
+          duration: "Duration",
+          category: "Category",
+        };
 
   const lines: string[] = [];
-  const divider = '═'.repeat(52);
-  const thinDiv = '─'.repeat(52);
+  const divider = "═".repeat(52);
+  const thinDiv = "─".repeat(52);
 
   lines.push(divider);
   lines.push(`  ${labels.title}`);
-  lines.push(`  ${labels.score}: ${report.totalScore}/100 (${report.totalGrade})`);
-  lines.push(`  16 ${labels.areas} · ${report.totalChecks} ${labels.checks} · ${report.totalFindings} ${labels.findings}`);
+  lines.push(
+    `  ${labels.score}: ${report.totalScore}/100 (${report.totalGrade})`,
+  );
+  lines.push(
+    `  16 ${labels.areas} · ${report.totalChecks} ${labels.checks} · ${report.totalFindings} ${labels.findings}`,
+  );
   if (report.hardGateFail) {
-    lines.push(`  ❌ ${labels.hardGate}: ${labels.fail} — ${report.hardGateReason}`);
+    lines.push(
+      `  ❌ ${labels.hardGate}: ${labels.fail} — ${report.hardGateReason}`,
+    );
   } else {
     lines.push(`  ✅ ${labels.hardGate}: ${labels.pass}`);
   }
   lines.push(divider);
 
   // Category scores
-  lines.push('');
+  lines.push("");
   for (const cat of report.categories) {
-    const catLabel = lang === 'ko'
-      ? { 'code-health': '코드 건강', quality: '품질 보증', 'user-experience': '사용자 경험', 'infra-security': '인프라 & 보안' }[cat.category]
-      : { 'code-health': 'Code Health', quality: 'Quality', 'user-experience': 'User Experience', 'infra-security': 'Infra & Security' }[cat.category];
-    const bar = '█'.repeat(Math.round(cat.score / 5)) + '░'.repeat(20 - Math.round(cat.score / 5));
-    lines.push(`  ${catLabel?.padEnd(16)} ${bar} ${cat.score}/100 (${cat.grade})`);
+    const catLabel =
+      lang === "ko"
+        ? {
+            "code-health": "코드 건강",
+            quality: "품질 보증",
+            "user-experience": "사용자 경험",
+            "infra-security": "인프라 & 보안",
+          }[cat.category]
+        : {
+            "code-health": "Code Health",
+            quality: "Quality",
+            "user-experience": "User Experience",
+            "infra-security": "Infra & Security",
+          }[cat.category];
+    const bar =
+      "█".repeat(Math.round(cat.score / 5)) +
+      "░".repeat(20 - Math.round(cat.score / 5));
+    lines.push(
+      `  ${catLabel?.padEnd(16)} ${bar} ${cat.score}/100 (${cat.grade})`,
+    );
   }
 
-  lines.push('');
+  lines.push("");
   lines.push(thinDiv);
 
   // Area details
   for (const cat of report.categories) {
-    lines.push('');
-    const catLabel = lang === 'ko'
-      ? { 'code-health': 'A. 코드 건강', quality: 'B. 품질 보증', 'user-experience': 'C. 사용자 경험', 'infra-security': 'D. 인프라 & 보안' }[cat.category]
-      : { 'code-health': 'A. Code Health', quality: 'B. Quality', 'user-experience': 'C. User Experience', 'infra-security': 'D. Infra & Security' }[cat.category];
+    lines.push("");
+    const catLabel =
+      lang === "ko"
+        ? {
+            "code-health": "A. 코드 건강",
+            quality: "B. 품질 보증",
+            "user-experience": "C. 사용자 경험",
+            "infra-security": "D. 인프라 & 보안",
+          }[cat.category]
+        : {
+            "code-health": "A. Code Health",
+            quality: "B. Quality",
+            "user-experience": "C. User Experience",
+            "infra-security": "D. Infra & Security",
+          }[cat.category];
     lines.push(`  ${catLabel}`);
     for (const area of cat.areas) {
-      const areaLabel = lang === 'ko'
-        ? { operations: '운영성', complexity: '복잡도', architecture: '아키텍처', dependencies: '의존성', testing: '테스트', 'error-handling': '에러 핸들링', 'feature-completeness': '기능 완성도', documentation: '문서', 'design-system': '디자인 시스템', accessibility: '접근성', 'ux-quality': 'UX 품질', i18n: '국제화', security: '보안', performance: '성능', 'api-health': 'API 건강', 'env-config': '환경 설정' }[area.area]
-        : area.area;
-      const icon = area.grade === 'S' || area.grade === 'A' ? '✅' : area.grade === 'B' ? '🔶' : area.grade === 'C' ? '⚠️' : '❌';
-      lines.push(`    ${icon} ${(areaLabel ?? area.area).padEnd(14)} ${area.score.toString().padStart(3)}/100 (${area.grade}) — ${area.passed}/${area.checks} ${labels.pass}`);
+      const areaLabel =
+        lang === "ko"
+          ? {
+              operations: "운영성",
+              complexity: "복잡도",
+              architecture: "아키텍처",
+              dependencies: "의존성",
+              testing: "테스트",
+              "error-handling": "에러 핸들링",
+              "feature-completeness": "기능 완성도",
+              documentation: "문서",
+              "design-system": "디자인 시스템",
+              accessibility: "접근성",
+              "ux-quality": "UX 품질",
+              i18n: "국제화",
+              security: "보안",
+              performance: "성능",
+              "api-health": "API 건강",
+              "env-config": "환경 설정",
+            }[area.area]
+          : area.area;
+      const icon =
+        area.grade === "S" || area.grade === "A"
+          ? "✅"
+          : area.grade === "B"
+            ? "🔶"
+            : area.grade === "C"
+              ? "⚠️"
+              : "❌";
+      lines.push(
+        `    ${icon} ${(areaLabel ?? area.area).padEnd(14)} ${area.score.toString().padStart(3)}/100 (${area.grade}) — ${area.passed}/${area.checks} ${labels.pass}`,
+      );
     }
   }
 
-  lines.push('');
+  lines.push("");
   lines.push(thinDiv);
 
   // Severity summary
-  lines.push('');
+  lines.push("");
   lines.push(`  ${labels.findings}:`);
-  lines.push(`    CRITICAL: ${report.findingsBySeverity.critical}  HIGH: ${report.findingsBySeverity.high}  MEDIUM: ${report.findingsBySeverity.medium}  LOW: ${report.findingsBySeverity.low}`);
+  lines.push(
+    `    CRITICAL: ${report.findingsBySeverity.critical}  HIGH: ${report.findingsBySeverity.high}  MEDIUM: ${report.findingsBySeverity.medium}  LOW: ${report.findingsBySeverity.low}`,
+  );
 
   // Urgent items
-  lines.push('');
+  lines.push("");
   lines.push(thinDiv);
   lines.push(`  TOP ${report.urgent.length} ${labels.urgent}`);
-  lines.push('');
+  lines.push("");
   for (const item of report.urgent) {
-    const icon = item.severity === 'critical' ? '🔴' : item.severity === 'high' ? '🟠' : item.severity === 'medium' ? '🟡' : '🔵';
-    lines.push(`  ${item.rank.toString().padStart(2)}. ${icon} [${item.area}] ${item.message}${item.file ? ` (${item.file.split('/').pop()})` : ''}`);
+    const icon =
+      item.severity === "critical"
+        ? "🔴"
+        : item.severity === "high"
+          ? "🟠"
+          : item.severity === "medium"
+            ? "🟡"
+            : "🔵";
+    lines.push(
+      `  ${item.rank.toString().padStart(2)}. ${icon} [${item.area}] ${item.message}${item.file ? ` (${item.file.split("/").pop()})` : ""}`,
+    );
   }
 
-  lines.push('');
+  lines.push("");
   lines.push(thinDiv);
   lines.push(`  ${labels.duration}: ${report.duration}ms`);
   lines.push(`  Generated: ${new Date(report.timestamp).toISOString()}`);
   lines.push(divider);
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 // IDENTITY_SEAL: PART-5 | role=report-formatter | inputs=AuditReport | outputs=string

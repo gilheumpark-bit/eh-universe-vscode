@@ -40,18 +40,19 @@ const FLAGS: FeatureFlags = {
  * then falls back to the default defined above.
  */
 export function isFeatureEnabled(flag: keyof FeatureFlags): boolean {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     // Client-side: check localStorage override for dev/testing
     const override = localStorage.getItem(`ff_${flag}`);
-    if (override === 'true') return true;
-    if (override === 'false') return false;
+    if (override === "true") return true;
+    if (override === "false") return false;
   }
 
   // Environment variable override (build-time)
   const envKey = `NEXT_PUBLIC_FF_${flag}`;
-  const envVal = typeof process !== 'undefined' ? process.env[envKey] : undefined;
-  if (envVal === 'true') return true;
-  if (envVal === 'false') return false;
+  const envVal =
+    typeof process !== "undefined" ? process.env[envKey] : undefined;
+  if (envVal === "true") return true;
+  if (envVal === "false") return false;
 
   return FLAGS[flag];
 }
@@ -59,7 +60,8 @@ export function isFeatureEnabled(flag: keyof FeatureFlags): boolean {
 /** 서버 컴포넌트·Route Handler용 (localStorage 없음, env + 기본값만) */
 export function isFeatureEnabledServer(flag: keyof FeatureFlags): boolean {
   const envKey = `NEXT_PUBLIC_FF_${flag}`;
-  const envVal = typeof process !== "undefined" ? process.env[envKey] : undefined;
+  const envVal =
+    typeof process !== "undefined" ? process.env[envKey] : undefined;
   if (envVal === "true") return true;
   if (envVal === "false") return false;
   return FLAGS[flag];

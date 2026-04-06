@@ -61,12 +61,19 @@ function simpleHash(str: string): string {
 
 function classifyFile(filePath: string): "css" | "module" | "unknown" {
   const lower = filePath.toLowerCase();
-  if (lower.endsWith(".css") || lower.endsWith(".scss") || lower.endsWith(".less")) {
+  if (
+    lower.endsWith(".css") ||
+    lower.endsWith(".scss") ||
+    lower.endsWith(".less")
+  ) {
     return "css";
   }
   if (
-    lower.endsWith(".tsx") || lower.endsWith(".jsx")
-    || lower.endsWith(".ts") || lower.endsWith(".js") || lower.endsWith(".mjs")
+    lower.endsWith(".tsx") ||
+    lower.endsWith(".jsx") ||
+    lower.endsWith(".ts") ||
+    lower.endsWith(".js") ||
+    lower.endsWith(".mjs")
   ) {
     return "module";
   }
@@ -211,10 +218,17 @@ export class HMRBridge {
     if (prevHash && prevHash.hash === newHash) return;
 
     this.fileHashes.set(filePath, { hash: newHash, timestamp: Date.now() });
-    this.pendingChanges.push({ filePath, content, type: classifyFile(filePath) });
+    this.pendingChanges.push({
+      filePath,
+      content,
+      type: classifyFile(filePath),
+    });
 
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
-    this.debounceTimer = setTimeout(() => this.flushPendingChanges(), this.options.debounceMs);
+    this.debounceTimer = setTimeout(
+      () => this.flushPendingChanges(),
+      this.options.debounceMs,
+    );
   }
 
   /** Subscribe to HMR events. */
@@ -279,7 +293,11 @@ export class HMRBridge {
           this.emit({ type: "client-ready", timestamp: Date.now() });
           break;
         case "css-update-applied":
-          this.emit({ type: "css-update", file: data.file, timestamp: Date.now() });
+          this.emit({
+            type: "css-update",
+            file: data.file,
+            timestamp: Date.now(),
+          });
           break;
         case "error":
           this.emit({
@@ -319,7 +337,10 @@ export class HMRBridge {
     }
 
     // Non-CSS changes trigger full reload.
-    if (otherChanges.length > 0 || (!this.options.cssHotReload && cssChanges.length > 0)) {
+    if (
+      otherChanges.length > 0 ||
+      (!this.options.cssHotReload && cssChanges.length > 0)
+    ) {
       this.forceReload();
     }
   }

@@ -40,13 +40,17 @@ export default function QuickStartModal({
 
   return (
     <div className="animate-in fade-in zoom-in fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md duration-300">
-      <div className="w-full max-w-lg overflow-hidden rounded-[2rem] border border-border/80 bg-bg-primary shadow-2xl shadow-accent-purple/20" role="dialog" aria-modal="true">
+      <div
+        className="w-full max-w-lg overflow-hidden rounded-[2rem] border border-border/80 bg-bg-primary shadow-2xl shadow-accent-purple/20"
+        role="dialog"
+        aria-modal="true"
+      >
         <div className="relative px-8 pb-4 pt-8">
           <button
             type="button"
             onClick={onClose}
             className="absolute right-6 top-6 rounded-full p-2 text-text-tertiary transition-colors hover:bg-bg-secondary hover:text-text-primary"
-            aria-label={t('quickStartModal.closeQuickStart')}
+            aria-label={t("quickStartModal.closeQuickStart")}
           >
             <X className="h-5 w-5" />
           </button>
@@ -56,20 +60,20 @@ export default function QuickStartModal({
               <Sparkles className="h-6 w-6 text-accent-purple" />
             </div>
             <h2 className="font-mono text-2xl font-black italic tracking-tighter">
-              {t('quickStartModal.title')}
+              {t("quickStartModal.title")}
             </h2>
           </div>
 
           <p className="text-sm leading-relaxed text-text-tertiary">
-            {t('quickStartModal.desc')}
+            {t("quickStartModal.desc")}
           </p>
 
           <div className="mt-4 rounded-2xl border border-white/6 bg-bg-secondary/70 px-4 py-3">
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-purple">
-              {t('quickStartModal.flowLabel')}
+              {t("quickStartModal.flowLabel")}
             </p>
             <p className="mt-2 text-xs leading-6 text-text-secondary">
-              {t('quickStartModal.flowDesc')}
+              {t("quickStartModal.flowDesc")}
             </p>
           </div>
         </div>
@@ -77,7 +81,7 @@ export default function QuickStartModal({
         <form onSubmit={handleSubmit} className="space-y-6 px-8 pb-8">
           <div className="space-y-3">
             <label className="px-1 text-[10px] font-black uppercase tracking-widest text-text-tertiary">
-              {t('quickStartModal.selectGenre')}
+              {t("quickStartModal.selectGenre")}
             </label>
             <div className="flex flex-wrap gap-2">
               {Object.values(Genre).map((genre) => (
@@ -99,14 +103,14 @@ export default function QuickStartModal({
 
           <div className="space-y-3">
             <label className="px-1 text-[10px] font-black uppercase tracking-widest text-text-tertiary">
-              {t('quickStartModal.storyPrompt')}
+              {t("quickStartModal.storyPrompt")}
             </label>
             <div className="relative">
               <textarea
                 autoFocus
                 value={prompt}
                 onChange={(event) => setPrompt(event.target.value)}
-                placeholder={t('quickStartModal.placeholder')}
+                placeholder={t("quickStartModal.placeholder")}
                 className="h-32 w-full resize-none rounded-2xl border border-border bg-bg-secondary p-4 text-sm leading-relaxed outline-none transition-all placeholder:text-text-tertiary focus:border-accent-purple"
                 disabled={isGenerating}
                 maxLength={240}
@@ -129,12 +133,12 @@ export default function QuickStartModal({
             {isGenerating ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {t('quickStartModal.generating')}
+                {t("quickStartModal.generating")}
               </>
             ) : (
               <>
                 <Wand2 className="h-4 w-4" />
-                {t('quickStartModal.submit')}
+                {t("quickStartModal.submit")}
               </>
             )}
           </button>

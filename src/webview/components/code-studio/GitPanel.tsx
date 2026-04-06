@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import {
   GitBranch,
   GitCommit,
@@ -158,7 +164,9 @@ function flattenFilesWithPaths(
 
     const nextPath = skipTopLevelFolderName
       ? parentPath
-      : (parentPath ? `${parentPath}/${node.name}` : node.name);
+      : parentPath
+        ? `${parentPath}/${node.name}`
+        : node.name;
     if (node.children) {
       result.push(...flattenFilesWithPaths(node.children, nextPath, false));
     }
@@ -192,14 +200,19 @@ function DiffPreview({ snapshot, lang }: DiffPreviewProps) {
           {unchanged} {L4(lang, { ko: "줄 변경 없음", en: "unchanged" })}
         </span>
         {added > 0 && (
-          <span className="text-accent-green">+{added} {L4(lang, { ko: "줄", en: "lines" })}</span>
+          <span className="text-accent-green">
+            +{added} {L4(lang, { ko: "줄", en: "lines" })}
+          </span>
         )}
         {removed > 0 && (
-          <span className="text-accent-red">-{removed} {L4(lang, { ko: "줄", en: "lines" })}</span>
+          <span className="text-accent-red">
+            -{removed} {L4(lang, { ko: "줄", en: "lines" })}
+          </span>
         )}
       </div>
       <div className="mt-1 text-text-tertiary">
-        {snapshot.linesBefore} {L4(lang, { ko: "줄", en: "lines" })} → {snapshot.linesAfter} {L4(lang, { ko: "줄", en: "lines" })}
+        {snapshot.linesBefore} {L4(lang, { ko: "줄", en: "lines" })} →{" "}
+        {snapshot.linesAfter} {L4(lang, { ko: "줄", en: "lines" })}
       </div>
     </div>
   );
@@ -247,7 +260,9 @@ function ChangesTab({
     return (
       <div className="flex flex-col items-center justify-center py-8 text-text-tertiary">
         <Check size={24} className="mb-2 opacity-50" />
-        <span className="text-sm">{L4(cLang, { ko: "변경 사항 없음", en: "No pending changes" })}</span>
+        <span className="text-sm">
+          {L4(cLang, { ko: "변경 사항 없음", en: "No pending changes" })}
+        </span>
       </div>
     );
   }
@@ -267,9 +282,7 @@ function ChangesTab({
             }`}
           >
             <FileText size={14} className="shrink-0 text-accent-amber" />
-            <span className="truncate font-mono text-xs">
-              {file.name}
-            </span>
+            <span className="truncate font-mono text-xs">{file.name}</span>
             <span className="ml-auto shrink-0 rounded bg-accent-amber/15 px-1.5 py-0.5 text-[10px] font-medium text-accent-amber">
               M
             </span>
@@ -278,7 +291,9 @@ function ChangesTab({
       </div>
 
       {/* Diff preview */}
-      {selectedSnapshot && <DiffPreview snapshot={selectedSnapshot} lang={cLang} />}
+      {selectedSnapshot && (
+        <DiffPreview snapshot={selectedSnapshot} lang={cLang} />
+      )}
 
       {/* Commit button */}
       <button
@@ -286,7 +301,11 @@ function ChangesTab({
         className="mt-1 flex items-center justify-center gap-2 rounded bg-accent-green/15 px-3 py-1.5 text-sm font-medium text-accent-green transition-colors hover:bg-accent-green/25"
       >
         <GitCommit size={14} />
-        {L4(cLang, { ko: `커밋 (${dirtyFiles.length}개 파일)`, en: `Commit ${dirtyFiles.length} file` })}{L4(cLang, { ko: "", en: dirtyFiles.length > 1 ? "s" : "" })}
+        {L4(cLang, {
+          ko: `커밋 (${dirtyFiles.length}개 파일)`,
+          en: `Commit ${dirtyFiles.length} file`,
+        })}
+        {L4(cLang, { ko: "", en: dirtyFiles.length > 1 ? "s" : "" })}
       </button>
     </div>
   );
@@ -318,7 +337,9 @@ function HistoryTab({
     return (
       <div className="flex flex-col items-center justify-center py-8 text-text-tertiary">
         <History size={24} className="mb-2 opacity-50" />
-        <span className="text-sm">{L4(hLang, { ko: "커밋 기록 없음", en: "No commit history" })}</span>
+        <span className="text-sm">
+          {L4(hLang, { ko: "커밋 기록 없음", en: "No commit history" })}
+        </span>
       </div>
     );
   }
@@ -347,9 +368,7 @@ function HistoryTab({
                   {commit.message}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-text-tertiary">
-                  <span className="font-mono">
-                    {shortHash(commit.hash)}
-                  </span>
+                  <span className="font-mono">{shortHash(commit.hash)}</span>
                   <span>{formatTimestamp(commit.timestamp)}</span>
                   <span>
                     {commit.files.length} file
@@ -364,14 +383,23 @@ function HistoryTab({
               <div className="border-t border-border/20 px-2 py-2">
                 <div className="space-y-1">
                   {commit.files.map((snap) => (
-                    <DiffPreview key={snap.fileId} snapshot={snap} lang={hLang} />
+                    <DiffPreview
+                      key={snap.fileId}
+                      snapshot={snap}
+                      lang={hLang}
+                    />
                   ))}
                 </div>
                 <button
                   onClick={() => onRestore(commit)}
                   className="mt-2 flex items-center gap-1.5 rounded bg-accent-amber/15 px-2.5 py-1 text-xs font-medium text-accent-amber transition-colors hover:bg-accent-amber/25"
                 >
-                  <RotateCcw size={12} />{L4(hLang, { ko: "이 버전으로 복원", en: "Restore this version" })}</button>
+                  <RotateCcw size={12} />
+                  {L4(hLang, {
+                    ko: "이 버전으로 복원",
+                    en: "Restore this version",
+                  })}
+                </button>
               </div>
             )}
           </div>
@@ -405,7 +433,9 @@ export default function GitPanel({
   // Branch management
   const [branches, setBranches] = useState<string[]>(["main"]);
   const [currentBranch, setCurrentBranch] = useState("main");
-  const [branchCommits, setBranchCommits] = useState<Record<string, CommitEntry[]>>({ main: [] });
+  const [branchCommits, setBranchCommits] = useState<
+    Record<string, CommitEntry[]>
+  >({ main: [] });
   const [showNewBranch, setShowNewBranch] = useState(false);
   const [newBranchName, setNewBranchName] = useState("");
 
@@ -420,7 +450,7 @@ export default function GitPanel({
 
   const dirtyFiles = useMemo(
     () => openFiles.filter((f) => f.isDirty),
-    [openFiles]
+    [openFiles],
   );
 
   const gitWorkspaceFiles = useMemo(
@@ -428,37 +458,44 @@ export default function GitPanel({
     [files],
   );
 
-  const ensureGitRunner = useCallback(async (): Promise<WebContainerInstance> => {
-    if (gitContainerRef.current) {
-      return gitContainerRef.current;
-    }
-
-    const container = await createWebContainer();
-    gitContainerRef.current = container;
-    setGitRunner(async (args) => {
-      const result = await container.run(["git", ...args].join(" "));
-      if (result.exitCode !== 0) {
-        throw new Error(result.stderr || result.stdout || "Git command failed");
+  const ensureGitRunner =
+    useCallback(async (): Promise<WebContainerInstance> => {
+      if (gitContainerRef.current) {
+        return gitContainerRef.current;
       }
-      return result.stdout || result.stderr;
-    });
 
-    try {
-      await container.run("git init");
-      await container.run("git config user.name EH-Code-Studio");
-      await container.run("git config user.email code-studio@example.local");
-    } catch {
-      // Simulated runners can no-op here.
-    }
+      const container = await createWebContainer();
+      gitContainerRef.current = container;
+      setGitRunner(async (args) => {
+        const result = await container.run(["git", ...args].join(" "));
+        if (result.exitCode !== 0) {
+          throw new Error(
+            result.stderr || result.stdout || "Git command failed",
+          );
+        }
+        return result.stdout || result.stderr;
+      });
 
-    setGitBackendLabel(container.isAvailable ? "WebContainer" : "Simulated Runner");
-    return container;
-  }, []);
+      try {
+        await container.run("git init");
+        await container.run("git config user.name EH-Code-Studio");
+        await container.run("git config user.email code-studio@example.local");
+      } catch {
+        // Simulated runners can no-op here.
+      }
+
+      setGitBackendLabel(
+        container.isAvailable ? "WebContainer" : "Simulated Runner",
+      );
+      return container;
+    }, []);
 
   const syncGitWorkspace = useCallback(async (): Promise<void> => {
     const container = await ensureGitRunner();
     await Promise.all(
-      gitWorkspaceFiles.map((file) => container.writeFile(`/${file.path}`, file.content)),
+      gitWorkspaceFiles.map((file) =>
+        container.writeFile(`/${file.path}`, file.content),
+      ),
     );
   }, [ensureGitRunner, gitWorkspaceFiles]);
 
@@ -516,40 +553,53 @@ export default function GitPanel({
 
     setBranches((prev) => [...prev, name]);
     // Copy current branch commit history to the new branch
-    setBranchCommits((prev) => ({ ...prev, [name]: [...(prev[currentBranch] ?? [])] }));
+    setBranchCommits((prev) => ({
+      ...prev,
+      [name]: [...(prev[currentBranch] ?? [])],
+    }));
     setCurrentBranch(name);
     setCommits(branchCommits[currentBranch] ?? []);
     setNewBranchName("");
     setShowNewBranch(false);
-  }, [newBranchName, branches, currentBranch, branchCommits, gitAvailable, syncGitWorkspace]);
+  }, [
+    newBranchName,
+    branches,
+    currentBranch,
+    branchCommits,
+    gitAvailable,
+    syncGitWorkspace,
+  ]);
 
   // Branch: switch to existing branch
-  const handleSwitchBranch = useCallback(async (branch: string) => {
-    if (branch === currentBranch) return;
+  const handleSwitchBranch = useCallback(
+    async (branch: string) => {
+      if (branch === currentBranch) return;
 
-    if (gitAvailable) {
-      try {
-        await syncGitWorkspace();
-        await gitCheckout(branch);
-      } catch {
-        // Fall through to simulation
+      if (gitAvailable) {
+        try {
+          await syncGitWorkspace();
+          await gitCheckout(branch);
+        } catch {
+          // Fall through to simulation
+        }
       }
-    }
 
-    // In-memory engine switch
-    try {
-      engineSwitchBranch(gitEngineRef.current, branch);
-    } catch {
-      // Branch may not exist in engine
-    }
+      // In-memory engine switch
+      try {
+        engineSwitchBranch(gitEngineRef.current, branch);
+      } catch {
+        // Branch may not exist in engine
+      }
 
-    // Save current branch commits
-    setBranchCommits((prev) => ({ ...prev, [currentBranch]: commits }));
-    // Load target branch commits
-    setCurrentBranch(branch);
-    setCommits(branchCommits[branch] ?? []);
-    setExpandedHash(null);
-  }, [currentBranch, commits, branchCommits, gitAvailable, syncGitWorkspace]);
+      // Save current branch commits
+      setBranchCommits((prev) => ({ ...prev, [currentBranch]: commits }));
+      // Load target branch commits
+      setCurrentBranch(branch);
+      setCommits(branchCommits[branch] ?? []);
+      setExpandedHash(null);
+    },
+    [currentBranch, commits, branchCommits, gitAvailable, syncGitWorkspace],
+  );
 
   const handleCommit = useCallback(async () => {
     if (dirtyFiles.length === 0) return;
@@ -590,7 +640,11 @@ export default function GitPanel({
       for (const df of dirtyFiles) {
         engineFiles.set(df.name, df.content);
       }
-      const engineResult = await engineCommit(gitEngineRef.current, engineFiles, commitMessage);
+      const engineResult = await engineCommit(
+        gitEngineRef.current,
+        engineFiles,
+        commitMessage,
+      );
       commitHash = engineResult.hash;
     } catch {
       commitHash = generateHashFallback();
@@ -610,12 +664,22 @@ export default function GitPanel({
     });
     setBranchCommits((bc) => ({
       ...bc,
-      [currentBranch]: [entry, ...(bc[currentBranch] || [])].slice(0, MAX_HISTORY),
+      [currentBranch]: [entry, ...(bc[currentBranch] || [])].slice(
+        0,
+        MAX_HISTORY,
+      ),
     }));
     setActiveTab("history");
     // 커밋 후 dirty 상태 해제
     onClearDirty?.();
-  }, [dirtyFiles, flatFileMap, currentBranch, onClearDirty, gitAvailable, syncGitWorkspace]);
+  }, [
+    dirtyFiles,
+    flatFileMap,
+    currentBranch,
+    onClearDirty,
+    gitAvailable,
+    syncGitWorkspace,
+  ]);
 
   const handleRestore = useCallback(
     (commit: CommitEntry) => {
@@ -623,17 +687,19 @@ export default function GitPanel({
         onRestore(snap.fileId, snap.content);
       }
     },
-    [onRestore]
+    [onRestore],
   );
 
-  const handleToggleExpand = useCallback(
-    (hash: string) => {
-      setExpandedHash((prev) => (prev === hash ? null : hash));
-    },
-    []
-  );
+  const handleToggleExpand = useCallback((hash: string) => {
+    setExpandedHash((prev) => (prev === hash ? null : hash));
+  }, []);
 
-  const tabs: { id: TabId; label: string; icon: React.ReactNode; count?: number }[] = [
+  const tabs: {
+    id: TabId;
+    label: string;
+    icon: React.ReactNode;
+    count?: number;
+  }[] = [
     {
       id: "changes",
       label: L4(lang, { ko: "변경 사항", en: "Changes" }),
@@ -653,10 +719,20 @@ export default function GitPanel({
       {/* Mode notice */}
       <div className="text-[9px] text-text-tertiary bg-white/[0.02] px-3 py-1 border-b border-white/[0.08] flex items-center gap-2">
         <span>
-          {gitAvailable ? L4(lang, { ko: `Git 러너 연결됨 — ${gitBackendLabel}`, en: `Git runner connected — ${gitBackendLabel}` }) : L4(lang, { ko: "로컬 시뮬레이션 — 변경 사항은 브라우저에만 저장됩니다", en: "Local simulation — changes are saved in browser only" })}
+          {gitAvailable
+            ? L4(lang, {
+                ko: `Git 러너 연결됨 — ${gitBackendLabel}`,
+                en: `Git runner connected — ${gitBackendLabel}`,
+              })
+            : L4(lang, {
+                ko: "로컬 시뮬레이션 — 변경 사항은 브라우저에만 저장됩니다",
+                en: "Local simulation — changes are saved in browser only",
+              })}
         </span>
         <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-gray-500">
-          {gitAvailable ? gitBackendLabel : L4(lang, { ko: "시뮬레이션", en: "Simulation" })}
+          {gitAvailable
+            ? gitBackendLabel
+            : L4(lang, { ko: "시뮬레이션", en: "Simulation" })}
         </span>
       </div>
       {/* Branch selector */}
@@ -668,7 +744,9 @@ export default function GitPanel({
           className="flex-1 rounded border border-border/30 bg-bg-primary/50 px-2 py-1 font-mono text-xs text-text-primary outline-none"
         >
           {branches.map((b) => (
-            <option key={b} value={b}>{b}</option>
+            <option key={b} value={b}>
+              {b}
+            </option>
           ))}
         </select>
         {showNewBranch ? (
@@ -678,13 +756,21 @@ export default function GitPanel({
               onChange={(e) => setNewBranchName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleNewBranch();
-                if (e.key === "Escape") { setShowNewBranch(false); setNewBranchName(""); }
+                if (e.key === "Escape") {
+                  setShowNewBranch(false);
+                  setNewBranchName("");
+                }
               }}
               placeholder={L4(lang, { ko: "브랜치-이름", en: "branch-name" })}
               className="w-24 rounded border border-accent-green/30 bg-bg-primary/50 px-1.5 py-0.5 font-mono text-[10px] text-text-primary outline-none"
               autoFocus
             />
-            <button onClick={handleNewBranch} className="rounded bg-accent-green/15 px-1.5 py-0.5 text-[10px] text-accent-green hover:bg-accent-green/25">{L4(lang, { ko: "확인", en: "OK" })}</button>
+            <button
+              onClick={handleNewBranch}
+              className="rounded bg-accent-green/15 px-1.5 py-0.5 text-[10px] text-accent-green hover:bg-accent-green/25"
+            >
+              {L4(lang, { ko: "확인", en: "OK" })}
+            </button>
           </div>
         ) : (
           <button

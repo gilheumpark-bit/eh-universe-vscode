@@ -2,18 +2,18 @@
 // PART 1 — Core IndexedDB Backup (existing)
 // ============================================================
 
-import type { Project } from '@/lib/studio-types';
+import type { Project } from "@/lib/studio-types";
 
-const DB_NAME = 'noa_backup';
+const DB_NAME = "noa_backup";
 const DB_VERSION = 2;
-const STORE_NAME = 'projects';
-const VERSIONED_STORE = 'versioned_backups';
+const STORE_NAME = "projects";
+const VERSIONED_STORE = "versioned_backups";
 const MAX_VERSIONED_BACKUPS = 5;
 
 /** @returns True if IndexedDB API is available in the current environment */
 export function isIndexedDBAvailable(): boolean {
   try {
-    return typeof indexedDB !== 'undefined' && indexedDB !== null;
+    return typeof indexedDB !== "undefined" && indexedDB !== null;
   } catch {
     return false;
   }
@@ -29,10 +29,10 @@ function openDB(): Promise<IDBDatabase | null> {
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+          db.createObjectStore(STORE_NAME, { keyPath: "id" });
         }
         if (!db.objectStoreNames.contains(VERSIONED_STORE)) {
-          db.createObjectStore(VERSIONED_STORE, { keyPath: 'timestamp' });
+          db.createObjectStore(VERSIONED_STORE, { keyPath: "timestamp" });
         }
       };
 
@@ -51,7 +51,7 @@ export async function backupToIndexedDB(projects: Project[]): Promise<boolean> {
 
   return new Promise((resolve) => {
     try {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const tx = db.transaction(STORE_NAME, "readwrite");
       const store = tx.objectStore(STORE_NAME);
 
       store.clear();
@@ -59,8 +59,14 @@ export async function backupToIndexedDB(projects: Project[]): Promise<boolean> {
         store.put(project);
       }
 
-      tx.oncomplete = () => { db.close(); resolve(true); };
-      tx.onerror = () => { db.close(); resolve(false); };
+      tx.oncomplete = () => {
+        db.close();
+        resolve(true);
+      };
+      tx.onerror = () => {
+        db.close();
+        resolve(false);
+      };
     } catch {
       db.close();
       resolve(false);
@@ -75,7 +81,7 @@ export async function restoreFromIndexedDB(): Promise<Project[] | null> {
 
   return new Promise((resolve) => {
     try {
-      const tx = db.transaction(STORE_NAME, 'readonly');
+      const tx = db.transaction(STORE_NAME, "readonly");
       const store = tx.objectStore(STORE_NAME);
       const request = store.getAll();
 
@@ -84,7 +90,10 @@ export async function restoreFromIndexedDB(): Promise<Project[] | null> {
         const results = request.result as Project[];
         resolve(results.length > 0 ? results : null);
       };
-      request.onerror = () => { db.close(); resolve(null); };
+      request.onerror = () => {
+        db.close();
+        resolve(null);
+      };
     } catch {
       db.close();
       resolve(null);
@@ -105,13 +114,15 @@ export interface VersionedBackup {
 }
 
 /** Save a timestamped backup, rotating oldest if over MAX_VERSIONED_BACKUPS */
-export async function saveVersionedBackup(projects: Project[]): Promise<boolean> {
+export async function saveVersionedBackup(
+  projects: Project[],
+): Promise<boolean> {
   const db = await openDB();
   if (!db) return false;
 
   return new Promise((resolve) => {
     try {
-      const tx = db.transaction(VERSIONED_STORE, 'readwrite');
+      const tx = db.transaction(VERSIONED_STORE, "readwrite");
       const store = tx.objectStore(VERSIONED_STORE);
 
       const now = Date.now();
@@ -120,13 +131,15 @@ export async function saveVersionedBackup(projects: Project[]): Promise<boolean>
       // Get all existing backups to enforce rotation
       const getAllReq = store.getAll();
       getAllReq.onsuccess = () => {
-        const existing = (getAllReq.result as VersionedBackup[])
-          .sort((a, b) => a.timestamp - b.timestamp);
+        const existing = (getAllReq.result as VersionedBackup[]).sort(
+          (a, b) => a.timestamp - b.timestamp,
+        );
 
         // Remove oldest if at capacity
-        const toRemove = existing.length >= MAX_VERSIONED_BACKUPS
-          ? existing.slice(0, existing.length - MAX_VERSIONED_BACKUPS + 1)
-          : [];
+        const toRemove =
+          existing.length >= MAX_VERSIONED_BACKUPS
+            ? existing.slice(0, existing.length - MAX_VERSIONED_BACKUPS + 1)
+            : [];
 
         for (const old of toRemove) {
           store.delete(old.timestamp);
@@ -135,8 +148,14 @@ export async function saveVersionedBackup(projects: Project[]): Promise<boolean>
         store.put({ timestamp: now, label, projects });
       };
 
-      tx.oncomplete = () => { db.close(); resolve(true); };
-      tx.onerror = () => { db.close(); resolve(false); };
+      tx.oncomplete = () => {
+        db.close();
+        resolve(true);
+      };
+      tx.onerror = () => {
+        db.close();
+        resolve(false);
+      };
     } catch {
       db.close();
       resolve(false);
@@ -151,17 +170,21 @@ export async function listVersionedBackups(): Promise<VersionedBackup[]> {
 
   return new Promise((resolve) => {
     try {
-      const tx = db.transaction(VERSIONED_STORE, 'readonly');
+      const tx = db.transaction(VERSIONED_STORE, "readonly");
       const store = tx.objectStore(VERSIONED_STORE);
       const request = store.getAll();
 
       request.onsuccess = () => {
         db.close();
-        const results = (request.result as VersionedBackup[])
-          .sort((a, b) => b.timestamp - a.timestamp);
+        const results = (request.result as VersionedBackup[]).sort(
+          (a, b) => b.timestamp - a.timestamp,
+        );
         resolve(results);
       };
-      request.onerror = () => { db.close(); resolve([]); };
+      request.onerror = () => {
+        db.close();
+        resolve([]);
+      };
     } catch {
       db.close();
       resolve([]);
@@ -170,13 +193,15 @@ export async function listVersionedBackups(): Promise<VersionedBackup[]> {
 }
 
 /** Restore from a specific versioned backup by timestamp */
-export async function restoreVersionedBackup(timestamp: number): Promise<Project[] | null> {
+export async function restoreVersionedBackup(
+  timestamp: number,
+): Promise<Project[] | null> {
   const db = await openDB();
   if (!db) return null;
 
   return new Promise((resolve) => {
     try {
-      const tx = db.transaction(VERSIONED_STORE, 'readonly');
+      const tx = db.transaction(VERSIONED_STORE, "readonly");
       const store = tx.objectStore(VERSIONED_STORE);
       const request = store.get(timestamp);
 
@@ -185,7 +210,10 @@ export async function restoreVersionedBackup(timestamp: number): Promise<Project
         const backup = request.result as VersionedBackup | undefined;
         resolve(backup?.projects ?? null);
       };
-      request.onerror = () => { db.close(); resolve(null); };
+      request.onerror = () => {
+        db.close();
+        resolve(null);
+      };
     } catch {
       db.close();
       resolve(null);

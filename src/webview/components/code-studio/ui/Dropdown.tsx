@@ -6,7 +6,13 @@
 // Replaces inline dropdown patterns across ModelSwitcher, SearchPanel, etc.
 // Uses z-dropdown token. Escape/Enter/Arrow key support.
 
-import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
 import { ChevronDown } from "lucide-react";
 
 export interface DropdownOption {
@@ -60,7 +66,11 @@ export function Dropdown({
   useEffect(() => {
     if (!open) return;
     const onClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) close();
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      )
+        close();
     };
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
@@ -120,9 +130,8 @@ export function Dropdown({
     [open, focusIdx, enabledOptions, onChange, close, disabled],
   );
 
-  const sizeClasses = size === "sm"
-    ? "px-2 py-1 text-[11px]"
-    : "px-3 py-2 text-xs";
+  const sizeClasses =
+    size === "sm" ? "px-2 py-1 text-[11px]" : "px-3 py-2 text-xs";
 
   return (
     <div ref={containerRef} className={`relative ${width} ${className}`}>
@@ -133,7 +142,12 @@ export function Dropdown({
         aria-haspopup="listbox"
         aria-label={ariaLabel}
         disabled={disabled}
-        onClick={() => { if (!disabled) { setOpen(!open); setFocusIdx(0); } }}
+        onClick={() => {
+          if (!disabled) {
+            setOpen(!open);
+            setFocusIdx(0);
+          }
+        }}
         onKeyDown={handleKeyDown}
         className={`${sizeClasses} ${width} flex items-center justify-between gap-2
           bg-bg-secondary border border-border rounded-[var(--radius-md)]
@@ -141,7 +155,9 @@ export function Dropdown({
           transition-colors
           hover:bg-bg-tertiary
           disabled:opacity-30 disabled:pointer-events-none`}
-        style={{ transition: `border-color var(--transition-fast), background-color var(--transition-fast)` }}
+        style={{
+          transition: `border-color var(--transition-fast), background-color var(--transition-fast)`,
+        }}
       >
         <span className={selected ? "text-text-primary" : "text-text-tertiary"}>
           {selected ? (
@@ -149,7 +165,9 @@ export function Dropdown({
               {selected.icon}
               {selected.label}
             </span>
-          ) : placeholder}
+          ) : (
+            placeholder
+          )}
         </span>
         <ChevronDown
           size={size === "sm" ? 12 : 14}

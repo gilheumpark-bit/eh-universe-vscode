@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef } from 'react';
-import type { Message, AppLanguage } from '@/lib/studio-types';
-import { streamChat, type ChatMsg } from '@/lib/ai-providers';
-import { logger } from '@/lib/logger';
+import { useState, useCallback, useRef } from "react";
+import type { Message, AppLanguage } from "@/lib/studio-types";
+import { streamChat, type ChatMsg } from "@/lib/ai-providers";
+import { logger } from "@/lib/logger";
 
 interface NovelContext {
   genre?: string;
@@ -10,8 +10,11 @@ interface NovelContext {
   currentChapter?: string;
 }
 
-function buildWritingChatSystem(language: AppLanguage, ctx?: NovelContext): string {
-  const isKo = language === 'KO' || language === 'JP';
+function buildWritingChatSystem(
+  language: AppLanguage,
+  ctx?: NovelContext,
+): string {
+  const isKo = language === "KO" || language === "JP";
   const base = isKo
     ? `당신은 전문 소설 집필 컨설턴트입니다. 사용자의 언어로 응답하세요.`
     : `You are a professional fiction writing consultant. Respond in the user's language.`;
@@ -28,14 +31,17 @@ function buildWritingChatSystem(language: AppLanguage, ctx?: NovelContext): stri
 3. Keep responses concise (3-5 paragraphs max)
 4. Never write the actual novel text unless explicitly asked`;
 
-  const parts = [base, '', rules];
+  const parts = [base, "", rules];
 
   if (ctx?.genre) parts.push(`\nGenre: ${ctx.genre}`);
   if (ctx?.synopsis) parts.push(`Synopsis: ${ctx.synopsis}`);
   if (ctx?.characters) parts.push(`Characters: ${ctx.characters}`);
-  if (ctx?.currentChapter) parts.push(`Current chapter context:\n${ctx.currentChapter.slice(0, 2000)}`);
+  if (ctx?.currentChapter)
+    parts.push(
+      `Current chapter context:\n${ctx.currentChapter.slice(0, 2000)}`,
+    );
 
-  return parts.join('\n');
+  return parts.join("\n");
 }
 
 /**
@@ -51,71 +57,83 @@ export function useWritingChat(novelContext?: NovelContext) {
   const chatMessagesRef = useRef(chatMessages);
   chatMessagesRef.current = chatMessages;
 
-  const sendChat = useCallback(async (text: string, language: AppLanguage) => {
-    if (!text.trim() || chatLoading) return;
+  const sendChat = useCallback(
+    async (text: string, language: AppLanguage) => {
+      if (!text.trim() || chatLoading) return;
 
-    const userMsg: Message = {
-      id: `chat-u-${Date.now()}`,
-      role: 'user',
-      content: text,
-      timestamp: Date.now(),
-    };
+      const userMsg: Message = {
+        id: `chat-u-${Date.now()}`,
+        role: "user",
+        content: text,
+        timestamp: Date.now(),
+      };
 
-    const assistantMsgId = `chat-a-${Date.now()}`;
-    const assistantMsg: Message = {
-      id: assistantMsgId,
-      role: 'assistant',
-      content: '',
-      timestamp: Date.now(),
-    };
+      const assistantMsgId = `chat-a-${Date.now()}`;
+      const assistantMsg: Message = {
+        id: assistantMsgId,
+        role: "assistant",
+        content: "",
+        timestamp: Date.now(),
+      };
 
-    setChatMessages(prev => [...prev, userMsg, assistantMsg]);
-    setChatLoading(true);
+      setChatMessages((prev) => [...prev, userMsg, assistantMsg]);
+      setChatLoading(true);
 
-    if (abortControllerRef.current) abortControllerRef.current.abort();
-    abortControllerRef.current = new AbortController();
+      if (abortControllerRef.current) abortControllerRef.current.abort();
+      abortControllerRef.current = new AbortController();
 
-    try {
-      const history: ChatMsg[] = chatMessagesRef.current
-        .slice(-10)
-        .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
-      history.push({ role: 'user', content: text });
+      try {
+        const history: ChatMsg[] = chatMessagesRef.current
+          .slice(-10)
+          .map((m) => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+          }));
+        history.push({ role: "user", content: text });
 
-      await streamChat({
-        systemInstruction: buildWritingChatSystem(language, novelContext),
-        messages: history,
-        temperature: 0.7,
-        signal: abortControllerRef.current.signal,
-        isChatMode: true,
-        onChunk: (chunk) => {
-          setChatMessages(prev =>
-            prev.map(m =>
-              m.id === assistantMsgId
-                ? { ...m, content: m.content + chunk }
-                : m
-            )
+        await streamChat({
+          systemInstruction: buildWritingChatSystem(language, novelContext),
+          messages: history,
+          temperature: 0.7,
+          signal: abortControllerRef.current.signal,
+          isChatMode: true,
+          onChunk: (chunk) => {
+            setChatMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantMsgId
+                  ? { ...m, content: m.content + chunk }
+                  : m,
+              ),
+            );
+          },
+        });
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
+          logger.warn("Writing chat aborted");
+        } else {
+          logger.error("Writing chat error:", err);
+          setChatMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsgId && !m.content
+                ? {
+                    ...m,
+                    content:
+                      language === "KO"
+                        ? "⚠ AI 응답 실패. 다시 시도해주세요."
+                        : "⚠ AI response failed. Please try again.",
+                  }
+                : m,
+            ),
           );
-        },
-      });
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        logger.warn('Writing chat aborted');
-      } else {
-        logger.error('Writing chat error:', err);
-        setChatMessages(prev =>
-          prev.map(m =>
-            m.id === assistantMsgId && !m.content
-              ? { ...m, content: language === 'KO' ? '⚠ AI 응답 실패. 다시 시도해주세요.' : '⚠ AI response failed. Please try again.' }
-              : m
-          )
-        );
+        }
+      } finally {
+        setChatLoading(false);
+        abortControllerRef.current = null;
       }
-    } finally {
-      setChatLoading(false);
-      abortControllerRef.current = null;
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- chatMessagesRef avoids stale closure
-  }, [chatLoading, novelContext]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- chatMessagesRef avoids stale closure
+    },
+    [chatLoading, novelContext],
+  );
 
   const abortChat = useCallback(() => {
     if (abortControllerRef.current) {
@@ -134,6 +152,6 @@ export function useWritingChat(novelContext?: NovelContext) {
     sendChat,
     chatLoading,
     abortChat,
-    clearChat
+    clearChat,
   };
 }

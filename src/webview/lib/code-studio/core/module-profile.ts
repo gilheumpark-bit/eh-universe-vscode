@@ -18,21 +18,21 @@ export interface ModuleProfile {
   boundaries: string[];
   knownIssues: string[];
   evolutionPlan: string;
-  visibility: 'public' | 'internal' | 'private';
+  visibility: "public" | "internal" | "private";
   /** Glob patterns for files belonging to this module */
   filePatterns: string[];
   createdAt: number;
   updatedAt: number;
 }
 
-const STORAGE_KEY = 'eh-cs-module-profiles';
+const STORAGE_KEY = "eh-cs-module-profiles";
 
 // ============================================================
 // PART 2 — Storage Helpers
 // ============================================================
 
 function readStore(): ModuleProfile[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
@@ -44,7 +44,7 @@ function readStore(): ModuleProfile[] {
 }
 
 function writeStore(profiles: ModuleProfile[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
 }
 
@@ -57,7 +57,7 @@ export function getProfiles(): ModuleProfile[] {
 }
 
 export function createProfile(
-  data: Omit<ModuleProfile, 'id' | 'createdAt' | 'updatedAt'>,
+  data: Omit<ModuleProfile, "id" | "createdAt" | "updatedAt">,
 ): ModuleProfile {
   const profiles = readStore();
   const now = Date.now();
@@ -74,7 +74,7 @@ export function createProfile(
 
 export function updateProfile(
   id: string,
-  patch: Partial<Omit<ModuleProfile, 'id' | 'createdAt'>>,
+  patch: Partial<Omit<ModuleProfile, "id" | "createdAt">>,
 ): ModuleProfile | null {
   const profiles = readStore();
   const idx = profiles.findIndex((p) => p.id === id);
@@ -98,11 +98,11 @@ export function deleteProfile(id: string): boolean {
  */
 export function getProfileForFile(filePath: string): ModuleProfile | null {
   const profiles = readStore();
-  const normalized = filePath.replace(/\\/g, '/');
+  const normalized = filePath.replace(/\\/g, "/");
 
   for (const profile of profiles) {
     for (const pattern of profile.filePatterns) {
-      const normalizedPattern = pattern.replace(/\\/g, '/').replace(/\*+/g, '');
+      const normalizedPattern = pattern.replace(/\\/g, "/").replace(/\*+/g, "");
       if (normalized.includes(normalizedPattern)) {
         return profile;
       }
@@ -125,18 +125,18 @@ export function buildModuleDirective(profile: ModuleProfile): string {
   ];
 
   if (profile.dependencies.length > 0) {
-    sections.push(`**Dependencies:** ${profile.dependencies.join(', ')}`);
+    sections.push(`**Dependencies:** ${profile.dependencies.join(", ")}`);
   }
 
   if (profile.boundaries.length > 0) {
     sections.push(
-      `**Boundaries (MUST NOT):**\n${profile.boundaries.map((b) => `- ${b}`).join('\n')}`,
+      `**Boundaries (MUST NOT):**\n${profile.boundaries.map((b) => `- ${b}`).join("\n")}`,
     );
   }
 
   if (profile.knownIssues.length > 0) {
     sections.push(
-      `**Known Issues:**\n${profile.knownIssues.map((i) => `- ${i}`).join('\n')}`,
+      `**Known Issues:**\n${profile.knownIssues.map((i) => `- ${i}`).join("\n")}`,
     );
   }
 
@@ -146,7 +146,7 @@ export function buildModuleDirective(profile: ModuleProfile): string {
 
   sections.push(`**Visibility:** ${profile.visibility}`);
 
-  return sections.join('\n\n');
+  return sections.join("\n\n");
 }
 
 // IDENTITY_SEAL: module-profile | role=ModuleProfileCRUD | inputs=localStorage | outputs=ModuleProfile,buildModuleDirective

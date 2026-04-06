@@ -11,13 +11,19 @@ import dynamic from "next/dynamic";
 
 // ── chat (named) ──────────────────────────────────────────────
 export const ChatPanelComponent = dynamic(
-  () => import("@/components/code-studio/ChatPanel").then((m) => ({ default: m.ChatPanel })),
+  () =>
+    import("@/components/code-studio/ChatPanel").then((m) => ({
+      default: m.ChatPanel,
+    })),
   { ssr: false },
 );
 
 // ── pipeline (named) ──────────────────────────────────────────
 export const PipelinePanelComponent = dynamic(
-  () => import("@/components/code-studio/PipelinePanel").then((m) => ({ default: m.PipelinePanel })),
+  () =>
+    import("@/components/code-studio/PipelinePanel").then((m) => ({
+      default: m.PipelinePanel,
+    })),
   { ssr: false },
 );
 
@@ -35,19 +41,28 @@ export const DeployPanelComponent = dynamic(
 
 // ── search (named) ────────────────────────────────────────────
 export const SearchPanelComponent = dynamic(
-  () => import("@/components/code-studio/SearchPanel").then((m) => ({ default: m.SearchPanel })),
+  () =>
+    import("@/components/code-studio/SearchPanel").then((m) => ({
+      default: m.SearchPanel,
+    })),
   { ssr: false },
 );
 
 // ── autopilot (named) ─────────────────────────────────────────
 export const AutopilotPanelComponent = dynamic(
-  () => import("@/components/code-studio/AutopilotPanel").then((m) => ({ default: m.AutopilotPanel })),
+  () =>
+    import("@/components/code-studio/AutopilotPanel").then((m) => ({
+      default: m.AutopilotPanel,
+    })),
   { ssr: false },
 );
 
 // ── agents (named) ────────────────────────────────────────────
 export const AgentPanelComponent = dynamic(
-  () => import("@/components/code-studio/AgentPanel").then((m) => ({ default: m.AgentPanel })),
+  () =>
+    import("@/components/code-studio/AgentPanel").then((m) => ({
+      default: m.AgentPanel,
+    })),
   { ssr: false },
 );
 
@@ -59,7 +74,10 @@ export const ComposerPanelComponent = dynamic(
 
 // ── review (named) ────────────────────────────────────────────
 export const ReviewCenterComponent = dynamic(
-  () => import("@/components/code-studio/ReviewCenter").then((m) => ({ default: m.ReviewCenter })),
+  () =>
+    import("@/components/code-studio/ReviewCenter").then((m) => ({
+      default: m.ReviewCenter,
+    })),
   { ssr: false },
 );
 
@@ -71,31 +89,46 @@ export const PreviewPanelComponent = dynamic(
 
 // ── outline (named) ───────────────────────────────────────────
 export const OutlinePanelComponent = dynamic(
-  () => import("@/components/code-studio/OutlinePanel").then((m) => ({ default: m.OutlinePanel })),
+  () =>
+    import("@/components/code-studio/OutlinePanel").then((m) => ({
+      default: m.OutlinePanel,
+    })),
   { ssr: false },
 );
 
 // ── templates (named) ─────────────────────────────────────────
 export const TemplateGalleryComponent = dynamic(
-  () => import("@/components/code-studio/TemplateGallery").then((m) => ({ default: m.TemplateGallery })),
+  () =>
+    import("@/components/code-studio/TemplateGallery").then((m) => ({
+      default: m.TemplateGallery,
+    })),
   { ssr: false },
 );
 
 // ── settings-panel (named) ────────────────────────────────────
 export const SettingsPanelComponent = dynamic(
-  () => import("@/components/code-studio/SettingsPanel").then((m) => ({ default: m.SettingsPanel })),
+  () =>
+    import("@/components/code-studio/SettingsPanel").then((m) => ({
+      default: m.SettingsPanel,
+    })),
   { ssr: false },
 );
 
 // ── packages (named) ──────────────────────────────────────────
 export const PackagePanelComponent = dynamic(
-  () => import("@/components/code-studio/PackagePanel").then((m) => ({ default: m.PackagePanel })),
+  () =>
+    import("@/components/code-studio/PackagePanel").then((m) => ({
+      default: m.PackagePanel,
+    })),
   { ssr: false },
 );
 
 // ── evaluation (named) ────────────────────────────────────────
 export const EvaluationPanelComponent = dynamic(
-  () => import("@/components/code-studio/EvaluationPanel").then((m) => ({ default: m.EvaluationPanel })),
+  () =>
+    import("@/components/code-studio/EvaluationPanel").then((m) => ({
+      default: m.EvaluationPanel,
+    })),
   { ssr: false },
 );
 
@@ -119,13 +152,19 @@ export const CodeCreatorPanelComponent = dynamic(
 
 // ── terminal-panel (named) ────────────────────────────────────
 export const TerminalPanelComponent = dynamic(
-  () => import("@/components/code-studio/TerminalPanel").then((m) => ({ default: m.TerminalPanel })),
+  () =>
+    import("@/components/code-studio/TerminalPanel").then((m) => ({
+      default: m.TerminalPanel,
+    })),
   { ssr: false },
 );
 
 // ── multi-terminal (named) ────────────────────────────────────
 export const MultiTerminalComponent = dynamic(
-  () => import("@/components/code-studio/MultiTerminal").then((m) => ({ default: m.MultiTerminal })),
+  () =>
+    import("@/components/code-studio/MultiTerminal").then((m) => ({
+      default: m.MultiTerminal,
+    })),
   { ssr: false },
 );
 
@@ -137,7 +176,10 @@ export const DatabasePanelComponent = dynamic(
 
 // ── diff-editor (named) ───────────────────────────────────────
 export const DiffEditorPanelComponent = dynamic(
-  () => import("@/components/code-studio/DiffEditorPanel").then((m) => ({ default: m.DiffEditorPanel })),
+  () =>
+    import("@/components/code-studio/DiffEditorPanel").then((m) => ({
+      default: m.DiffEditorPanel,
+    })),
   { ssr: false },
 );
 
@@ -167,13 +209,19 @@ export const CanvasPanelComponent = dynamic(
 
 // ── progress (named) ──────────────────────────────────────────
 export const ProgressDashboardComponent = dynamic(
-  () => import("@/components/code-studio/ProgressDashboard").then((m) => ({ default: m.ProgressDashboard })),
+  () =>
+    import("@/components/code-studio/ProgressDashboard").then((m) => ({
+      default: m.ProgressDashboard,
+    })),
   { ssr: false },
 );
 
 // ── onboarding (named) ────────────────────────────────────────
 export const OnboardingGuideComponent = dynamic(
-  () => import("@/components/code-studio/OnboardingGuide").then((m) => ({ default: m.OnboardingGuide })),
+  () =>
+    import("@/components/code-studio/OnboardingGuide").then((m) => ({
+      default: m.OnboardingGuide,
+    })),
   { ssr: false },
 );
 
@@ -185,7 +233,10 @@ export const MergeConflictEditorComponent = dynamic(
 
 // ── project-switcher (named) ──────────────────────────────────
 export const ProjectSwitcherComponent = dynamic(
-  () => import("@/components/code-studio/ProjectSwitcher").then((m) => ({ default: m.ProjectSwitcher })),
+  () =>
+    import("@/components/code-studio/ProjectSwitcher").then((m) => ({
+      default: m.ProjectSwitcher,
+    })),
   { ssr: false },
 );
 
@@ -203,19 +254,28 @@ export const SymbolPaletteComponent = dynamic(
 
 // ── keybindings (named) ───────────────────────────────────────
 export const KeybindingsPanelComponent = dynamic(
-  () => import("@/components/code-studio/KeybindingsPanel").then((m) => ({ default: m.KeybindingsPanel })),
+  () =>
+    import("@/components/code-studio/KeybindingsPanel").then((m) => ({
+      default: m.KeybindingsPanel,
+    })),
   { ssr: false },
 );
 
 // ── quick-verify (one-click verification) ────────────────────
 export const QuickVerifyComponent = dynamic(
-  () => import("@/components/code-studio/QuickVerify").then((m) => ({ default: m.QuickVerify })),
+  () =>
+    import("@/components/code-studio/QuickVerify").then((m) => ({
+      default: m.QuickVerify,
+    })),
   { ssr: false },
 );
 
 // ── api-config (unified) ──────────────────────────────────────
 export const APIKeyConfigComponent = dynamic(
-  () => import("@/components/home/APIKeySlotManager").then((m) => ({ default: m.APIKeySlotManager })),
+  () =>
+    import("@/components/home/APIKeySlotManager").then((m) => ({
+      default: m.APIKeySlotManager,
+    })),
   { ssr: false },
 );
 
@@ -227,37 +287,55 @@ export const PreviewNetworkTabComponent = dynamic(
 
 // ── code-actions (named) ──────────────────────────────────────
 export const QuickActionsComponent = dynamic(
-  () => import("@/components/code-studio/QuickActions").then((m) => ({ default: m.QuickActions })),
+  () =>
+    import("@/components/code-studio/QuickActions").then((m) => ({
+      default: m.QuickActions,
+    })),
   { ssr: false },
 );
 
 // ── model-switcher (named) ────────────────────────────────────
 export const ModelSwitcherComponent = dynamic(
-  () => import("@/components/code-studio/ModelSwitcher").then((m) => ({ default: m.ModelSwitcher })),
+  () =>
+    import("@/components/code-studio/ModelSwitcher").then((m) => ({
+      default: m.ModelSwitcher,
+    })),
   { ssr: false },
 );
 
 // ── audit (named) ───────────────────────────────────────────
 export const AuditPanelComponent = dynamic(
-  () => import("@/components/code-studio/AuditPanel").then((m) => ({ default: m.AuditPanel })),
+  () =>
+    import("@/components/code-studio/AuditPanel").then((m) => ({
+      default: m.AuditPanel,
+    })),
   { ssr: false },
 );
 
 // ── multi-diff (named) ──────────────────────────────────────
 export const MultiFileDiffComponent = dynamic(
-  () => import("@/components/code-studio/MultiFileDiff").then((m) => ({ default: m.MultiFileDiff })),
+  () =>
+    import("@/components/code-studio/MultiFileDiff").then((m) => ({
+      default: m.MultiFileDiff,
+    })),
   { ssr: false },
 );
 
 // ── debugger (named) ────────────────────────────────────────
 export const DebugPanelComponent = dynamic(
-  () => import("@/components/code-studio/DebugPanel").then((m) => ({ default: m.DebugPanel })),
+  () =>
+    import("@/components/code-studio/DebugPanel").then((m) => ({
+      default: m.DebugPanel,
+    })),
   { ssr: false },
 );
 
 // ── naming-dict (named) ─────────────────────────────────────
 export const NamingDictPanelComponent = dynamic(
-  () => import("@/components/code-studio/NamingDictPanel").then((m) => ({ default: m.NamingDictPanel })),
+  () =>
+    import("@/components/code-studio/NamingDictPanel").then((m) => ({
+      default: m.NamingDictPanel,
+    })),
   { ssr: false },
 );
 
@@ -269,43 +347,64 @@ export const DependencyGraphComponent = dynamic(
 
 // ── review-board (named) ────────────────────────────────────
 export const ReviewBoardComponent = dynamic(
-  () => import("@/components/code-studio/ReviewBoard").then((m) => ({ default: m.ReviewBoard })),
+  () =>
+    import("@/components/code-studio/ReviewBoard").then((m) => ({
+      default: m.ReviewBoard,
+    })),
   { ssr: false },
 );
 
 // ── module-profile (named) ─────────────────────────────────
 export const ModuleProfilePanelComponent = dynamic(
-  () => import("@/components/code-studio/ModuleProfilePanel").then((m) => ({ default: m.ModuleProfilePanel })),
+  () =>
+    import("@/components/code-studio/ModuleProfilePanel").then((m) => ({
+      default: m.ModuleProfilePanel,
+    })),
   { ssr: false },
 );
 
 // ── cognitive-load (named) ─────────────────────────────────
 export const CognitiveLoadPanelComponent = dynamic(
-  () => import("@/components/code-studio/CognitiveLoadPanel").then((m) => ({ default: m.CognitiveLoadPanel })),
+  () =>
+    import("@/components/code-studio/CognitiveLoadPanel").then((m) => ({
+      default: m.CognitiveLoadPanel,
+    })),
   { ssr: false },
 );
 
 // ── adr (named) ────────────────────────────────────────────
 export const ADRPanelComponent = dynamic(
-  () => import("@/components/code-studio/ADRPanel").then((m) => ({ default: m.ADRPanel })),
+  () =>
+    import("@/components/code-studio/ADRPanel").then((m) => ({
+      default: m.ADRPanel,
+    })),
   { ssr: false },
 );
 
 // ── code-rhythm (named) ────────────────────────────────────
 export const RhythmPanelComponent = dynamic(
-  () => import("@/components/code-studio/RhythmPanel").then((m) => ({ default: m.RhythmPanel })),
+  () =>
+    import("@/components/code-studio/RhythmPanel").then((m) => ({
+      default: m.RhythmPanel,
+    })),
   { ssr: false },
 );
 
 // ── migration-audit (named) ────────────────────────────────
 export const MigrationAuditPanelComponent = dynamic(
-  () => import("@/components/code-studio/MigrationAuditPanel").then((m) => ({ default: m.MigrationAuditPanel })),
+  () =>
+    import("@/components/code-studio/MigrationAuditPanel").then((m) => ({
+      default: m.MigrationAuditPanel,
+    })),
   { ssr: false },
 );
 
 // ── snippet-market (named) ─────────────────────────────────
 export const SnippetMarketComponent = dynamic(
-  () => import("@/components/code-studio/SnippetMarket").then((m) => ({ default: m.SnippetMarket })),
+  () =>
+    import("@/components/code-studio/SnippetMarket").then((m) => ({
+      default: m.SnippetMarket,
+    })),
   { ssr: false },
 );
 
@@ -334,7 +433,10 @@ export const DiffViewerComponent = dynamic(
 );
 
 export const StatusBarComponent = dynamic(
-  () => import("@/components/code-studio/StatusBar").then((m) => ({ default: m.StatusBar })),
+  () =>
+    import("@/components/code-studio/StatusBar").then((m) => ({
+      default: m.StatusBar,
+    })),
   { ssr: false },
 );
 
@@ -344,22 +446,34 @@ export const MobileLayoutComponent = dynamic(
 );
 
 export const TabletLayoutComponent = dynamic(
-  () => import("@/components/code-studio/TabletLayout").then((m) => ({ default: m.TabletLayout })),
+  () =>
+    import("@/components/code-studio/TabletLayout").then((m) => ({
+      default: m.TabletLayout,
+    })),
   { ssr: false },
 );
 
 export const EditorTabsComponent = dynamic(
-  () => import("@/components/code-studio/EditorTabs").then((m) => ({ default: m.EditorTabs })),
+  () =>
+    import("@/components/code-studio/EditorTabs").then((m) => ({
+      default: m.EditorTabs,
+    })),
   { ssr: false },
 );
 
 export const ProblemsPanelComponent = dynamic(
-  () => import("@/components/code-studio/ProblemsPanel").then((m) => ({ default: m.ProblemsPanel })),
+  () =>
+    import("@/components/code-studio/ProblemsPanel").then((m) => ({
+      default: m.ProblemsPanel,
+    })),
   { ssr: false },
 );
 
 export const QuickOpenComponent = dynamic(
-  () => import("@/components/code-studio/QuickOpen").then((m) => ({ default: m.QuickOpen })),
+  () =>
+    import("@/components/code-studio/QuickOpen").then((m) => ({
+      default: m.QuickOpen,
+    })),
   { ssr: false },
 );
 
@@ -375,37 +489,55 @@ export const QuickOpenComponent = dynamic(
 
 // ── file-explorer (named) ───────────────────────────────────
 export const FileExplorerComponent = dynamic(
-  () => import("@/components/code-studio/FileExplorer").then((m) => ({ default: m.FileExplorer })),
+  () =>
+    import("@/components/code-studio/FileExplorer").then((m) => ({
+      default: m.FileExplorer,
+    })),
   { ssr: false },
 );
 
 // ── context-menu (named) ────────────────────────────────────
 export const ContextMenuComponent = dynamic(
-  () => import("@/components/code-studio/ContextMenu").then((m) => ({ default: m.ContextMenu })),
+  () =>
+    import("@/components/code-studio/ContextMenu").then((m) => ({
+      default: m.ContextMenu,
+    })),
   { ssr: false },
 );
 
 // ── input-dialog (named) ────────────────────────────────────
 export const InputDialogComponent = dynamic(
-  () => import("@/components/code-studio/InputDialog").then((m) => ({ default: m.InputDialog })),
+  () =>
+    import("@/components/code-studio/InputDialog").then((m) => ({
+      default: m.InputDialog,
+    })),
   { ssr: false },
 );
 
 // ── resize-handle (named) ───────────────────────────────────
 export const ResizeHandleComponent = dynamic(
-  () => import("@/components/code-studio/ResizeHandle").then((m) => ({ default: m.ResizeHandle })),
+  () =>
+    import("@/components/code-studio/ResizeHandle").then((m) => ({
+      default: m.ResizeHandle,
+    })),
   { ssr: false },
 );
 
 // ── editor-group (named) ────────────────────────────────────
 export const EditorGroupComponent = dynamic(
-  () => import("@/components/code-studio/EditorGroup").then((m) => ({ default: m.EditorGroup })),
+  () =>
+    import("@/components/code-studio/EditorGroup").then((m) => ({
+      default: m.EditorGroup,
+    })),
   { ssr: false },
 );
 
 // ── split-terminal (named) ──────────────────────────────────
 export const SplitTerminalComponent = dynamic(
-  () => import("@/components/code-studio/SplitTerminal").then((m) => ({ default: m.SplitTerminal })),
+  () =>
+    import("@/components/code-studio/SplitTerminal").then((m) => ({
+      default: m.SplitTerminal,
+    })),
   { ssr: false },
 );
 
@@ -423,19 +555,28 @@ export const CodeBlockActionsComponent = dynamic(
 
 // ── inline-edit-widget (named) ──────────────────────────────
 export const InlineEditWidgetComponent = dynamic(
-  () => import("@/components/code-studio/InlineEditWidget").then((m) => ({ default: m.InlineEditWidget })),
+  () =>
+    import("@/components/code-studio/InlineEditWidget").then((m) => ({
+      default: m.InlineEditWidget,
+    })),
   { ssr: false },
 );
 
 // ── language-switch (named) ─────────────────────────────────
 export const LanguageSwitchComponent = dynamic(
-  () => import("@/components/code-studio/LanguageSwitch").then((m) => ({ default: m.LanguageSwitch })),
+  () =>
+    import("@/components/code-studio/LanguageSwitch").then((m) => ({
+      default: m.LanguageSwitch,
+    })),
   { ssr: false },
 );
 
 // ── project-spec-form (named) ───────────────────────────────
 export const ProjectSpecFormComponent = dynamic(
-  () => import("@/components/code-studio/ProjectSpecForm").then((m) => ({ default: m.ProjectSpecForm })),
+  () =>
+    import("@/components/code-studio/ProjectSpecForm").then((m) => ({
+      default: m.ProjectSpecForm,
+    })),
   { ssr: false },
 );
 
@@ -447,7 +588,10 @@ export const WelcomeTabComponent = dynamic(
 
 // ── activity-bar (named) ────────────────────────────────────
 export const ActivityBarComponent = dynamic(
-  () => import("@/components/code-studio/ActivityBar").then((m) => ({ default: m.ActivityBar })),
+  () =>
+    import("@/components/code-studio/ActivityBar").then((m) => ({
+      default: m.ActivityBar,
+    })),
   { ssr: false },
 );
 

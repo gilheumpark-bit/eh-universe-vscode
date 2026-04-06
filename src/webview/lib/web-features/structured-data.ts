@@ -12,8 +12,8 @@ export function buildArticleJsonLd(article: {
   wordCount: number;
 }): object {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
+    "@context": "https://schema.org",
+    "@type": "Article",
     headline: article.title,
     description: article.description,
     articleSection: article.category,
@@ -21,44 +21,47 @@ export function buildArticleJsonLd(article: {
     wordCount: article.wordCount,
     url: `https://eh-universe.com/archive/${article.slug}`,
     publisher: {
-      '@type': 'Organization',
-      name: 'EH Universe',
-      url: 'https://eh-universe.com',
+      "@type": "Organization",
+      name: "EH Universe",
+      url: "https://eh-universe.com",
     },
     isAccessibleForFree: true,
-    license: 'https://creativecommons.org/licenses/by-nc/4.0/',
+    license: "https://creativecommons.org/licenses/by-nc/4.0/",
   };
 }
 
 export function buildWebAppJsonLd(): object {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
-    name: 'EH Universe',
-    description: 'AI-powered narrative engine with novel studio, code studio, and translation studio.',
-    url: 'https://eh-universe.com',
-    applicationCategory: 'CreativeWork',
-    operatingSystem: 'Web Browser',
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "EH Universe",
+    description:
+      "AI-powered narrative engine with novel studio, code studio, and translation studio.",
+    url: "https://eh-universe.com",
+    applicationCategory: "CreativeWork",
+    operatingSystem: "Web Browser",
     offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
     },
     featureList: [
-      'AI Novel Writing',
-      'AI Code Verification',
-      'AI Translation with 6-axis scoring',
-      'Worldbuilding Archive',
+      "AI Novel Writing",
+      "AI Code Verification",
+      "AI Translation with 6-axis scoring",
+      "Worldbuilding Archive",
     ],
   };
 }
 
-export function buildBreadcrumbJsonLd(items: Array<{ name: string; url: string }>): object {
+export function buildBreadcrumbJsonLd(
+  items: Array<{ name: string; url: string }>,
+): object {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
     itemListElement: items.map((item, i) => ({
-      '@type': 'ListItem',
+      "@type": "ListItem",
       position: i + 1,
       name: item.name,
       item: item.url,
@@ -66,15 +69,17 @@ export function buildBreadcrumbJsonLd(items: Array<{ name: string; url: string }
   };
 }
 
-export function buildFAQJsonLd(faqs: Array<{ question: string; answer: string }>): object {
+export function buildFAQJsonLd(
+  faqs: Array<{ question: string; answer: string }>,
+): object {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map(faq => ({
-      '@type': 'Question',
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
       name: faq.question,
       acceptedAnswer: {
-        '@type': 'Answer',
+        "@type": "Answer",
         text: faq.answer,
       },
     })),

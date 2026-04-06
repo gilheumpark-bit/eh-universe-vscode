@@ -72,7 +72,10 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
 // PART 3 — Component
 // ============================================================
 
-export default function ShortcutOverlay({ open, onClose }: ShortcutOverlayProps) {
+export default function ShortcutOverlay({
+  open,
+  onClose,
+}: ShortcutOverlayProps) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -88,8 +91,8 @@ export default function ShortcutOverlay({ open, onClose }: ShortcutOverlayProps)
   if (!open) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-200" 
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
@@ -103,12 +106,16 @@ export default function ShortcutOverlay({ open, onClose }: ShortcutOverlayProps)
               <Keyboard size={20} className="text-accent-green" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-text-primary">Keyboard Shortcuts</h2>
-              <p className="text-[10px] text-text-tertiary uppercase tracking-wider">Quick access commands</p>
+              <h2 className="text-base font-bold text-text-primary">
+                Keyboard Shortcuts
+              </h2>
+              <p className="text-[10px] text-text-tertiary uppercase tracking-wider">
+                Quick access commands
+              </p>
             </div>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-2 rounded-xl text-text-tertiary hover:text-text-primary hover:bg-white/5 transition-colors"
           >
             <X size={18} />
@@ -145,7 +152,11 @@ export default function ShortcutOverlay({ open, onClose }: ShortcutOverlayProps)
         {/* Footer */}
         <div className="mt-6 pt-4 border-t border-white/[0.06] text-center">
           <p className="text-[10px] text-text-tertiary">
-            Press <kbd className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 mx-1">?</kbd> anytime to open this panel
+            Press{" "}
+            <kbd className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 mx-1">
+              ?
+            </kbd>{" "}
+            anytime to open this panel
           </p>
         </div>
       </div>

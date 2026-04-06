@@ -1,19 +1,23 @@
 import type { User } from "firebase/auth";
 // Firebase Firestore — static import for data-layer modules.
 // Dynamic alternative: import('firebase/firestore') via lazyFirestore() in firebase.ts
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { type UserRecord } from "@/lib/network-types";
 import {
-  doc, getDoc, setDoc, updateDoc,
-} from "firebase/firestore";
-import {
-  type UserRecord,
-} from "@/lib/network-types";
-import { requireDb, normalizeText, COLLECTIONS, nowIso, buildDefaultUserRecord } from "./helpers";
+  requireDb,
+  normalizeText,
+  COLLECTIONS,
+  nowIso,
+  buildDefaultUserRecord,
+} from "./helpers";
 
 // ============================================================
 // PART 2 - USER HELPERS
 // ============================================================
 
-export async function ensureNetworkUserRecord(user: Pick<User, "uid" | "displayName">) {
+export async function ensureNetworkUserRecord(
+  user: Pick<User, "uid" | "displayName">,
+) {
   const database = requireDb();
   const ref = doc(database, COLLECTIONS.users, user.uid);
   const snapshot = await getDoc(ref);
@@ -50,4 +54,3 @@ export async function getNetworkUserRecord(userId: string) {
 }
 
 // IDENTITY_SEAL: PART-2 | role=user record sync | inputs=firebase auth user | outputs=network user record
-

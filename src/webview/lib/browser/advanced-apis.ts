@@ -16,26 +16,39 @@ export interface OCRResult {
 }
 
 /** 이미지에서 텍스트 추출 (Chromium only) */
-export async function detectTextFromImage(imageSource: ImageBitmapSource): Promise<OCRResult[]> {
-  if (typeof (globalThis as any).TextDetector === 'undefined') return [];
+export async function detectTextFromImage(
+  imageSource: ImageBitmapSource,
+): Promise<OCRResult[]> {
+  if (typeof (globalThis as any).TextDetector === "undefined") return [];
   try {
     const detector = new (globalThis as any).TextDetector();
     const results = await detector.detect(imageSource);
-    return results.map((r: { rawValue: string; boundingBox: DOMRectReadOnly }) => ({
-      text: r.rawValue,
-      boundingBox: { x: r.boundingBox.x, y: r.boundingBox.y, width: r.boundingBox.width, height: r.boundingBox.height },
-      confidence: 1,
-    }));
+    return results.map(
+      (r: { rawValue: string; boundingBox: DOMRectReadOnly }) => ({
+        text: r.rawValue,
+        boundingBox: {
+          x: r.boundingBox.x,
+          y: r.boundingBox.y,
+          width: r.boundingBox.width,
+          height: r.boundingBox.height,
+        },
+        confidence: 1,
+      }),
+    );
   } catch {
     return [];
   }
 }
 
 /** 바코드/QR 감지 */
-export async function detectBarcode(imageSource: ImageBitmapSource): Promise<string[]> {
-  if (typeof (globalThis as any).BarcodeDetector === 'undefined') return [];
+export async function detectBarcode(
+  imageSource: ImageBitmapSource,
+): Promise<string[]> {
+  if (typeof (globalThis as any).BarcodeDetector === "undefined") return [];
   try {
-    const detector = new (globalThis as any).BarcodeDetector({ formats: ['qr_code', 'ean_13', 'code_128'] });
+    const detector = new (globalThis as any).BarcodeDetector({
+      formats: ["qr_code", "ean_13", "code_128"],
+    });
     const results = await detector.detect(imageSource);
     return results.map((r: { rawValue: string }) => r.rawValue);
   } catch {
@@ -79,7 +92,7 @@ export async function getLocalFonts(): Promise<LocalFont[]> {
 
 /** 화면에서 색상 추출 (Chromium only) */
 export async function pickColorFromScreen(): Promise<string | null> {
-  if (typeof (globalThis as any).EyeDropper === 'undefined') return null;
+  if (typeof (globalThis as any).EyeDropper === "undefined") return null;
   try {
     const dropper = new (globalThis as any).EyeDropper();
     const result = await dropper.open();
@@ -113,7 +126,9 @@ export async function startScreenRecording(): Promise<boolean> {
     recordingStartTime = Date.now();
 
     mediaRecorder = new MediaRecorder(stream, {
-      mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm',
+      mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+        ? "video/webm;codecs=vp9"
+        : "video/webm",
     });
 
     mediaRecorder.ondataavailable = (e) => {
@@ -130,18 +145,18 @@ export async function startScreenRecording(): Promise<boolean> {
 /** 화면 녹화 중지 + 결과 반환 */
 export function stopScreenRecording(): Promise<ScreenRecording | null> {
   return new Promise((resolve) => {
-    if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+    if (!mediaRecorder || mediaRecorder.state === "inactive") {
       resolve(null);
       return;
     }
 
     mediaRecorder.onstop = () => {
-      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      const blob = new Blob(recordedChunks, { type: "video/webm" });
       const url = URL.createObjectURL(blob);
       const duration = Date.now() - recordingStartTime;
 
       // 스트림 트랙 정리
-      mediaRecorder?.stream.getTracks().forEach(t => t.stop());
+      mediaRecorder?.stream.getTracks().forEach((t) => t.stop());
       mediaRecorder = null;
       recordedChunks = [];
 
@@ -154,29 +169,33 @@ export function stopScreenRecording(): Promise<ScreenRecording | null> {
 
 /** 녹화 중인지 */
 export function isRecording(): boolean {
-  return mediaRecorder !== null && mediaRecorder.state === 'recording';
+  return mediaRecorder !== null && mediaRecorder.state === "recording";
 }
 
 // ── 5. Speculation Rules (페이지 사전 렌더링) ──
 
 /** 자주 이동하는 경로를 사전 렌더링 힌트로 등록 */
 export function addSpeculationRules(urls: string[]): void {
-  if (!HTMLScriptElement.supports?.('speculationrules')) return;
+  if (!HTMLScriptElement.supports?.("speculationrules")) return;
 
   // 기존 규칙 제거
-  const existing = document.querySelector('script[type="speculationrules"][data-eh]');
+  const existing = document.querySelector(
+    'script[type="speculationrules"][data-eh]',
+  );
   if (existing) existing.remove();
 
   const rules = {
-    prerender: [{
-      urls,
-      eagerness: 'moderate' as const,
-    }],
+    prerender: [
+      {
+        urls,
+        eagerness: "moderate" as const,
+      },
+    ],
   };
 
-  const script = document.createElement('script');
-  script.type = 'speculationrules';
-  script.dataset.eh = '1';
+  const script = document.createElement("script");
+  script.type = "speculationrules";
+  script.dataset.eh = "1";
   script.textContent = JSON.stringify(rules);
   document.head.appendChild(script);
 }
@@ -184,10 +203,10 @@ export function addSpeculationRules(urls: string[]): void {
 /** 스튜디오 경로 기본 사전 렌더링 */
 export function preloadStudioRoutes(): void {
   addSpeculationRules([
-    '/studio',
-    '/code-studio',
-    '/translation-studio',
-    '/archive',
+    "/studio",
+    "/code-studio",
+    "/translation-studio",
+    "/archive",
   ]);
 }
 
@@ -195,11 +214,17 @@ export function preloadStudioRoutes(): void {
 
 export function getBrowserCapabilities() {
   return {
-    textDetection: typeof (globalThis as any).TextDetector !== 'undefined',
-    barcodeDetection: typeof (globalThis as any).BarcodeDetector !== 'undefined',
-    localFonts: typeof window !== 'undefined' && !!(window as any).queryLocalFonts,
-    eyeDropper: typeof (globalThis as any).EyeDropper !== 'undefined',
-    screenCapture: typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia,
-    speculationRules: typeof HTMLScriptElement !== 'undefined' && !!HTMLScriptElement.supports?.('speculationrules'),
+    textDetection: typeof (globalThis as any).TextDetector !== "undefined",
+    barcodeDetection:
+      typeof (globalThis as any).BarcodeDetector !== "undefined",
+    localFonts:
+      typeof window !== "undefined" && !!(window as any).queryLocalFonts,
+    eyeDropper: typeof (globalThis as any).EyeDropper !== "undefined",
+    screenCapture:
+      typeof navigator !== "undefined" &&
+      !!navigator.mediaDevices?.getDisplayMedia,
+    speculationRules:
+      typeof HTMLScriptElement !== "undefined" &&
+      !!HTMLScriptElement.supports?.("speculationrules"),
   };
 }

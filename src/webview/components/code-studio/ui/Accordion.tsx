@@ -25,7 +25,11 @@ interface AccordionProps {
   className?: string;
 }
 
-export function Accordion({ items, multiple = false, className = "" }: AccordionProps) {
+export function Accordion({
+  items,
+  multiple = false,
+  className = "",
+}: AccordionProps) {
   const [openIds, setOpenIds] = useState<Set<string>>(() => {
     const initial = new Set<string>();
     for (const item of items) {
@@ -67,7 +71,9 @@ export function Accordion({ items, multiple = false, className = "" }: Accordion
               className="w-full flex items-center gap-2 px-3 py-2.5
                 text-xs font-semibold text-text-secondary
                 hover:bg-bg-tertiary/50 hover:text-text-primary"
-              style={{ transition: `background-color var(--transition-fast), color var(--transition-fast)` }}
+              style={{
+                transition: `background-color var(--transition-fast), color var(--transition-fast)`,
+              }}
             >
               <ChevronRight
                 size={12}

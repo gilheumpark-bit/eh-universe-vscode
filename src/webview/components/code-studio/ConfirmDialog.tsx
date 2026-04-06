@@ -50,7 +50,11 @@ export function ConfirmDialog({
         : "bg-amber-800 hover:bg-amber-600";
 
   const iconColor =
-    variant === "danger" ? "text-red-400" : variant === "warning" ? "text-amber-400" : "text-amber-400";
+    variant === "danger"
+      ? "text-red-400"
+      : variant === "warning"
+        ? "text-amber-400"
+        : "text-amber-400";
 
   return (
     <div
@@ -67,7 +71,9 @@ export function ConfirmDialog({
           <AlertTriangle size={16} className={iconColor} />
           <p className="text-sm font-semibold text-text-primary">{title}</p>
         </div>
-        <p className="text-xs text-text-tertiary mb-4 leading-relaxed">{message}</p>
+        <p className="text-xs text-text-tertiary mb-4 leading-relaxed">
+          {message}
+        </p>
         <div className="flex justify-end gap-2">
           <button
             ref={cancelRef}

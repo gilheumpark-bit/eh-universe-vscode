@@ -24,7 +24,7 @@ import { verifyHmac } from "./hmac";
  */
 export async function verifyChainIntegrity(
   entries: readonly AuditEntry[],
-  secret: string
+  secret: string,
 ): Promise<AuditVerification> {
   if (entries.length === 0) {
     return { valid: true };
@@ -123,7 +123,11 @@ export function createStreamingVerifier(secret: string): StreamingVerifier {
       }
 
       // HMAC 검증
-      const sigValid = await verifyHmac(entry.hash, entry.hmacSignature, secret);
+      const sigValid = await verifyHmac(
+        entry.hash,
+        entry.hmacSignature,
+        secret,
+      );
       if (!sigValid) {
         return { valid: false, brokenAt: i, reason: "SIGNATURE_MISMATCH" };
       }

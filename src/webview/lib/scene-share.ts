@@ -7,7 +7,7 @@
 // PART 1 — Types
 // ============================================================
 
-import type { ParsedScene, VoiceMapping } from '@/engine/scene-parser';
+import type { ParsedScene, VoiceMapping } from "@/engine/scene-parser";
 
 export interface SharedSceneData {
   token: string;
@@ -50,14 +50,15 @@ export interface SceneFeedback {
 // ============================================================
 
 function generateToken(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-  let token = '';
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let token = "";
   const array = new Uint8Array(8);
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
     crypto.getRandomValues(array);
     for (const byte of array) token += chars[byte % chars.length];
   } else {
-    for (let i = 0; i < 8; i++) token += chars[Math.floor(Math.random() * chars.length)];
+    for (let i = 0; i < 8; i++)
+      token += chars[Math.floor(Math.random() * chars.length)];
   }
   return token;
 }
@@ -72,20 +73,20 @@ function generateToken(): string {
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 // P0#5 fix: Firebase 인스턴스 캐싱 (중복 초기화 방지)
-import type { Firestore } from 'firebase/firestore';
+import type { Firestore } from "firebase/firestore";
 let _dbCache: Firestore | null = null;
 let _dbPromise: Promise<Firestore | null> | null = null;
 
 async function getFirestore() {
   if (_dbCache) return _dbCache;
   if (_dbPromise) return _dbPromise;
-  _dbPromise = import('@/lib/firebase').then(({ getDb }) => {
+  _dbPromise = import("@/lib/firebase").then(({ getDb }) => {
     _dbCache = getDb();
     return _dbCache;
   });
@@ -95,13 +96,15 @@ async function getFirestore() {
 /** 공유 링크 생성 → Firestore에 저장 → 토큰 반환 */
 export async function createShareLink(options: ShareOptions): Promise<string> {
   const db = await getFirestore();
-  if (!db) throw new Error('Firestore not available');
+  if (!db) throw new Error("Firestore not available");
 
-  const { doc, setDoc } = await import('firebase/firestore');
+  const { doc, setDoc } = await import("firebase/firestore");
   const token = generateToken();
   const now = Date.now();
 
-  const hashedPw = options.password ? await hashPassword(options.password) : undefined;
+  const hashedPw = options.password
+    ? await hashPassword(options.password)
+    : undefined;
 
   const data: SharedSceneData = {
     token,
@@ -116,17 +119,19 @@ export async function createShareLink(options: ShareOptions): Promise<string> {
     authorName: options.authorName,
   };
 
-  await setDoc(doc(db, 'shared-scenes', token), data);
+  await setDoc(doc(db, "shared-scenes", token), data);
   return token;
 }
 
 /** 토큰으로 공유 데이터 조회 */
-export async function loadSharedScene(token: string): Promise<SharedSceneData | null> {
+export async function loadSharedScene(
+  token: string,
+): Promise<SharedSceneData | null> {
   const db = await getFirestore();
   if (!db) return null;
 
-  const { doc, getDoc } = await import('firebase/firestore');
-  const snap = await getDoc(doc(db, 'shared-scenes', token));
+  const { doc, getDoc } = await import("firebase/firestore");
+  const snap = await getDoc(doc(db, "shared-scenes", token));
   if (!snap.exists()) return null;
 
   const data = snap.data() as SharedSceneData;
@@ -138,7 +143,10 @@ export async function loadSharedScene(token: string): Promise<SharedSceneData | 
 }
 
 /** 비밀번호 검증 (SHA-256 해시 비교) */
-export async function verifyPassword(data: SharedSceneData, input: string): Promise<boolean> {
+export async function verifyPassword(
+  data: SharedSceneData,
+  input: string,
+): Promise<boolean> {
   if (!data.password) return true;
   const inputHash = await hashPassword(input);
   return data.password === inputHash;
@@ -150,12 +158,14 @@ export async function verifyPassword(data: SharedSceneData, input: string): Prom
 // PART 4 — 피드백 저장/조회
 // ============================================================
 
-export async function saveFeedback(feedback: Omit<SceneFeedback, 'id' | 'createdAt'>): Promise<void> {
+export async function saveFeedback(
+  feedback: Omit<SceneFeedback, "id" | "createdAt">,
+): Promise<void> {
   const db = await getFirestore();
   if (!db) return;
 
-  const { collection, addDoc } = await import('firebase/firestore');
-  await addDoc(collection(db, 'shared-scenes', feedback.token, 'feedback'), {
+  const { collection, addDoc } = await import("firebase/firestore");
+  await addDoc(collection(db, "shared-scenes", feedback.token, "feedback"), {
     ...feedback,
     createdAt: Date.now(),
   });
@@ -165,8 +175,12 @@ export async function loadFeedbacks(token: string): Promise<SceneFeedback[]> {
   const db = await getFirestore();
   if (!db) return [];
 
-  const { collection, getDocs, orderBy, query } = await import('firebase/firestore');
-  const q = query(collection(db, 'shared-scenes', token, 'feedback'), orderBy('createdAt', 'asc'));
+  const { collection, getDocs, orderBy, query } =
+    await import("firebase/firestore");
+  const q = query(
+    collection(db, "shared-scenes", token, "feedback"),
+    orderBy("createdAt", "asc"),
+  );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as SceneFeedback);
 }
@@ -188,7 +202,7 @@ export function encodeSceneToUrl(scenes: ParsedScene[], title: string): string {
       d: sc.timeOfDay,
       tn: sc.tension,
       b: sc.beats.map((bt) => ({
-        y: bt.type[0],  // d/n/a/t/e → 1글자
+        y: bt.type[0], // d/n/a/t/e → 1글자
         s: bt.speaker,
         x: bt.text,
       })),
@@ -196,44 +210,54 @@ export function encodeSceneToUrl(scenes: ParsedScene[], title: string): string {
   };
 
   const json = JSON.stringify(minimal);
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     const encoded = btoa(unescape(encodeURIComponent(json)));
     return encoded;
   }
-  return Buffer.from(json).toString('base64');
+  return Buffer.from(json).toString("base64");
 }
 
 /** URL-safe base64에서 장면 복원 */
-export function decodeSceneFromUrl(encoded: string): { title: string; scenes: ParsedScene[] } | null {
+export function decodeSceneFromUrl(
+  encoded: string,
+): { title: string; scenes: ParsedScene[] } | null {
   try {
     let json: string;
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       json = decodeURIComponent(escape(atob(encoded)));
     } else {
-      json = Buffer.from(encoded, 'base64').toString('utf-8');
+      json = Buffer.from(encoded, "base64").toString("utf-8");
     }
 
     const minimal = JSON.parse(json);
-    const TYPE_MAP: Record<string, string> = { d: 'dialogue', n: 'narration', a: 'action', t: 'thought', e: 'description' };
+    const TYPE_MAP: Record<string, string> = {
+      d: "dialogue",
+      n: "narration",
+      a: "action",
+      t: "thought",
+      e: "description",
+    };
 
-    const scenes: ParsedScene[] = minimal.s.map((sc: Record<string, unknown>) => ({
-      id: `scene_${sc.i}`,
-      index: sc.i as number,
-      title: sc.n as string,
-      mood: sc.m as string | undefined,
-      timeOfDay: sc.d as string | undefined,
-      tension: sc.tn as number,
-      beats: (sc.b as Record<string, unknown>[]).map((bt, bi: number) => ({
-        id: `beat_${sc.i}_${bi}`,
-        type: TYPE_MAP[(bt.y as string)] ?? 'narration',
-        speaker: bt.s as string | undefined,
-        text: bt.x as string,
-        tempo: 'normal' as const,
-        camera: 'medium' as const,
-        lineStart: 0,
-        lineEnd: 0,
-      })),
-    }));
+    const scenes: ParsedScene[] = minimal.s.map(
+      (sc: Record<string, unknown>) => ({
+        id: `scene_${sc.i}`,
+        index: sc.i as number,
+        title: sc.n as string,
+        mood: sc.m as string | undefined,
+        timeOfDay: sc.d as string | undefined,
+        tension: sc.tn as number,
+        beats: (sc.b as Record<string, unknown>[]).map((bt, bi: number) => ({
+          id: `beat_${sc.i}_${bi}`,
+          type: TYPE_MAP[bt.y as string] ?? "narration",
+          speaker: bt.s as string | undefined,
+          text: bt.x as string,
+          tempo: "normal" as const,
+          camera: "medium" as const,
+          lineStart: 0,
+          lineEnd: 0,
+        })),
+      }),
+    );
 
     return { title: minimal.t, scenes };
   } catch {

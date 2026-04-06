@@ -3,7 +3,12 @@
 // Source: NOA v42.6/v43 Zero-Gravity
 // ============================================================
 
-import type { AuditEntry, AuditChainState, AuditVerification, AuditManager } from "../types";
+import type {
+  AuditEntry,
+  AuditChainState,
+  AuditVerification,
+  AuditManager,
+} from "../types";
 import { canonicalJson, computeHash } from "./chain";
 import { signHmac } from "./hmac";
 import { verifyChainIntegrity } from "./verify";
@@ -82,7 +87,9 @@ function idbClear(db: IDBDatabase): Promise<void> {
   });
 }
 
-export function createAuditManager(hmacSecret: string = "noa-default-secret"): AuditManager {
+export function createAuditManager(
+  hmacSecret: string = "noa-default-secret",
+): AuditManager {
   const entries: AuditEntry[] = [];
   let latestHash = "GENESIS_NOA_V1";
   let idCounter = 0;

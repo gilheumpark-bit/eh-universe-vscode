@@ -4,14 +4,14 @@
 // PART 1 — Imports & Types
 // ============================================================
 
-import { useState, useMemo, useCallback } from 'react';
-import { BarChart3, AlertTriangle, Info } from 'lucide-react';
+import { useState, useMemo, useCallback } from "react";
+import { BarChart3, AlertTriangle, Info } from "lucide-react";
 import {
   analyzeCodeRhythm,
   type CodeRhythmResult,
   type RhythmSection,
   type CodeLineType,
-} from '@/lib/code-studio/pipeline/code-rhythm';
+} from "@/lib/code-studio/pipeline/code-rhythm";
 
 interface Props {
   code?: string;
@@ -22,22 +22,24 @@ interface Props {
 // ============================================================
 
 const TYPE_COLORS: Record<CodeLineType, string> = {
-  import: 'bg-accent-blue',
-  type: 'bg-accent-purple',
-  logic: 'bg-accent-amber',
-  comment: 'bg-accent-green',
-  blank: 'bg-bg-tertiary',
-  return: 'bg-orange-400',
-  decorator: 'bg-pink-400',
-  'block-boundary': 'bg-bg-secondary',
+  import: "bg-accent-blue",
+  type: "bg-accent-purple",
+  logic: "bg-accent-amber",
+  comment: "bg-accent-green",
+  blank: "bg-bg-tertiary",
+  return: "bg-orange-400",
+  decorator: "bg-pink-400",
+  "block-boundary": "bg-bg-secondary",
 };
 
 function SectionBar({ section }: { section: RhythmSection }) {
   const total = section.endLine - section.startLine + 1;
   const densityColor =
-    section.density >= 90 ? 'bg-red-500'
-      : section.density >= 70 ? 'bg-amber-500'
-        : 'bg-emerald-500';
+    section.density >= 90
+      ? "bg-red-500"
+      : section.density >= 70
+        ? "bg-amber-500"
+        : "bg-emerald-500";
 
   return (
     <div className="group px-3 py-1 hover:bg-bg-tertiary transition-colors">
@@ -51,7 +53,9 @@ function SectionBar({ section }: { section: RhythmSection }) {
             style={{ width: `${section.density}%` }}
           />
         </div>
-        <span className="text-text-secondary w-8 text-right">{section.density}%</span>
+        <span className="text-text-secondary w-8 text-right">
+          {section.density}%
+        </span>
       </div>
 
       {/* Expanded breakdown on hover */}
@@ -74,7 +78,7 @@ function SectionBar({ section }: { section: RhythmSection }) {
 // ============================================================
 
 export function RhythmPanel({ code }: Props) {
-  const [manualCode, setManualCode] = useState('');
+  const [manualCode, setManualCode] = useState("");
   const activeCode = code ?? manualCode;
 
   const result: CodeRhythmResult | null = useMemo(() => {
@@ -102,7 +106,9 @@ export function RhythmPanel({ code }: Props) {
       {/* No code */}
       {!activeCode.trim() && (
         <div className="p-3 space-y-2">
-          <p className="text-text-secondary text-xs">Open a file or paste code to analyze rhythm.</p>
+          <p className="text-text-secondary text-xs">
+            Open a file or paste code to analyze rhythm.
+          </p>
           <button
             onClick={handlePaste}
             className="px-2 py-1 rounded bg-bg-tertiary border border-border text-xs hover:bg-bg-primary transition-colors focus-visible:ring-2 ring-accent-blue"
@@ -118,15 +124,21 @@ export function RhythmPanel({ code }: Props) {
           <div className="px-3 py-2 border-b border-border grid grid-cols-3 gap-2 text-xs">
             <div className="text-center">
               <div className="text-text-secondary">Density</div>
-              <div className="font-bold text-accent-amber">{result.overallDensity}%</div>
+              <div className="font-bold text-accent-amber">
+                {result.overallDensity}%
+              </div>
             </div>
             <div className="text-center">
               <div className="text-text-secondary">Comments</div>
-              <div className="font-bold text-accent-green">{result.commentRatio}%</div>
+              <div className="font-bold text-accent-green">
+                {result.commentRatio}%
+              </div>
             </div>
             <div className="text-center">
               <div className="text-text-secondary">Blanks</div>
-              <div className="font-bold text-text-primary">{result.blankRatio}%</div>
+              <div className="font-bold text-text-primary">
+                {result.blankRatio}%
+              </div>
             </div>
           </div>
 
@@ -134,11 +146,15 @@ export function RhythmPanel({ code }: Props) {
           {result.suggestions.length > 0 && (
             <div className="border-b border-border">
               {result.suggestions.map((s, i) => (
-                <div key={i} className="px-3 py-1.5 flex items-start gap-1.5 text-xs">
-                  {s.severity === 'warn'
-                    ? <AlertTriangle className="w-3 h-3 text-accent-amber shrink-0 mt-0.5" />
-                    : <Info className="w-3 h-3 text-accent-blue shrink-0 mt-0.5" />
-                  }
+                <div
+                  key={i}
+                  className="px-3 py-1.5 flex items-start gap-1.5 text-xs"
+                >
+                  {s.severity === "warn" ? (
+                    <AlertTriangle className="w-3 h-3 text-accent-amber shrink-0 mt-0.5" />
+                  ) : (
+                    <Info className="w-3 h-3 text-accent-blue shrink-0 mt-0.5" />
+                  )}
                   <span className="text-text-secondary">{s.message}</span>
                 </div>
               ))}
@@ -154,7 +170,9 @@ export function RhythmPanel({ code }: Props) {
 
           {/* Legend */}
           <div className="px-3 py-1.5 border-t border-border flex flex-wrap gap-2 text-xs text-text-secondary">
-            {(['logic', 'import', 'type', 'comment', 'blank'] as CodeLineType[]).map((t) => (
+            {(
+              ["logic", "import", "type", "comment", "blank"] as CodeLineType[]
+            ).map((t) => (
               <span key={t} className="flex items-center gap-0.5">
                 <span className={`w-2 h-2 rounded-sm ${TYPE_COLORS[t]}`} />
                 {t}

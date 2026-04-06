@@ -67,9 +67,9 @@ export function checkRateLimit(
 // ============================================================
 
 export const RATE_LIMITS = {
-  chat:     { windowMs: 60_000, maxRequests: 30 },  // 30/min (was 60)
-  imageGen: { windowMs: 60_000, maxRequests: 10 },  // 10/min (was 30)
-  default:  { windowMs: 60_000, maxRequests: 60 },   // 60/min (was 120)
+  chat: { windowMs: 60_000, maxRequests: 30 }, // 30/min (was 60)
+  imageGen: { windowMs: 60_000, maxRequests: 10 }, // 10/min (was 30)
+  default: { windowMs: 60_000, maxRequests: 60 }, // 60/min (was 120)
   /** /api/translate — 번역 엔진 프록시 */
   translate: { windowMs: 60_000, maxRequests: 30 },
   /** /api/upload — 문서 파싱 */
@@ -81,9 +81,9 @@ export const RATE_LIMITS = {
  */
 export function getClientIp(headers: Headers): string {
   return (
-    headers.get('x-real-ip') ||
-    headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    'unknown'
+    headers.get("x-real-ip") ||
+    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown"
   );
 }
 

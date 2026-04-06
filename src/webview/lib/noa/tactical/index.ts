@@ -3,7 +3,12 @@
 // Source: NOA v50 Adaptive Control Plane
 // ============================================================
 
-import type { GradeEntry, AvailabilityResult, TacticalResult, TacticalPath } from "../types";
+import type {
+  GradeEntry,
+  AvailabilityResult,
+  TacticalResult,
+  TacticalPath,
+} from "../types";
 import { TACTICAL_PATHS } from "./paths";
 import { getTokenBudget, applyTokenBudget } from "./budget";
 
@@ -24,7 +29,7 @@ import { getTokenBudget, applyTokenBudget } from "./budget";
  */
 export function selectTacticalPath(
   grade: GradeEntry,
-  availability: AvailabilityResult
+  availability: AvailabilityResult,
 ): TacticalResult {
   // ── 조건 1: 예산 부족 시 강제 차단 ──
   if (!availability.allowed) {
@@ -102,7 +107,7 @@ export function selectTacticalPath(
 function makeTactical(
   path: TacticalPath,
   grade: GradeEntry,
-  reason: string
+  reason: string,
 ): TacticalResult {
   return {
     selectedPath: path,
@@ -115,7 +120,10 @@ function makeTactical(
 /**
  * 전술 경로에 맞게 응답에 토큰 예산을 적용한다.
  */
-export function applyPathBudget(response: string, result: TacticalResult): string {
+export function applyPathBudget(
+  response: string,
+  result: TacticalResult,
+): string {
   const budget = getTokenBudget(result.selectedPath);
   return applyTokenBudget(response, budget);
 }

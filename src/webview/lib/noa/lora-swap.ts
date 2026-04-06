@@ -5,9 +5,9 @@
 // 단일 Base Model + 좌/우뇌 어댑터 ms 단위 교체.
 // 웹 환경: API 프로바이더 레벨 추상화 (NPU/GPU 직접 제어 대신).
 
-export type AdapterMode = 'LEFT_BRAIN' | 'RIGHT_BRAIN';
+export type AdapterMode = "LEFT_BRAIN" | "RIGHT_BRAIN";
 
-export type SwapStatus = 'SUCCESS' | 'CACHE_HIT' | 'OOM_ABORT' | 'TIMEOUT';
+export type SwapStatus = "SUCCESS" | "CACHE_HIT" | "OOM_ABORT" | "TIMEOUT";
 
 /**
  * 서사 깊이 레벨 (Narrative Depth)
@@ -19,10 +19,10 @@ export type SwapStatus = 'SUCCESS' | 'CACHE_HIT' | 'OOM_ABORT' | 'TIMEOUT';
 export type NarrativeDepth = number; // 0.9 ~ 1.5
 
 const DEPTH_PROMPT_MAP: Record<string, string> = {
-  '0.9': `[Depth: 평작] 가독성 최우선. 짧은 문장, 직접적 묘사, 클리셰 허용. 독자 이탈 방지가 목표. 1문장 1행동 원칙.`,
-  '1.0': `[Depth: 기본] 장르 관습 준수. 적절한 묘사와 대화 균형. 복선 1-2개 유지. 감정선 자연스러운 흐름.`,
-  '1.2': `[Depth: 심화] 비유/상징 적극 활용. 인물 내면 다층 묘사. 복선 3개 이상 병행. 문장 리듬 변주(단문↔장문 교차).`,
-  '1.5': `[Depth: 최대] 문예 수준 밀도. 모든 문장이 서사적 기능 수행. 감각 묘사(시각+청각+촉각 혼합), 의식의 흐름, 상징 체계 유지. 독자에게 해석 여지를 남기는 열린 서사.`,
+  "0.9": `[Depth: 평작] 가독성 최우선. 짧은 문장, 직접적 묘사, 클리셰 허용. 독자 이탈 방지가 목표. 1문장 1행동 원칙.`,
+  "1.0": `[Depth: 기본] 장르 관습 준수. 적절한 묘사와 대화 균형. 복선 1-2개 유지. 감정선 자연스러운 흐름.`,
+  "1.2": `[Depth: 심화] 비유/상징 적극 활용. 인물 내면 다층 묘사. 복선 3개 이상 병행. 문장 리듬 변주(단문↔장문 교차).`,
+  "1.5": `[Depth: 최대] 문예 수준 밀도. 모든 문장이 서사적 기능 수행. 감각 묘사(시각+청각+촉각 혼합), 의식의 흐름, 상징 체계 유지. 독자에게 해석 여지를 남기는 열린 서사.`,
 };
 
 /** 깊이 값에 가장 가까운 프롬프트 키 반환 */
@@ -30,9 +30,9 @@ function getDepthPrompt(depth: NarrativeDepth): string {
   const clamped = Math.max(0.9, Math.min(1.5, depth));
   const keys = [0.9, 1.0, 1.2, 1.5];
   const closest = keys.reduce((prev, curr) =>
-    Math.abs(curr - clamped) < Math.abs(prev - clamped) ? curr : prev
+    Math.abs(curr - clamped) < Math.abs(prev - clamped) ? curr : prev,
   );
-  return DEPTH_PROMPT_MAP[closest.toString()] ?? DEPTH_PROMPT_MAP['1.0'];
+  return DEPTH_PROMPT_MAP[closest.toString()] ?? DEPTH_PROMPT_MAP["1.0"];
 }
 
 /** 현재 서사 깊이 설정 (런타임 변경 가능) */
@@ -60,7 +60,7 @@ function depthToTemperature(baseTemp: number, depth: NarrativeDepth): number {
  * - 'office': 직장인 — 복붙 가능 코드, 설명 최소, 실용 우선
  * - 'architect': 설계자 — 아키텍처 중심, 패턴/구조 강조
  */
-export type CodingMode = 'standard' | 'office' | 'architect';
+export type CodingMode = "standard" | "office" | "architect";
 
 const CODING_MODE_PROMPTS: Record<CodingMode, string> = {
   standard: `[Mode: Standard] 정석 코딩 모드.
@@ -85,7 +85,7 @@ const CODING_MODE_PROMPTS: Record<CodingMode, string> = {
 - DDD/Clean Architecture 원칙 적용 시 경계 컨텍스트 명시.`,
 };
 
-let currentCodingMode: CodingMode = 'standard';
+let currentCodingMode: CodingMode = "standard";
 
 export function setCodingMode(mode: CodingMode): void {
   currentCodingMode = mode;
@@ -102,9 +102,12 @@ function getCodingModePrompt(): string {
 /** 코딩 모드별 temperature 보정 */
 function codingModeTemperature(baseTemp: number): number {
   switch (currentCodingMode) {
-    case 'office': return Math.max(0.05, baseTemp - 0.03);  // 살짝 더 결정적
-    case 'architect': return Math.max(0.05, baseTemp + 0.05); // 살짝 더 창의적
-    default: return baseTemp;
+    case "office":
+      return Math.max(0.05, baseTemp - 0.03); // 살짝 더 결정적
+    case "architect":
+      return Math.max(0.05, baseTemp + 0.05); // 살짝 더 창의적
+    default:
+      return baseTemp;
   }
 }
 
@@ -157,17 +160,17 @@ GOOD: "손톱이 손바닥에 박히는 줄도 몰랐다. 목소리만은 평온
 
 export const ADAPTER_REGISTRY: Record<AdapterMode, AdapterManifest> = {
   LEFT_BRAIN: {
-    mode: 'LEFT_BRAIN',
-    providerId: 'gemini',
-    modelId: 'gemini-2.5-pro',
+    mode: "LEFT_BRAIN",
+    providerId: "gemini",
+    modelId: "gemini-2.5-pro",
     systemPrompt: LEFT_BRAIN_PROMPT,
     costWeight: 1.2,
     temperature: 0.1,
   },
   RIGHT_BRAIN: {
-    mode: 'RIGHT_BRAIN',
-    providerId: 'gemini',
-    modelId: 'gemini-2.5-flash',
+    mode: "RIGHT_BRAIN",
+    providerId: "gemini",
+    modelId: "gemini-2.5-flash",
     systemPrompt: RIGHT_BRAIN_PROMPT,
     costWeight: 0.3,
     temperature: 0.9,
@@ -203,7 +206,9 @@ export class VRAMManager {
   /** 어댑터 적재 — OOM(동시 추론 초과) 방어 */
   load(manifest: AdapterManifest): number {
     if (this.inferenceCount >= MAX_CONCURRENT_INFERENCES) {
-      throw new Error(`OOM 방어: 동시 추론 ${this.inferenceCount}/${MAX_CONCURRENT_INFERENCES} 초과`);
+      throw new Error(
+        `OOM 방어: 동시 추론 ${this.inferenceCount}/${MAX_CONCURRENT_INFERENCES} 초과`,
+      );
     }
     const start = performance.now();
     this.activeMode = manifest.mode;
@@ -235,11 +240,11 @@ export class VRAMManager {
 // L2 라우팅 결과에 따라 좌/우뇌 어댑터를 ms 단위로 교체.
 // 캐시 히트, OOM 방어, Taint 연동.
 
-import { getTaintTracker, type TaintDomain } from './taint-tracker';
+import { getTaintTracker, type TaintDomain } from "./taint-tracker";
 
 /** AdapterMode → TaintDomain 매핑 */
 function modeToTaintDomain(mode: AdapterMode): TaintDomain {
-  return mode === 'LEFT_BRAIN' ? 'code' : 'novel';
+  return mode === "LEFT_BRAIN" ? "code" : "novel";
 }
 
 export class SwapController {
@@ -263,7 +268,7 @@ export class SwapController {
     if (currentMode === target) {
       getTaintTracker().taint(sessionId, modeToTaintDomain(target));
       return {
-        status: 'CACHE_HIT',
+        status: "CACHE_HIT",
         latencyMs: 0,
         activeMode: target,
         sessionId,
@@ -275,7 +280,7 @@ export class SwapController {
     // 타임아웃 사전 검증
     if (this.vram.estimateSwapCost() > SWAP_TIMEOUT_MS) {
       return {
-        status: 'TIMEOUT',
+        status: "TIMEOUT",
         latencyMs: performance.now() - start,
         activeMode: currentMode ?? target,
         sessionId,
@@ -287,7 +292,7 @@ export class SwapController {
       this.vram.load(manifest);
     } catch {
       return {
-        status: 'OOM_ABORT',
+        status: "OOM_ABORT",
         latencyMs: performance.now() - start,
         activeMode: currentMode ?? target,
         sessionId,
@@ -298,7 +303,7 @@ export class SwapController {
     getTaintTracker().taint(sessionId, modeToTaintDomain(target));
 
     return {
-      status: 'SUCCESS',
+      status: "SUCCESS",
       latencyMs: performance.now() - start,
       activeMode: target,
       sessionId,
@@ -310,18 +315,18 @@ export class SwapController {
     const mode = this.vram.getActiveMode();
     if (!mode) return null;
     const base = this.registry[mode];
-    if (mode === 'RIGHT_BRAIN') {
+    if (mode === "RIGHT_BRAIN") {
       const depth = getNarrativeDepth();
       return {
         ...base,
-        systemPrompt: base.systemPrompt + '\n\n' + getDepthPrompt(depth),
+        systemPrompt: base.systemPrompt + "\n\n" + getDepthPrompt(depth),
         temperature: depthToTemperature(base.temperature, depth),
       };
     }
-    if (mode === 'LEFT_BRAIN') {
+    if (mode === "LEFT_BRAIN") {
       return {
         ...base,
-        systemPrompt: base.systemPrompt + '\n\n' + getCodingModePrompt(),
+        systemPrompt: base.systemPrompt + "\n\n" + getCodingModePrompt(),
         temperature: codingModeTemperature(base.temperature),
       };
     }

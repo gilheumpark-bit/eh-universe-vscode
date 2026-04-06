@@ -23,14 +23,16 @@ function sendReport(report: ErrorReport) {
   // navigator.sendBeacon ensures delivery even on page unload
   const payload = JSON.stringify(report);
   if (navigator.sendBeacon) {
-    navigator.sendBeacon('/api/error-report', payload);
+    navigator.sendBeacon("/api/error-report", payload);
   } else {
-    fetch('/api/error-report', {
-      method: 'POST',
+    fetch("/api/error-report", {
+      method: "POST",
       body: payload,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
       keepalive: true,
-    }).catch(() => { /* delivery best-effort */ });
+    }).catch(() => {
+      /* delivery best-effort */
+    });
   }
 }
 
@@ -38,13 +40,13 @@ let _initialized = false;
 
 /** Returns a cleanup function to remove listeners. Guards against duplicate init. */
 export function initErrorReporter(): (() => void) | undefined {
-  if (typeof window === 'undefined' || _initialized) return;
+  if (typeof window === "undefined" || _initialized) return;
   _initialized = true;
 
   // Global unhandled errors
   const onError = (event: ErrorEvent) => {
     sendReport({
-      message: event.message || 'Unknown error',
+      message: event.message || "Unknown error",
       stack: event.error?.stack?.slice(0, 500),
       source: `${event.filename}:${event.lineno}:${event.colno}`,
       url: window.location.pathname,
@@ -59,19 +61,19 @@ export function initErrorReporter(): (() => void) | undefined {
     sendReport({
       message: reason?.message || String(reason).slice(0, 200),
       stack: reason?.stack?.slice(0, 500),
-      source: 'unhandledrejection',
+      source: "unhandledrejection",
       url: window.location.pathname,
       userAgent: navigator.userAgent.slice(0, 100),
       timestamp: new Date().toISOString(),
     });
   };
 
-  window.addEventListener('error', onError);
-  window.addEventListener('unhandledrejection', onRejection);
+  window.addEventListener("error", onError);
+  window.addEventListener("unhandledrejection", onRejection);
 
   return () => {
-    window.removeEventListener('error', onError);
-    window.removeEventListener('unhandledrejection', onRejection);
+    window.removeEventListener("error", onError);
+    window.removeEventListener("unhandledrejection", onRejection);
     _initialized = false;
   };
 }

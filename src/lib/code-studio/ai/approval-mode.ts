@@ -4,19 +4,19 @@
 // Determines whether AI-driven actions require user confirmation.
 // Three modes: easy (always confirm), normal (dangerous only), pro (auto-execute).
 
-import { loadIDESettings } from '@/components/code-studio/SettingsPanel';
+import { loadIDESettings } from "@/components/code-studio/SettingsPanel";
 
-export type ApprovalMode = 'easy' | 'normal' | 'pro';
+export type ApprovalMode = "easy" | "normal" | "pro";
 
 /** Actions that are considered dangerous in "normal" mode */
 const DANGEROUS_ACTIONS = new Set([
-  'runTerminal',
-  'deleteFile',
-  'overwriteFile',
-  'installPackage',
-  'gitPush',
-  'gitReset',
-  'modifyEnv',
+  "runTerminal",
+  "deleteFile",
+  "overwriteFile",
+  "installPackage",
+  "gitPush",
+  "gitReset",
+  "modifyEnv",
 ]);
 
 /**
@@ -28,11 +28,11 @@ export function requiresApproval(action: string): boolean {
   const mode = getApprovalMode();
 
   switch (mode) {
-    case 'easy':
+    case "easy":
       return true;
-    case 'pro':
+    case "pro":
       return false;
-    case 'normal':
+    case "normal":
     default:
       return DANGEROUS_ACTIONS.has(action);
   }
@@ -41,7 +41,7 @@ export function requiresApproval(action: string): boolean {
 /** Read the current approval mode from settings */
 export function getApprovalMode(): ApprovalMode {
   const settings = loadIDESettings();
-  return settings.actionApprovalMode ?? 'normal';
+  return settings.actionApprovalMode ?? "normal";
 }
 
 // IDENTITY_SEAL: PART-1 | role=approval-mode | inputs=action | outputs=boolean
@@ -74,7 +74,7 @@ let haltState: HaltState = {
  * @returns `true` if execution is still allowed, `false` if halt triggered
  */
 export function recordProExecution(action: string): boolean {
-  if (getApprovalMode() !== 'pro') {
+  if (getApprovalMode() !== "pro") {
     resetHaltState();
     return true;
   }
@@ -95,7 +95,7 @@ export function recordProExecution(action: string): boolean {
  * @returns `true` if execution can continue, `false` if halt triggered
  */
 export function recordProError(action: string): boolean {
-  if (getApprovalMode() !== 'pro') {
+  if (getApprovalMode() !== "pro") {
     resetHaltState();
     return true;
   }
@@ -141,7 +141,7 @@ export interface ApprovalStep {
   id: string;
   action: string;
   label: string;
-  status: 'pending' | 'awaiting' | 'approved' | 'rejected';
+  status: "pending" | "awaiting" | "approved" | "rejected";
   timestamp: number;
 }
 
@@ -156,7 +156,13 @@ function notifyStepListeners(): void {
 /** Register a step for user approval in Easy mode */
 export function enqueueApprovalStep(action: string, label: string): string {
   const id = `step_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-  stepQueue.push({ id, action, label, status: 'awaiting', timestamp: Date.now() });
+  stepQueue.push({
+    id,
+    action,
+    label,
+    status: "awaiting",
+    timestamp: Date.now(),
+  });
   notifyStepListeners();
   return id;
 }
@@ -165,7 +171,7 @@ export function enqueueApprovalStep(action: string, label: string): string {
 export function resolveApprovalStep(id: string, approved: boolean): void {
   const step = stepQueue.find((s) => s.id === id);
   if (step) {
-    step.status = approved ? 'approved' : 'rejected';
+    step.status = approved ? "approved" : "rejected";
     notifyStepListeners();
   }
 }
@@ -177,14 +183,20 @@ export function getApprovalSteps(): readonly ApprovalStep[] {
 
 /** Clear completed steps */
 export function clearResolvedSteps(): void {
-  stepQueue = stepQueue.filter((s) => s.status === 'awaiting' || s.status === 'pending');
+  stepQueue = stepQueue.filter(
+    (s) => s.status === "awaiting" || s.status === "pending",
+  );
   notifyStepListeners();
 }
 
 /** Subscribe to step changes (for React components) */
-export function onStepChange(listener: (steps: ApprovalStep[]) => void): () => void {
+export function onStepChange(
+  listener: (steps: ApprovalStep[]) => void,
+): () => void {
   stepListeners.add(listener);
-  return () => { stepListeners.delete(listener); };
+  return () => {
+    stepListeners.delete(listener);
+  };
 }
 
 // IDENTITY_SEAL: PART-3 | role=easy-mode-steps | inputs=action,label | outputs=ApprovalStep[]

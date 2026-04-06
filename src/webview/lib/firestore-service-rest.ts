@@ -1,11 +1,17 @@
 import { JWT } from "google-auth-library";
 import { logger } from "@/lib/logger";
 
-function parseServiceAccount(): { client_email: string; private_key: string } | null {
+function parseServiceAccount(): {
+  client_email: string;
+  private_key: string;
+} | null {
   const raw = process.env.VERTEX_AI_CREDENTIALS?.trim();
   if (!raw) return null;
   try {
-    const j = JSON.parse(raw) as { client_email?: string; private_key?: string };
+    const j = JSON.parse(raw) as {
+      client_email?: string;
+      private_key?: string;
+    };
     if (!j.client_email || !j.private_key) return null;
     return { client_email: j.client_email, private_key: j.private_key };
   } catch {
@@ -22,7 +28,7 @@ async function getAccessToken(): Promise<string | null> {
     scopes: ["https://www.googleapis.com/auth/datastore"],
   });
   const t = await client.getAccessToken();
-  return typeof t === "string" ? t : t?.token ?? null;
+  return typeof t === "string" ? t : (t?.token ?? null);
 }
 
 /** Firestore REST v1 — list documents (GET). */
@@ -34,14 +40,21 @@ export async function firestoreListDocuments(
   const token = await getAccessToken();
   if (!token) return { ok: false, error: "no_service_account" };
 
-  const params = new URLSearchParams({ pageSize: String(query.pageSize ?? 10) });
+  const params = new URLSearchParams({
+    pageSize: String(query.pageSize ?? 10),
+  });
   if (query.orderBy) params.set("orderBy", query.orderBy);
 
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collectionId}?${params}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    logger.warn("firestore-service-rest/list", { status: res.status, detail: text.slice(0, 200) });
+    logger.warn("firestore-service-rest/list", {
+      status: res.status,
+      detail: text.slice(0, 200),
+    });
     return { ok: false, error: `http_${res.status}` };
   }
   const data = (await res.json()) as { documents?: unknown[] };
@@ -52,7 +65,10 @@ export async function firestoreListDocuments(
 export async function firestoreCreateDocument(
   projectId: string,
   collectionId: string,
-  fields: Record<string, { stringValue?: string; integerValue?: string; timestampValue?: string }>,
+  fields: Record<
+    string,
+    { stringValue?: string; integerValue?: string; timestampValue?: string }
+  >,
 ): Promise<{ ok: true; name?: string } | { ok: false; error: string }> {
   const token = await getAccessToken();
   if (!token) return { ok: false, error: "no_service_account" };
@@ -69,7 +85,10 @@ export async function firestoreCreateDocument(
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    logger.warn("firestore-service-rest/create", { status: res.status, detail: text.slice(0, 200) });
+    logger.warn("firestore-service-rest/create", {
+      status: res.status,
+      detail: text.slice(0, 200),
+    });
     return { ok: false, error: `http_${res.status}` };
   }
   const data = (await res.json()) as { name?: string };

@@ -94,7 +94,13 @@ function registerSemanticTokens(monaco: typeof Monaco): void {
             const deltaLine = i - prevLine;
             const deltaChar = deltaLine === 0 ? charPos - prevChar : charPos;
 
-            data.push(deltaLine, deltaChar, name.length, TOKEN_TYPE_MAP[tokenType] ?? 0, 0);
+            data.push(
+              deltaLine,
+              deltaChar,
+              name.length,
+              TOKEN_TYPE_MAP[tokenType] ?? 0,
+              0,
+            );
             prevLine = i;
             prevChar = charPos;
           }
@@ -108,10 +114,22 @@ function registerSemanticTokens(monaco: typeof Monaco): void {
     },
   };
 
-  monaco.languages.registerDocumentSemanticTokensProvider("typescript", provider);
-  monaco.languages.registerDocumentSemanticTokensProvider("javascript", provider);
-  monaco.languages.registerDocumentSemanticTokensProvider("typescriptreact", provider);
-  monaco.languages.registerDocumentSemanticTokensProvider("javascriptreact", provider);
+  monaco.languages.registerDocumentSemanticTokensProvider(
+    "typescript",
+    provider,
+  );
+  monaco.languages.registerDocumentSemanticTokensProvider(
+    "javascript",
+    provider,
+  );
+  monaco.languages.registerDocumentSemanticTokensProvider(
+    "typescriptreact",
+    provider,
+  );
+  monaco.languages.registerDocumentSemanticTokensProvider(
+    "javascriptreact",
+    provider,
+  );
 }
 
 // IDENTITY_SEAL: PART-2 | role=semantic token coloring + JSX tags | inputs=monaco | outputs=provider registration
@@ -122,8 +140,8 @@ function registerSemanticTokens(monaco: typeof Monaco): void {
 
 const EMMET_EXPANSIONS: Record<string, string> = {
   "!": '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <title>Document</title>\n</head>\n<body>\n  \n</body>\n</html>',
-  "div": "<div></div>",
-  "span": "<span></span>",
+  div: "<div></div>",
+  span: "<span></span>",
   "ul>li": "<ul>\n  <li></li>\n</ul>",
   "ul>li*3": "<ul>\n  <li></li>\n  <li></li>\n  <li></li>\n</ul>",
   "ol>li*3": "<ol>\n  <li></li>\n  <li></li>\n  <li></li>\n</ol>",
@@ -132,10 +150,10 @@ const EMMET_EXPANSIONS: Record<string, string> = {
     '<nav>\n  <ul>\n    <li><a href=""></a></li>\n    <li><a href=""></a></li>\n    <li><a href=""></a></li>\n    <li><a href=""></a></li>\n  </ul>\n</nav>',
 
   // React shortcuts
-  "rfc": `import React from 'react';\n\ninterface Props {\n  \n}\n\nexport default function Component({ }: Props) {\n  return (\n    <div>\n      \n    </div>\n  );\n}`,
-  "us": "const [state, setState] = useState()",
-  "ue": "useEffect(() => {\n  \n}, [])",
-  "uc": "const ctx = useContext()",
+  rfc: `import React from 'react';\n\ninterface Props {\n  \n}\n\nexport default function Component({ }: Props) {\n  return (\n    <div>\n      \n    </div>\n  );\n}`,
+  us: "const [state, setState] = useState()",
+  ue: "useEffect(() => {\n  \n}, [])",
+  uc: "const ctx = useContext()",
 };
 
 function expandSimpleEmmet(abbr: string): string | null {
@@ -218,15 +236,28 @@ function registerPrettierFormat(
     },
   };
 
-  const languages = ["typescript", "javascript", "typescriptreact", "javascriptreact", "html", "css", "json"];
+  const languages = [
+    "typescript",
+    "javascript",
+    "typescriptreact",
+    "javascriptreact",
+    "html",
+    "css",
+    "json",
+  ];
   for (const lang of languages) {
-    monaco.languages.registerDocumentFormattingEditProvider(lang, formatProvider);
+    monaco.languages.registerDocumentFormattingEditProvider(
+      lang,
+      formatProvider,
+    );
   }
 
   editor.addAction({
     id: "code-studio.formatDocument",
     label: "Format Document",
-    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyI],
+    keybindings: [
+      monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyI,
+    ],
     run(ed) {
       ed.getAction("editor.action.formatDocument")?.run();
     },
@@ -244,7 +275,11 @@ function registerPrettierFormat(
  */
 function simpleFormat(text: string, language?: string): string {
   const lines = text.split("\n");
-  const isJsTs = !language || /^(typescript|javascript|typescriptreact|javascriptreact|js|ts|jsx|tsx)$/i.test(language);
+  const isJsTs =
+    !language ||
+    /^(typescript|javascript|typescriptreact|javascriptreact|js|ts|jsx|tsx)$/i.test(
+      language,
+    );
 
   // ---- Step 1: Detect indentation style ----
   let tabCount = 0;
@@ -282,7 +317,9 @@ function simpleFormat(text: string, language?: string): string {
       if (hasMixed) {
         // Convert tabs to spaces or vice versa
         const expanded = leading.replace(/\t/g, " ".repeat(detectedSpaces));
-        const level = Math.round(expanded.length / (useTab ? detectedSpaces : detectedSpaces));
+        const level = Math.round(
+          expanded.length / (useTab ? detectedSpaces : detectedSpaces),
+        );
         line = indent.repeat(level) + line.trimStart();
       }
     }
@@ -308,7 +345,12 @@ function simpleFormat(text: string, language?: string): string {
 
     // 5. Ensure closing brace is on its own line
     //    Pattern: something} or something }  where something is non-whitespace
-    if (isJsTs && line.trim().length > 1 && line.trim().endsWith("}") && !line.trim().startsWith("}")) {
+    if (
+      isJsTs &&
+      line.trim().length > 1 &&
+      line.trim().endsWith("}") &&
+      !line.trim().startsWith("}")
+    ) {
       const braceIdx = line.lastIndexOf("}");
       const before = line.slice(0, braceIdx).trimEnd();
       const leadWs = line.match(/^(\s*)/)?.[1] ?? "";
@@ -348,13 +390,24 @@ function addMissingSemicolon(line: string): string {
   // Skip lines that already end with ; { } , : ( or are comments/decorators
   if (/[;{},:(]$/.test(trimmed)) return line;
   if (trimmed.endsWith("}")) return line;
-  if (trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.startsWith("*")) return line;
+  if (
+    trimmed.startsWith("//") ||
+    trimmed.startsWith("/*") ||
+    trimmed.startsWith("*")
+  )
+    return line;
   if (trimmed.startsWith("@")) return line;
 
   // Skip control flow keywords that don't need ;
-  if (/^(if|else|for|while|do|switch|try|catch|finally|class|interface|enum|type|namespace|module|declare)\b/.test(trimmed)) return line;
+  if (
+    /^(if|else|for|while|do|switch|try|catch|finally|class|interface|enum|type|namespace|module|declare)\b/.test(
+      trimmed,
+    )
+  )
+    return line;
   // Skip import/export that continue on next line
-  if (/^(import|export)\s/.test(trimmed) && !trimmed.includes("from")) return line;
+  if (/^(import|export)\s/.test(trimmed) && !trimmed.includes("from"))
+    return line;
   // Skip function declarations
   if (/^(function|async\s+function)\s/.test(trimmed)) return line;
   // Skip lines ending with =>
@@ -415,7 +468,12 @@ function registerCrossFileRename(monaco: typeof Monaco): void {
       const wordAtPos = model.getWordAtPosition(position);
       if (!wordAtPos) {
         return {
-          range: { startLineNumber: 0, startColumn: 0, endLineNumber: 0, endColumn: 0 },
+          range: {
+            startLineNumber: 0,
+            startColumn: 0,
+            endLineNumber: 0,
+            endColumn: 0,
+          },
           text: "",
           rejectReason: "Cannot rename this element",
         };
@@ -451,8 +509,8 @@ function registerGoToLine(editor: Monaco.editor.IStandaloneCodeEditor): void {
     id: "code-studio.goToLine",
     label: "Go to Line...",
     keybindings: [
-       
-      2048 /* CtrlCmd */ | 27 /* KeyG — Monaco KeyCode.KeyG = 27+ offset; using numeric */,
+      2048 /* CtrlCmd */ |
+        27 /* KeyG — Monaco KeyCode.KeyG = 27+ offset; using numeric */,
     ],
     run(ed) {
       const lineCount = ed.getModel()?.getLineCount() ?? 1;
@@ -690,7 +748,11 @@ function registerCodeActions(monaco: typeof Monaco): void {
       }
 
       // ---- Wrap in try/catch ----
-      if (trimmed.length > 0 && !trimmed.startsWith("try") && !trimmed.startsWith("//")) {
+      if (
+        trimmed.length > 0 &&
+        !trimmed.startsWith("try") &&
+        !trimmed.startsWith("//")
+      ) {
         const leadingWs = lineContent.match(/^(\s*)/)?.[1] ?? "";
         const innerIndent = leadingWs + "  ";
         actions.push({
@@ -705,7 +767,8 @@ function registerCodeActions(monaco: typeof Monaco): void {
                     startLineNumber: range.startLineNumber,
                     startColumn: 1,
                     endLineNumber: range.endLineNumber,
-                    endColumn: model.getLineContent(range.endLineNumber).length + 1,
+                    endColumn:
+                      model.getLineContent(range.endLineNumber).length + 1,
                   },
                   text:
                     `${leadingWs}try {\n` +
@@ -728,8 +791,14 @@ function registerCodeActions(monaco: typeof Monaco): void {
 
   monaco.languages.registerCodeActionProvider("typescript", codeActionProvider);
   monaco.languages.registerCodeActionProvider("javascript", codeActionProvider);
-  monaco.languages.registerCodeActionProvider("typescriptreact", codeActionProvider);
-  monaco.languages.registerCodeActionProvider("javascriptreact", codeActionProvider);
+  monaco.languages.registerCodeActionProvider(
+    "typescriptreact",
+    codeActionProvider,
+  );
+  monaco.languages.registerCodeActionProvider(
+    "javascriptreact",
+    codeActionProvider,
+  );
 }
 
 // IDENTITY_SEAL: PART-7 | role=code action quick fixes (expanded) | inputs=monaco | outputs=code action provider

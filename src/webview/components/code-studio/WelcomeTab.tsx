@@ -5,7 +5,14 @@
 // ============================================================
 
 import { useCallback, useMemo, useState } from "react";
-import { FileText, FolderOpen, GitBranch, Lightbulb, Clock, Plus } from "lucide-react";
+import {
+  FileText,
+  FolderOpen,
+  GitBranch,
+  Lightbulb,
+  Clock,
+  Plus,
+} from "lucide-react";
 import { useCodeStudioT } from "@/lib/use-code-studio-translations";
 
 interface RecentFileInfo {
@@ -39,15 +46,38 @@ export default function WelcomeTab({
 }: WelcomeTabProps) {
   const t = useCodeStudioT();
   const tips = useMemo(
-    () => [t.welcomeTip1, t.welcomeTip2, t.welcomeTip3, t.welcomeTip4, t.welcomeTip5, t.welcomeTip6, t.welcomeTip7],
+    () => [
+      t.welcomeTip1,
+      t.welcomeTip2,
+      t.welcomeTip3,
+      t.welcomeTip4,
+      t.welcomeTip5,
+      t.welcomeTip6,
+      t.welcomeTip7,
+    ],
     [t],
   );
   const [tipIndex] = useState(() => Math.floor(Math.random() * 7));
 
   const actions = [
-    { icon: <Plus size={16} />, label: t.welcomeActionNewFile, onClick: onNewFile, accent: "text-green-400" },
-    { icon: <FolderOpen size={16} />, label: t.welcomeActionOpenFolder, onClick: onOpenFolder, accent: "text-blue-400" },
-    { icon: <GitBranch size={16} />, label: t.welcomeActionCloneRepo, onClick: onCloneRepo, accent: "text-amber-400" },
+    {
+      icon: <Plus size={16} />,
+      label: t.welcomeActionNewFile,
+      onClick: onNewFile,
+      accent: "text-green-400",
+    },
+    {
+      icon: <FolderOpen size={16} />,
+      label: t.welcomeActionOpenFolder,
+      onClick: onOpenFolder,
+      accent: "text-blue-400",
+    },
+    {
+      icon: <GitBranch size={16} />,
+      label: t.welcomeActionCloneRepo,
+      onClick: onCloneRepo,
+      accent: "text-amber-400",
+    },
   ].filter((a) => a.onClick);
 
   const [now] = useState(() => Date.now());
@@ -55,8 +85,13 @@ export default function WelcomeTab({
     (ts: number) => {
       const diff = now - ts;
       if (diff < 60_000) return t.timeJustNow;
-      if (diff < 3_600_000) return t.timeMinAgo.replace("{n}", String(Math.floor(diff / 60_000)));
-      if (diff < 86_400_000) return t.timeHourAgo.replace("{n}", String(Math.floor(diff / 3_600_000)));
+      if (diff < 3_600_000)
+        return t.timeMinAgo.replace("{n}", String(Math.floor(diff / 60_000)));
+      if (diff < 86_400_000)
+        return t.timeHourAgo.replace(
+          "{n}",
+          String(Math.floor(diff / 3_600_000)),
+        );
       return t.timeDayAgo.replace("{n}", String(Math.floor(diff / 86_400_000)));
     },
     [now, t.timeJustNow, t.timeMinAgo, t.timeHourAgo, t.timeDayAgo],
@@ -96,7 +131,9 @@ export default function WelcomeTab({
               >
                 <FileText size={14} className="text-blue-400" />
                 <span className="truncate">{f.fileName}</span>
-                <span className="ml-auto text-xs text-gray-600">{formatTime(f.timestamp)}</span>
+                <span className="ml-auto text-xs text-gray-600">
+                  {formatTime(f.timestamp)}
+                </span>
               </button>
             ))}
           </div>

@@ -4,7 +4,7 @@
 // ============================================================
 
 interface LogEntry {
-  level: 'info' | 'warn' | 'error';
+  level: "info" | "warn" | "error";
   event: string;
   route: string;
   ip?: string;
@@ -19,9 +19,9 @@ interface LogEntry {
 }
 
 /** Emit a structured JSON log line to stdout/stderr (Vercel captures these automatically) */
-export function apiLog(entry: Omit<LogEntry, 'timestamp'>): void {
+export function apiLog(entry: Omit<LogEntry, "timestamp">): void {
   const log: LogEntry = { ...entry, timestamp: new Date().toISOString() };
-  if (entry.level === 'error') {
+  if (entry.level === "error") {
     console.error(JSON.stringify(log));
   } else {
     console.log(JSON.stringify(log));

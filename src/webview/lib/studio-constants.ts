@@ -1,4 +1,3 @@
-
 import { Genre, AppLanguage } from "./studio-types";
 
 // TRANSLATIONS moved to studio-translations.ts for bundle splitting
@@ -82,5 +81,5 @@ export const GENRE_LABELS: Record<AppLanguage, Record<Genre, string>> = {
     [Genre.MODERN_FANTASY]: "都市奇幻",
     [Genre.WUXIA]: "武侠",
     [Genre.LIGHT_NOVEL]: "轻小说",
-  }
+  },
 };

@@ -8,14 +8,22 @@ type ChatMarkdownBlockProps = {
   isCompact?: boolean;
 };
 
-export function ChatMarkdownBlock({ mainContent, isCompact }: ChatMarkdownBlockProps) {
+export function ChatMarkdownBlock({
+  mainContent,
+  isCompact,
+}: ChatMarkdownBlockProps) {
   return (
     <ReactMarkdown
       skipHtml
       rehypePlugins={[rehypeSanitize]}
       disallowedElements={["script", "iframe", "object", "embed", "form"]}
       components={{
-        p: (props) => <p className={isCompact ? "mb-2 last:mb-0" : "mb-6 last:mb-0"} {...props} />,
+        p: (props) => (
+          <p
+            className={isCompact ? "mb-2 last:mb-0" : "mb-6 last:mb-0"}
+            {...props}
+          />
+        ),
         h1: (props) => (
           <h1
             className={
@@ -26,14 +34,22 @@ export function ChatMarkdownBlock({ mainContent, isCompact }: ChatMarkdownBlockP
             {...props}
           />
         ),
-        hr: () => <div className={isCompact ? "my-4 h-px bg-border" : "my-10 h-px bg-border"} />,
+        hr: () => (
+          <div
+            className={
+              isCompact ? "my-4 h-px bg-border" : "my-10 h-px bg-border"
+            }
+          />
+        ),
         pre: (props) => (
           <pre
             className="max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-2xl border border-border bg-bg-primary/70 p-4 text-xs text-text-secondary"
             {...props}
           />
         ),
-        code: (props) => <code className="break-words whitespace-pre-wrap" {...props} />,
+        code: (props) => (
+          <code className="break-words whitespace-pre-wrap" {...props} />
+        ),
       }}
     >
       {mainContent}

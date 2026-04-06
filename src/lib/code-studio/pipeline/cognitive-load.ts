@@ -10,15 +10,15 @@ export interface FunctionMetrics {
   nestingDepth: number;
   parameterCount: number;
   cyclomaticComplexity: number;
-  nameClarity: number;       // 0-100
-  score: number;             // 0-100 (높을수록 부하 큼)
-  level: 'ok' | 'warning' | 'critical';
+  nameClarity: number; // 0-100
+  score: number; // 0-100 (높을수록 부하 큼)
+  level: "ok" | "warning" | "critical";
 }
 
 export interface CognitiveLoadResult {
   functions: FunctionMetrics[];
-  overallScore: number;      // 0-100
-  level: 'ok' | 'warning' | 'critical';
+  overallScore: number; // 0-100
+  level: "ok" | "warning" | "critical";
   summary: string;
 }
 
@@ -26,7 +26,8 @@ export interface CognitiveLoadResult {
 // PART 2 — Parsing Helpers
 // ============================================================
 
-const FUNC_RE = /(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?\(|(\w+)\s*\([^)]*\)\s*\{)/g;
+const FUNC_RE =
+  /(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?\(|(\w+)\s*\([^)]*\)\s*\{)/g;
 const BRANCH_KEYWORDS = /\b(if|else if|case|catch|\?\?|\|\||&&|\?)\b/g;
 
 function measureNesting(lines: string[]): number {
@@ -35,8 +36,13 @@ function measureNesting(lines: string[]): number {
   for (const line of lines) {
     const trimmed = line.trim();
     for (const ch of trimmed) {
-      if (ch === '{') { current++; maxDepth = Math.max(maxDepth, current); }
-      if (ch === '}') { current = Math.max(0, current - 1); }
+      if (ch === "{") {
+        current++;
+        maxDepth = Math.max(maxDepth, current);
+      }
+      if (ch === "}") {
+        current = Math.max(0, current - 1);
+      }
     }
   }
   return maxDepth;
@@ -45,7 +51,7 @@ function measureNesting(lines: string[]): number {
 function countParams(line: string): number {
   const match = line.match(/\(([^)]*)\)/);
   if (!match || !match[1].trim()) return 0;
-  return match[1].split(',').length;
+  return match[1].split(",").length;
 }
 
 function scoreNameClarity(name: string): number {
@@ -74,7 +80,7 @@ interface RawBlock {
 }
 
 function extractFunctions(code: string): RawBlock[] {
-  const lines = code.split('\n');
+  const lines = code.split("\n");
   const blocks: RawBlock[] = [];
 
   for (let i = 0; i < lines.length; i++) {
@@ -83,7 +89,7 @@ function extractFunctions(code: string): RawBlock[] {
     const match = FUNC_RE.exec(line);
     if (!match) continue;
 
-    const name = match[1] || match[2] || match[3] || 'anonymous';
+    const name = match[1] || match[2] || match[3] || "anonymous";
     // Find the matching closing brace
     let depth = 0;
     let started = false;
@@ -92,8 +98,11 @@ function extractFunctions(code: string): RawBlock[] {
     for (let j = i; j < lines.length; j++) {
       fnLines.push(lines[j]);
       for (const ch of lines[j]) {
-        if (ch === '{') { depth++; started = true; }
-        if (ch === '}') depth--;
+        if (ch === "{") {
+          depth++;
+          started = true;
+        }
+        if (ch === "}") depth--;
       }
       if (started && depth <= 0) {
         blocks.push({ name, startLine: i + 1, content: fnLines });
@@ -110,7 +119,7 @@ function extractFunctions(code: string): RawBlock[] {
 // ============================================================
 
 function computeFunctionScore(block: RawBlock): FunctionMetrics {
-  const bodyText = block.content.join('\n');
+  const bodyText = block.content.join("\n");
   const lineCount = block.content.length;
 
   const nestingDepth = measureNesting(block.content);
@@ -130,11 +139,18 @@ function computeFunctionScore(block: RawBlock): FunctionMetrics {
   const clarityPenalty = Math.max(0, (100 - nameClarity) * 0.1);
 
   const score = Math.round(
-    Math.min(lengthPenalty + nestPenalty + paramPenalty + complexityPenalty + clarityPenalty, 100),
+    Math.min(
+      lengthPenalty +
+        nestPenalty +
+        paramPenalty +
+        complexityPenalty +
+        clarityPenalty,
+      100,
+    ),
   );
 
-  const level: FunctionMetrics['level'] =
-    score >= 85 ? 'critical' : score >= 70 ? 'warning' : 'ok';
+  const level: FunctionMetrics["level"] =
+    score >= 85 ? "critical" : score >= 70 ? "warning" : "ok";
 
   return {
     name: block.name,
@@ -156,13 +172,23 @@ function computeFunctionScore(block: RawBlock): FunctionMetrics {
 
 export function analyzeCognitiveLoad(code: string): CognitiveLoadResult {
   if (!code.trim()) {
-    return { functions: [], overallScore: 0, level: 'ok', summary: 'Empty file' };
+    return {
+      functions: [],
+      overallScore: 0,
+      level: "ok",
+      summary: "Empty file",
+    };
   }
 
   const blocks = extractFunctions(code);
 
   if (blocks.length === 0) {
-    return { functions: [], overallScore: 0, level: 'ok', summary: 'No functions found' };
+    return {
+      functions: [],
+      overallScore: 0,
+      level: "ok",
+      summary: "No functions found",
+    };
   }
 
   const functions = blocks.map(computeFunctionScore);
@@ -170,11 +196,11 @@ export function analyzeCognitiveLoad(code: string): CognitiveLoadResult {
     functions.reduce((sum, f) => sum + f.score, 0) / functions.length,
   );
 
-  const level: CognitiveLoadResult['level'] =
-    overallScore >= 85 ? 'critical' : overallScore >= 70 ? 'warning' : 'ok';
+  const level: CognitiveLoadResult["level"] =
+    overallScore >= 85 ? "critical" : overallScore >= 70 ? "warning" : "ok";
 
-  const critical = functions.filter((f) => f.level === 'critical').length;
-  const warning = functions.filter((f) => f.level === 'warning').length;
+  const critical = functions.filter((f) => f.level === "critical").length;
+  const warning = functions.filter((f) => f.level === "warning").length;
   const summary = `${functions.length} functions analyzed. ${critical} critical, ${warning} warnings. Avg load: ${overallScore}/100`;
 
   return { functions, overallScore, level, summary };

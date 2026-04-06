@@ -4,7 +4,14 @@
 // PART 1 — Imports & Types
 // ============================================================
 
-import { createContext, useContext, useCallback, useState, useEffect, useRef } from "react";
+import {
+  createContext,
+  useContext,
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { CheckCircle, XCircle, Info, X } from "lucide-react";
 
 type ToastType = "success" | "error" | "info";
@@ -35,31 +42,40 @@ const iconMap: Record<ToastType, typeof CheckCircle> = {
   info: Info,
 };
 
-const colorMap: Record<ToastType, { icon: string; border: string; progress: string; bg: string; glow: string }> = {
-  success: { 
-    icon: "text-accent-green", 
-    border: "border-accent-green/30", 
+const colorMap: Record<
+  ToastType,
+  { icon: string; border: string; progress: string; bg: string; glow: string }
+> = {
+  success: {
+    icon: "text-accent-green",
+    border: "border-accent-green/30",
     progress: "bg-accent-green",
     bg: "from-accent-green/20 to-accent-green/5",
-    glow: "shadow-[0_0_20px_rgba(47,155,131,0.15)]"
+    glow: "shadow-[0_0_20px_rgba(47,155,131,0.15)]",
   },
-  error: { 
-    icon: "text-accent-red", 
-    border: "border-accent-red/30", 
+  error: {
+    icon: "text-accent-red",
+    border: "border-accent-red/30",
     progress: "bg-accent-red",
     bg: "from-accent-red/20 to-accent-red/5",
-    glow: "shadow-[0_0_20px_rgba(244,63,94,0.15)]"
+    glow: "shadow-[0_0_20px_rgba(244,63,94,0.15)]",
   },
-  info: { 
-    icon: "text-accent-blue", 
-    border: "border-accent-blue/30", 
+  info: {
+    icon: "text-accent-blue",
+    border: "border-accent-blue/30",
     progress: "bg-accent-blue",
     bg: "from-accent-blue/20 to-accent-blue/5",
-    glow: "shadow-[0_0_20px_rgba(92,143,214,0.15)]"
+    glow: "shadow-[0_0_20px_rgba(92,143,214,0.15)]",
   },
 };
 
-function ToastCard({ item, onDismiss }: { item: ToastItem; onDismiss: (id: string) => void }) {
+function ToastCard({
+  item,
+  onDismiss,
+}: {
+  item: ToastItem;
+  onDismiss: (id: string) => void;
+}) {
   const [entering, setEntering] = useState(true);
   const [exiting, setExiting] = useState(false);
   const [progress, setProgress] = useState(100);
@@ -102,13 +118,19 @@ function ToastCard({ item, onDismiss }: { item: ToastItem; onDismiss: (id: strin
   return (
     <div
       className={`relative flex items-center gap-3 overflow-hidden rounded-2xl border bg-gradient-to-r ${colors.bg} backdrop-blur-xl px-4 py-3.5 transition-all duration-300 ${colors.border} ${colors.glow} ${
-        entering ? "translate-x-full opacity-0" : exiting ? "translate-x-full opacity-0" : "translate-x-0 opacity-100"
+        entering
+          ? "translate-x-full opacity-0"
+          : exiting
+            ? "translate-x-full opacity-0"
+            : "translate-x-0 opacity-100"
       }`}
     >
       <div className={`p-1.5 rounded-lg ${colors.bg}`}>
         <Icon className={`h-4 w-4 shrink-0 ${colors.icon}`} />
       </div>
-      <span className="flex-1 font-mono text-[12px] font-medium text-text-primary">{item.message}</span>
+      <span className="flex-1 font-mono text-[12px] font-medium text-text-primary">
+        {item.message}
+      </span>
       <button
         onClick={handleManualDismiss}
         className="shrink-0 p-1 rounded-lg text-text-tertiary transition-colors hover:text-text-primary hover:bg-white/5 active:scale-95"
@@ -159,7 +181,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       {/* Toast container — fixed bottom-right */}
       {toasts.length > 0 && (
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col-reverse gap-2" style={{ maxWidth: 360 }}>
+        <div
+          className="fixed bottom-4 right-4 z-50 flex flex-col-reverse gap-2"
+          style={{ maxWidth: 360 }}
+        >
           {toasts.map((item) => (
             <ToastCard key={item.id} item={item} onDismiss={dismiss} />
           ))}

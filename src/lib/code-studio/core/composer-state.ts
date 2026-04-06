@@ -1,4 +1,4 @@
-import { logger } from '@/lib/logger';
+import { logger } from "@/lib/logger";
 
 // ============================================================
 // PART 1 — Composer Mode Types & Transition Map
@@ -18,22 +18,22 @@ import { logger } from '@/lib/logger';
  */
 
 export type ComposerMode =
-  | 'idle'
-  | 'generating'
-  | 'verifying'
-  | 'review'
-  | 'staged'
-  | 'applied'
-  | 'error';
+  | "idle"
+  | "generating"
+  | "verifying"
+  | "review"
+  | "staged"
+  | "applied"
+  | "error";
 
 export const ALLOWED_TRANSITIONS: Record<ComposerMode, ComposerMode[]> = {
-  idle: ['generating'],
-  generating: ['verifying', 'error', 'idle'],
-  verifying: ['review', 'error', 'idle'],
-  review: ['staged', 'generating', 'idle'],
-  staged: ['applied', 'review'],
-  applied: ['idle'],
-  error: ['idle', 'generating'],
+  idle: ["generating"],
+  generating: ["verifying", "error", "idle"],
+  verifying: ["review", "error", "idle"],
+  review: ["staged", "generating", "idle"],
+  staged: ["applied", "review"],
+  applied: ["idle"],
+  error: ["idle", "generating"],
 };
 
 // IDENTITY_SEAL: PART-1 | role=type-definitions | inputs=none | outputs=ComposerMode,ALLOWED_TRANSITIONS
@@ -62,7 +62,7 @@ export function createModeTransition(
   return (nextMode: ComposerMode): boolean => {
     if (!canTransition(currentMode, nextMode)) {
       logger.warn(
-        'codeStudio:composer',
+        "codeStudio:composer",
         `Invalid transition: ${currentMode} → ${nextMode}`,
       );
       return false;

@@ -1,8 +1,17 @@
 // Firebase Firestore — static import for data-layer modules.
 // Dynamic alternative: import('firebase/firestore') via lazyFirestore() in firebase.ts
 import {
-  collection, doc, getDoc, getDocs, increment,
-  limit, orderBy, query, updateDoc, writeBatch, where,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  increment,
+  limit,
+  orderBy,
+  query,
+  updateDoc,
+  writeBatch,
+  where,
   startAfter,
   type QueryConstraint,
   type DocumentSnapshot,
@@ -10,7 +19,8 @@ import {
 import { auth } from "@/lib/firebase";
 import {
   type CommentRecord,
-  type ReactionRecord, type ReactionType,
+  type ReactionRecord,
+  type ReactionType,
 } from "@/lib/network-types";
 import { requireDb, normalizeText, COLLECTIONS, nowIso } from "./helpers";
 
@@ -64,13 +74,21 @@ export async function addComment(input: {
   const postRef = doc(database, COLLECTIONS.posts, input.postId);
   const batch = writeBatch(database);
   batch.set(commentRef, record);
-  batch.set(postRef, { metrics: { commentCount: increment(1) }, updatedAt: timestamp }, { merge: true });
+  batch.set(
+    postRef,
+    { metrics: { commentCount: increment(1) }, updatedAt: timestamp },
+    { merge: true },
+  );
   await batch.commit();
 
   return record;
 }
 
-export async function updateComment(commentId: string, content: string, currentUserId: string) {
+export async function updateComment(
+  commentId: string,
+  content: string,
+  currentUserId: string,
+) {
   assertCurrentUser(currentUserId);
 
   const database = requireDb();
@@ -79,12 +97,20 @@ export async function updateComment(commentId: string, content: string, currentU
   const snap = await getDoc(ref);
   if (!snap.exists()) throw new Error("Comment not found");
   const data = snap.data() as CommentRecord;
-  if (data.authorId !== currentUserId) throw new Error("Not the comment author");
+  if (data.authorId !== currentUserId)
+    throw new Error("Not the comment author");
 
-  await updateDoc(ref, { content: normalizeText(content), updatedAt: nowIso() });
+  await updateDoc(ref, {
+    content: normalizeText(content),
+    updatedAt: nowIso(),
+  });
 }
 
-export async function deleteComment(commentId: string, postId: string, currentUserId: string) {
+export async function deleteComment(
+  commentId: string,
+  postId: string,
+  currentUserId: string,
+) {
   assertCurrentUser(currentUserId);
 
   const database = requireDb();
@@ -94,14 +120,19 @@ export async function deleteComment(commentId: string, postId: string, currentUs
   if (!snap.exists()) return; // already gone — no counter change
 
   const data = snap.data() as CommentRecord;
-  if (data.authorId !== currentUserId) throw new Error("Not the comment author");
+  if (data.authorId !== currentUserId)
+    throw new Error("Not the comment author");
 
   const timestamp = nowIso();
   const postRef = doc(database, COLLECTIONS.posts, postId);
 
   const batch = writeBatch(database);
   batch.delete(commentRef);
-  batch.set(postRef, { metrics: { commentCount: increment(-1) }, updatedAt: timestamp }, { merge: true });
+  batch.set(
+    postRef,
+    { metrics: { commentCount: increment(-1) }, updatedAt: timestamp },
+    { merge: true },
+  );
   await batch.commit();
 }
 
@@ -141,7 +172,11 @@ export async function listComments(
 // PART 3 — REACTION OPERATIONS
 // ============================================================
 
-export function reactionDocId(targetId: string, userId: string, reactionType: ReactionType) {
+export function reactionDocId(
+  targetId: string,
+  userId: string,
+  reactionType: ReactionType,
+) {
   return `${targetId}_${userId}_${reactionType}`;
 }
 
@@ -158,7 +193,8 @@ export async function toggleReaction(input: {
   const ref = doc(database, COLLECTIONS.reactions, docId);
   const snapshot = await getDoc(ref);
 
-  const parentCollection = input.targetType === "planet" ? COLLECTIONS.planets : COLLECTIONS.posts;
+  const parentCollection =
+    input.targetType === "planet" ? COLLECTIONS.planets : COLLECTIONS.posts;
   const parentRef = doc(database, parentCollection, input.targetId);
 
   const batch = writeBatch(database);
@@ -191,7 +227,10 @@ export async function toggleReaction(input: {
  *   For targets with very high reaction counts, callers should
  *   paginate using a cursor strategy similar to listComments.
  */
-export async function getReactions(targetId: string, limitCount = 500): Promise<ReactionRecord[]> {
+export async function getReactions(
+  targetId: string,
+  limitCount = 500,
+): Promise<ReactionRecord[]> {
   const database = requireDb();
   // Composite index: targetId + createdAt (firestore.indexes.json)
   const snapshot = await getDocs(

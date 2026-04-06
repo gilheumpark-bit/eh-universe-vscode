@@ -44,12 +44,42 @@ interface ItemDef {
 }
 
 const MAIN_ITEMS: ItemDef[] = [
-  { id: "project", icon: <FolderOpen size={18} />, label: "프로젝트 탐색기", shortcut: "Ctrl+Shift+E" },
-  { id: "search", icon: <Search size={18} />, label: "검색", shortcut: "Ctrl+Shift+F" },
-  { id: "ai", icon: <Bot size={18} />, label: "AI 어시스턴트", shortcut: "Ctrl+Shift+A" },
-  { id: "review", icon: <ShieldCheck size={18} />, label: "코드 리뷰", shortcut: "Ctrl+Shift+Q" },
-  { id: "preview", icon: <Eye size={18} />, label: "미리보기", shortcut: "Ctrl+Shift+P" },
-  { id: "deploy", icon: <Rocket size={18} />, label: "배포", shortcut: "Ctrl+Shift+D" },
+  {
+    id: "project",
+    icon: <FolderOpen size={18} />,
+    label: "프로젝트 탐색기",
+    shortcut: "Ctrl+Shift+E",
+  },
+  {
+    id: "search",
+    icon: <Search size={18} />,
+    label: "검색",
+    shortcut: "Ctrl+Shift+F",
+  },
+  {
+    id: "ai",
+    icon: <Bot size={18} />,
+    label: "AI 어시스턴트",
+    shortcut: "Ctrl+Shift+A",
+  },
+  {
+    id: "review",
+    icon: <ShieldCheck size={18} />,
+    label: "코드 리뷰",
+    shortcut: "Ctrl+Shift+Q",
+  },
+  {
+    id: "preview",
+    icon: <Eye size={18} />,
+    label: "미리보기",
+    shortcut: "Ctrl+Shift+P",
+  },
+  {
+    id: "deploy",
+    icon: <Rocket size={18} />,
+    label: "배포",
+    shortcut: "Ctrl+Shift+D",
+  },
 ];
 
 const SETTINGS_ITEM: ItemDef = {
@@ -108,7 +138,9 @@ export function ActivityBar({ activeView, onChangeView }: ActivityBarProps) {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      const currentIndex = ALL_ITEMS.findIndex((item) => item.id === activeView);
+      const currentIndex = ALL_ITEMS.findIndex(
+        (item) => item.id === activeView,
+      );
       let nextIndex: number | null = null;
 
       if (e.key === "ArrowDown") {
@@ -128,7 +160,9 @@ export function ActivityBar({ activeView, onChangeView }: ActivityBarProps) {
       if (nextIndex !== null) {
         onChangeView(ALL_ITEMS[nextIndex].id);
         const buttons =
-          containerRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+          containerRef.current?.querySelectorAll<HTMLButtonElement>(
+            '[role="tab"]',
+          );
         buttons?.[nextIndex]?.focus();
       }
     },

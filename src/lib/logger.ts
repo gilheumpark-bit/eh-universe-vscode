@@ -2,7 +2,8 @@
 // logger — General-purpose console wrapper with env-aware filtering
 // ============================================================
 
-const isProd = typeof process !== 'undefined' && process.env.NODE_ENV === 'production';
+const isProd =
+  typeof process !== "undefined" && process.env.NODE_ENV === "production";
 
 function fmt(ctx: string, args: unknown[]): unknown[] {
   return ctx ? [`[${ctx}]`, ...args] : args;

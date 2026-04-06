@@ -5,7 +5,7 @@
 // error squiggles, hover info, go-to-definition을 제공한다.
 // 외부 LSP 패키지 없이 monaco.languages.typescript API만 사용.
 
-import type * as Monaco from 'monaco-editor';
+import type * as Monaco from "monaco-editor";
 
 // ============================================================
 // PART 1 — Compiler Options Configuration
@@ -33,9 +33,9 @@ function configureCompilerOptions(monaco: typeof Monaco): void {
     noEmit: true,
     allowJs: true,
     skipLibCheck: true,
-    baseUrl: '.',
-    paths: { '@/*': ['./src/*'] },
-    lib: ['es2022', 'dom', 'dom.iterable'],
+    baseUrl: ".",
+    paths: { "@/*": ["./src/*"] },
+    lib: ["es2022", "dom", "dom.iterable"],
   });
 
   if (jsDef) {
@@ -62,7 +62,8 @@ function configureDiagnostics(monaco: typeof Monaco): void {
 
   // 개발 환경: semantic + syntactic 모두 활성화
   // 프로덕션: syntactic만 (워커 CPU 절감)
-  const isProd = typeof process !== 'undefined' && process.env?.NODE_ENV === 'production';
+  const isProd =
+    typeof process !== "undefined" && process.env?.NODE_ENV === "production";
 
   ts.typescriptDefaults.setDiagnosticsOptions({
     noSemanticValidation: isProd,
@@ -205,9 +206,12 @@ export function setupTypeScriptIntelliSense(monaco: typeof Monaco): void {
   configureDiagnostics(monaco);
 
   // 내장 타입 정의 등록
-  addTypeDefinition('file:///node_modules/@types/react/index.d.ts', REACT_TYPES);
-  addTypeDefinition('file:///node_modules/@types/next/link.d.ts', NEXTJS_TYPES);
-  addTypeDefinition('file:///globals.d.ts', GLOBAL_TYPES);
+  addTypeDefinition(
+    "file:///node_modules/@types/react/index.d.ts",
+    REACT_TYPES,
+  );
+  addTypeDefinition("file:///node_modules/@types/next/link.d.ts", NEXTJS_TYPES);
+  addTypeDefinition("file:///globals.d.ts", GLOBAL_TYPES);
 
   /**
    * addExtraLib은 monaco 인스턴스에 의존하므로 클로저로 실행.

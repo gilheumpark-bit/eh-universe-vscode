@@ -21,19 +21,21 @@ export interface LaunchedFile {
 export async function consumeLaunchQueue(): Promise<LaunchedFile[]> {
   if (!(window as any).launchQueue) return [];
   const files: LaunchedFile[] = [];
-  (window as any).launchQueue.setConsumer(async (launchParams: { files: FileSystemFileHandle[] }) => {
-    for (const handle of launchParams.files) {
-      const file = await handle.getFile();
-      const content = await file.text();
-      files.push({ name: file.name, type: file.type, content });
-    }
-  });
+  (window as any).launchQueue.setConsumer(
+    async (launchParams: { files: FileSystemFileHandle[] }) => {
+      for (const handle of launchParams.files) {
+        const file = await handle.getFile();
+        const content = await file.text();
+        files.push({ name: file.name, type: file.type, content });
+      }
+    },
+  );
   return files;
 }
 
 /** 파일 핸들러 등록 가능 여부 */
 export function supportsFileHandling(): boolean {
-  return typeof window !== 'undefined' && !!(window as any).launchQueue;
+  return typeof window !== "undefined" && !!(window as any).launchQueue;
 }
 
 // ── 2. Window Controls Overlay (Chrome PWA) ──
@@ -52,21 +54,32 @@ export function getTitleBarArea(): TitleBarArea {
   const overlay = (navigator as any).windowControlsOverlay;
   if (!overlay) return { x: 0, y: 0, width: 0, height: 0, visible: false };
   const rect = overlay.getTitlebarAreaRect();
-  return { x: rect.x, y: rect.y, width: rect.width, height: rect.height, visible: overlay.visible };
+  return {
+    x: rect.x,
+    y: rect.y,
+    width: rect.width,
+    height: rect.height,
+    visible: overlay.visible,
+  };
 }
 
 /** 타이틀바 오버레이 지원 여부 */
 export function supportsWindowControlsOverlay(): boolean {
-  return typeof navigator !== 'undefined' && !!(navigator as any).windowControlsOverlay;
+  return (
+    typeof navigator !== "undefined" &&
+    !!(navigator as any).windowControlsOverlay
+  );
 }
 
 /** 타이틀바 변경 리스너 */
-export function onTitleBarChange(callback: (area: TitleBarArea) => void): () => void {
+export function onTitleBarChange(
+  callback: (area: TitleBarArea) => void,
+): () => void {
   const overlay = (navigator as any).windowControlsOverlay;
   if (!overlay) return () => {};
   const handler = () => callback(getTitleBarArea());
-  overlay.addEventListener('geometrychange', handler);
-  return () => overlay.removeEventListener('geometrychange', handler);
+  overlay.addEventListener("geometrychange", handler);
+  return () => overlay.removeEventListener("geometrychange", handler);
 }
 
 // ── 3. Document Picture-in-Picture (Chrome) ──
@@ -78,18 +91,27 @@ export interface PiPWindow {
 }
 
 /** DOM 요소를 PiP 창으로 분리 */
-export async function openDocumentPiP(width: number = 400, height: number = 300): Promise<PiPWindow | null> {
+export async function openDocumentPiP(
+  width: number = 400,
+  height: number = 300,
+): Promise<PiPWindow | null> {
   if (!(window as any).documentPictureInPicture) return null;
   try {
-    const pipWindow = await (window as any).documentPictureInPicture.requestWindow({ width, height });
+    const pipWindow = await (
+      window as any
+    ).documentPictureInPicture.requestWindow({ width, height });
     // 기본 스타일 복사
     for (const styleSheet of document.styleSheets) {
       try {
-        const css = Array.from(styleSheet.cssRules).map(r => r.cssText).join('\n');
-        const style = pipWindow.document.createElement('style');
+        const css = Array.from(styleSheet.cssRules)
+          .map((r) => r.cssText)
+          .join("\n");
+        const style = pipWindow.document.createElement("style");
         style.textContent = css;
         pipWindow.document.head.appendChild(style);
-      } catch { /* cross-origin stylesheet */ }
+      } catch {
+        /* cross-origin stylesheet */
+      }
     }
     return {
       window: pipWindow,
@@ -102,26 +124,31 @@ export async function openDocumentPiP(width: number = 400, height: number = 300)
 
 /** Document PiP 지원 여부 */
 export function supportsDocumentPiP(): boolean {
-  return typeof window !== 'undefined' && !!(window as any).documentPictureInPicture;
+  return (
+    typeof window !== "undefined" && !!(window as any).documentPictureInPicture
+  );
 }
 
 // ── 4. Compute Pressure API (Chrome) ──
 // CPU/GPU 부하 감지 → 배치 작업 스로틀
 
-export type PressureState = 'nominal' | 'fair' | 'serious' | 'critical';
+export type PressureState = "nominal" | "fair" | "serious" | "critical";
 
 /** CPU 부하 감시 시작 */
 export function observeComputePressure(
   callback: (state: PressureState) => void,
   sampleInterval: number = 2000,
 ): (() => void) | null {
-  if (typeof (globalThis as any).PressureObserver === 'undefined') return null;
+  if (typeof (globalThis as any).PressureObserver === "undefined") return null;
   try {
-    const observer = new (globalThis as any).PressureObserver((records: Array<{ state: PressureState }>) => {
-      const latest = records[records.length - 1];
-      if (latest) callback(latest.state);
-    }, { sampleInterval });
-    observer.observe('cpu');
+    const observer = new (globalThis as any).PressureObserver(
+      (records: Array<{ state: PressureState }>) => {
+        const latest = records[records.length - 1];
+        if (latest) callback(latest.state);
+      },
+      { sampleInterval },
+    );
+    observer.observe("cpu");
     return () => observer.disconnect();
   } catch {
     return null;
@@ -142,14 +169,47 @@ export interface ScreenInfo {
 
 /** 연결된 모든 화면 정보 */
 export async function getScreens(): Promise<ScreenInfo[]> {
-  if (!(window as any).getScreenDetails) return [{ label: 'Primary', left: 0, top: 0, width: screen.width, height: screen.height, isPrimary: true }];
+  if (!(window as any).getScreenDetails)
+    return [
+      {
+        label: "Primary",
+        left: 0,
+        top: 0,
+        width: screen.width,
+        height: screen.height,
+        isPrimary: true,
+      },
+    ];
   try {
     const details = await (window as any).getScreenDetails();
-    return details.screens.map((s: { label: string; left: number; top: number; width: number; height: number; isPrimary: boolean }) => ({
-      label: s.label, left: s.left, top: s.top, width: s.width, height: s.height, isPrimary: s.isPrimary,
-    }));
+    return details.screens.map(
+      (s: {
+        label: string;
+        left: number;
+        top: number;
+        width: number;
+        height: number;
+        isPrimary: boolean;
+      }) => ({
+        label: s.label,
+        left: s.left,
+        top: s.top,
+        width: s.width,
+        height: s.height,
+        isPrimary: s.isPrimary,
+      }),
+    );
   } catch {
-    return [{ label: 'Primary', left: 0, top: 0, width: screen.width, height: screen.height, isPrimary: true }];
+    return [
+      {
+        label: "Primary",
+        left: 0,
+        top: 0,
+        width: screen.width,
+        height: screen.height,
+        isPrimary: true,
+      },
+    ];
   }
 }
 
@@ -162,10 +222,14 @@ export async function isMultiScreen(): Promise<boolean> {
 // ── 6. Ink API (Chrome — 저지연 펜 입력) ──
 
 /** 저지연 펜 입력 활성화 (Canvas용) */
-export async function requestInkPresenter(canvas: HTMLCanvasElement): Promise<unknown | null> {
+export async function requestInkPresenter(
+  canvas: HTMLCanvasElement,
+): Promise<unknown | null> {
   if (!(navigator as any).ink) return null;
   try {
-    return await (navigator as any).ink.requestPresenter({ presentationArea: canvas });
+    return await (navigator as any).ink.requestPresenter({
+      presentationArea: canvas,
+    });
   } catch {
     return null;
   }
@@ -173,7 +237,7 @@ export async function requestInkPresenter(canvas: HTMLCanvasElement): Promise<un
 
 /** Ink API 지원 여부 */
 export function supportsInk(): boolean {
-  return typeof navigator !== 'undefined' && !!(navigator as any).ink;
+  return typeof navigator !== "undefined" && !!(navigator as any).ink;
 }
 
 // ── Capability Summary ──
@@ -183,8 +247,10 @@ export function getPlatformCapabilities() {
     fileHandling: supportsFileHandling(),
     windowControlsOverlay: supportsWindowControlsOverlay(),
     documentPiP: supportsDocumentPiP(),
-    computePressure: typeof (globalThis as any).PressureObserver !== 'undefined',
-    multiScreen: typeof window !== 'undefined' && !!(window as any).getScreenDetails,
+    computePressure:
+      typeof (globalThis as any).PressureObserver !== "undefined",
+    multiScreen:
+      typeof window !== "undefined" && !!(window as any).getScreenDetails,
     ink: supportsInk(),
   };
 }

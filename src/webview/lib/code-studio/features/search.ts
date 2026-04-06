@@ -2,7 +2,7 @@
 // PART 1 — Types & Constants
 // ============================================================
 
-import type { FileNode } from '../core/types';
+import type { FileNode } from "../core/types";
 
 /** Search configuration options */
 export interface SearchOptions {
@@ -10,7 +10,7 @@ export interface SearchOptions {
   caseSensitive?: boolean;
   wholeWord?: boolean;
   maxResults?: number;
-  fileExtension?: string;  // e.g. "ts", "tsx", "json"
+  fileExtension?: string; // e.g. "ts", "tsx", "json"
   searchFileNames?: boolean; // true = search file names, not content
 }
 
@@ -65,7 +65,7 @@ function flattenFiles(nodes: FileNode[]): FlatFile[] {
 
   function walk(list: FileNode[]): void {
     for (const node of list) {
-      if (node.type === 'file' && node.content != null) {
+      if (node.type === "file" && node.content != null) {
         result.push({ id: node.id, name: node.name, content: node.content });
       }
       if (node.children) {
@@ -91,7 +91,7 @@ function flattenFiles(nodes: FileNode[]): FlatFile[] {
 function buildPattern(query: string, options: SearchOptions): RegExp | null {
   if (!query) return null;
 
-  const flags = options.caseSensitive ? 'g' : 'gi';
+  const flags = options.caseSensitive ? "g" : "gi";
 
   if (options.regex) {
     try {
@@ -103,7 +103,7 @@ function buildPattern(query: string, options: SearchOptions): RegExp | null {
   }
 
   // Plain text mode — escape regex metacharacters
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const source = options.wholeWord ? `\\b${escaped}\\b` : escaped;
   return new RegExp(source, flags);
 }
@@ -165,7 +165,7 @@ export function searchCode(
   const allFiles = flattenFiles(files);
   // 파일 확장자 필터
   const flatFiles = options.fileExtension
-    ? allFiles.filter(f => f.name.endsWith('.' + options.fileExtension))
+    ? allFiles.filter((f) => f.name.endsWith("." + options.fileExtension))
     : allFiles;
   const results: SearchResult[] = [];
 
@@ -193,7 +193,7 @@ export function searchCode(
   for (const file of flatFiles) {
     if (results.length >= maxResults) break;
 
-    const lines = file.content.split('\n');
+    const lines = file.content.split("\n");
 
     for (let i = 0; i < lines.length; i++) {
       if (results.length >= maxResults) break;
@@ -287,13 +287,13 @@ export function previewReplace(
   let pattern: RegExp;
   try {
     pattern = isRegex
-      ? new RegExp(find, 'g')
-      : new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+      ? new RegExp(find, "g")
+      : new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
   } catch {
     return [];
   }
 
-  const lines = code.split('\n');
+  const lines = code.split("\n");
   const entries: ReplacePreviewEntry[] = [];
 
   for (let i = 0; i < lines.length; i++) {
@@ -342,7 +342,7 @@ export function replaceAll(
     return nodes.map((node): FileNode => {
       const cloned: FileNode = { ...node };
 
-      if (cloned.type === 'file' && cloned.content != null) {
+      if (cloned.type === "file" && cloned.content != null) {
         pattern.lastIndex = 0;
         cloned.content = cloned.content.replace(pattern, replacement);
       }
@@ -364,12 +364,12 @@ export function replaceAll(
 // PART 9 — Web Code Search (AI-simulated)
 // ============================================================
 
-import { streamChat } from '@/lib/ai-providers';
+import { streamChat } from "@/lib/ai-providers";
 
 /** Web code search result */
 export interface WebSearchResult {
   title: string;
-  source: 'npm' | 'github' | 'stackoverflow' | 'docs';
+  source: "npm" | "github" | "stackoverflow" | "docs";
   url: string;
   snippet: string;
   relevance: number;
@@ -391,7 +391,8 @@ Respond ONLY with a JSON array of results. Each result must have:
 
 Return 5-10 results sorted by relevance. No markdown, no explanation, just the JSON array.`;
 
-const AI_ESTIMATE_DISCLAIMER = 'AI-estimated results — may not reflect actual web content';
+const AI_ESTIMATE_DISCLAIMER =
+  "AI-estimated results — may not reflect actual web content";
 
 /**
  * AI-simulated web code search.
@@ -407,17 +408,19 @@ export async function searchWeb(
   if (!query.trim()) return [];
 
   const sourceFilter = sources?.length
-    ? `\nOnly return results from these sources: ${sources.join(', ')}.`
-    : '';
+    ? `\nOnly return results from these sources: ${sources.join(", ")}.`
+    : "";
 
-  let raw = '';
+  let raw = "";
   try {
     raw = await streamChat({
       systemInstruction: WEB_SEARCH_SYSTEM + sourceFilter,
-      messages: [{ role: 'user', content: `Search: ${query}` }],
+      messages: [{ role: "user", content: `Search: ${query}` }],
       temperature: 0.3,
       signal,
-      onChunk: () => { /* collect via return value */ },
+      onChunk: () => {
+        /* collect via return value */
+      },
     });
   } catch {
     return [];
@@ -429,19 +432,24 @@ export async function searchWeb(
     if (!jsonMatch) return [];
     const parsed = JSON.parse(jsonMatch[0]) as unknown[];
     return parsed
-      .filter((item): item is Record<string, unknown> =>
-        typeof item === 'object' && item !== null &&
-        'title' in item && 'source' in item && 'url' in item &&
-        'snippet' in item && 'relevance' in item
+      .filter(
+        (item): item is Record<string, unknown> =>
+          typeof item === "object" &&
+          item !== null &&
+          "title" in item &&
+          "source" in item &&
+          "url" in item &&
+          "snippet" in item &&
+          "relevance" in item,
       )
-      .map(item => ({
+      .map((item) => ({
         title: String(item.title),
-        source: item.source as WebSearchResult['source'],
+        source: item.source as WebSearchResult["source"],
         url: String(item.url),
         snippet: String(item.snippet),
         relevance: Math.max(0, Math.min(1, Number(item.relevance) || 0)),
-        stars: typeof item.stars === 'number' ? item.stars : undefined,
-        license: typeof item.license === 'string' ? item.license : undefined,
+        stars: typeof item.stars === "number" ? item.stars : undefined,
+        license: typeof item.license === "string" ? item.license : undefined,
         isAIEstimate: true,
         disclaimer: AI_ESTIMATE_DISCLAIMER,
       }))

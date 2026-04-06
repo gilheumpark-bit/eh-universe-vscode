@@ -4,16 +4,32 @@
 // PART 1 — Imports & Types
 // ============================================================
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   createWebContainer,
   type WebContainerInstance,
 } from "@/lib/code-studio/features/webcontainer";
-import { createHMRBridge, type HMRBridge, type HMREvent } from "@/lib/code-studio/features/preview-hmr";
+import {
+  createHMRBridge,
+  type HMRBridge,
+  type HMREvent,
+} from "@/lib/code-studio/features/preview-hmr";
 import type { FileNode } from "@/lib/code-studio/core/types";
 import { useCodeStudioT } from "@/lib/use-code-studio-translations";
 
-type PreviewState = "idle" | "booting" | "installing" | "starting" | "ready" | "error";
+type PreviewState =
+  | "idle"
+  | "booting"
+  | "installing"
+  | "starting"
+  | "ready"
+  | "error";
 type DeviceMode = "responsive" | "mobile" | "tablet" | "desktop";
 
 interface ConsoleEntry {
@@ -98,7 +114,9 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
         if (allDeps["react"]) return "React";
         if (allDeps["vue"]) return "Vue";
         if (allDeps["svelte"]) return "Svelte";
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
     if (findFile(files, "index.html")) return "HTML";
     return null;
@@ -119,7 +137,9 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
       setState("installing");
 
       // Write all project files to the container concurrently.
-      await Promise.all(projectFiles.map((file) => wc.writeFile(file.path, file.content)));
+      await Promise.all(
+        projectFiles.map((file) => wc.writeFile(file.path, file.content)),
+      );
 
       if (wc.isAvailable) {
         await wc.installDependencies();
@@ -145,35 +165,53 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
       try {
         const wc = containerRef.current;
         if (!wc) return;
-        await Promise.all(projectFiles.map((file) => wc.writeFile(file.path, file.content)));
+        await Promise.all(
+          projectFiles.map((file) => wc.writeFile(file.path, file.content)),
+        );
         if (iframeRef.current && previewUrl) {
           iframeRef.current.src = previewUrl;
         }
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      }
     }, 1000);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [projectFiles, visible, previewUrl]);
 
   // ── Initialize HMR Bridge when iframe is ready ──
   useEffect(() => {
     if (state !== "ready" || !iframeRef.current) return;
-    if (hmrBridgeRef.current) { hmrBridgeRef.current.dispose(); hmrBridgeRef.current = null; }
+    if (hmrBridgeRef.current) {
+      hmrBridgeRef.current.dispose();
+      hmrBridgeRef.current = null;
+    }
     const bridge = createHMRBridge(iframeRef.current, {
       debounceMs: 300,
       targetOrigin: previewOrigin || undefined,
     });
     bridge.on("client-error", (event: HMREvent) => {
       if (event.error) {
-        setConsoleEntries((prev) => [...prev, {
-          id: crypto.randomUUID(), type: "error", message: `[HMR] ${event.error}`, timestamp: Date.now(),
-        }]);
+        setConsoleEntries((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            type: "error",
+            message: `[HMR] ${event.error}`,
+            timestamp: Date.now(),
+          },
+        ]);
       }
     });
     bridge.on("hmr-fail-full-reload", () => {
       if (iframeRef.current && previewUrl) iframeRef.current.src = previewUrl;
     });
     hmrBridgeRef.current = bridge;
-    return () => { hmrBridgeRef.current?.dispose(); hmrBridgeRef.current = null; };
+    return () => {
+      hmrBridgeRef.current?.dispose();
+      hmrBridgeRef.current = null;
+    };
   }, [state, previewOrigin, previewUrl]);
 
   // ── Notify HMR bridge on file changes ──
@@ -197,14 +235,23 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
   // ── Console capture from iframe ──
   useEffect(() => {
     const handler = (event: MessageEvent) => {
-      if (iframeRef.current && event.source !== iframeRef.current.contentWindow) return;
+      if (iframeRef.current && event.source !== iframeRef.current.contentWindow)
+        return;
       if (previewOrigin && event.origin !== previewOrigin) return;
       if (event.data?.__eh_console) {
-        const { type, args } = event.data.__eh_console as { type: string; args: string[] };
-        setConsoleEntries((prev) => [...prev.slice(-200), {
-          id: crypto.randomUUID(), type: (type as ConsoleEntry["type"]) || "log",
-          message: args.join(" "), timestamp: Date.now(),
-        }]);
+        const { type, args } = event.data.__eh_console as {
+          type: string;
+          args: string[];
+        };
+        setConsoleEntries((prev) => [
+          ...prev.slice(-200),
+          {
+            id: crypto.randomUUID(),
+            type: (type as ConsoleEntry["type"]) || "log",
+            message: args.join(" "),
+            timestamp: Date.now(),
+          },
+        ]);
       }
     };
     window.addEventListener("message", handler);
@@ -221,11 +268,19 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
   }, [previewUrl]);
 
   const handleNavBack = useCallback(() => {
-    if (navIndex > 0) { const ni = navIndex - 1; setNavIndex(ni); if (iframeRef.current) iframeRef.current.src = navHistory[ni]; }
+    if (navIndex > 0) {
+      const ni = navIndex - 1;
+      setNavIndex(ni);
+      if (iframeRef.current) iframeRef.current.src = navHistory[ni];
+    }
   }, [navIndex, navHistory]);
 
   const handleNavForward = useCallback(() => {
-    if (navIndex < navHistory.length - 1) { const ni = navIndex + 1; setNavIndex(ni); if (iframeRef.current) iframeRef.current.src = navHistory[ni]; }
+    if (navIndex < navHistory.length - 1) {
+      const ni = navIndex + 1;
+      setNavIndex(ni);
+      if (iframeRef.current) iframeRef.current.src = navHistory[ni];
+    }
   }, [navIndex, navHistory]);
 
   // Track iframe navigation
@@ -237,9 +292,14 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
       try {
         const currentUrl = iframe.contentWindow?.location.href;
         if (currentUrl && currentUrl !== "about:blank") {
-          setNavIndex((prev) => { setNavHistory((h) => [...h.slice(0, prev + 1), currentUrl]); return prev + 1; });
+          setNavIndex((prev) => {
+            setNavHistory((h) => [...h.slice(0, prev + 1), currentUrl]);
+            return prev + 1;
+          });
         }
-      } catch { /* cross-origin */ }
+      } catch {
+        /* cross-origin */
+      }
     };
     iframe.addEventListener("load", onLoad);
     return () => iframe.removeEventListener("load", onLoad);
@@ -252,19 +312,47 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
     <div className="flex flex-col h-full bg-[#0a0e17] text-text-secondary">
       {/* Toolbar Row 1 — URL Bar */}
       <div className="flex items-center gap-1.5 px-2 py-1 border-b border-white/8 bg-[#0d1117] min-h-[36px]">
-        <ToolbarBtn onClick={handleNavBack} disabled={navIndex <= 0} title={t.previewBack}>&larr;</ToolbarBtn>
-        <ToolbarBtn onClick={handleNavForward} disabled={navIndex >= navHistory.length - 1} title={t.previewForward}>&rarr;</ToolbarBtn>
-        <ToolbarBtn onClick={handleRefresh} disabled={state !== "ready"} title={t.previewRefresh}>&#x21bb;</ToolbarBtn>
+        <ToolbarBtn
+          onClick={handleNavBack}
+          disabled={navIndex <= 0}
+          title={t.previewBack}
+        >
+          &larr;
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={handleNavForward}
+          disabled={navIndex >= navHistory.length - 1}
+          title={t.previewForward}
+        >
+          &rarr;
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={handleRefresh}
+          disabled={state !== "ready"}
+          title={t.previewRefresh}
+        >
+          &#x21bb;
+        </ToolbarBtn>
 
-        {isLoading && <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-amber-500 rounded-full animate-spin shrink-0" />}
+        {isLoading && (
+          <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-amber-500 rounded-full animate-spin shrink-0" />
+        )}
 
         <input
-          type="text" value={displayUrl} readOnly
+          type="text"
+          value={displayUrl}
+          readOnly
           className="flex-1 bg-[#0a0e17] border border-white/10 rounded px-2 py-0.5 text-xs font-mono text-text-secondary"
           placeholder={t.previewUrlPlaceholder}
         />
 
-        <ToolbarBtn onClick={handleOpenExternal} disabled={state !== "ready"} title={t.previewOpenNewTab}>&#x2197;</ToolbarBtn>
+        <ToolbarBtn
+          onClick={handleOpenExternal}
+          disabled={state !== "ready"}
+          title={t.previewOpenNewTab}
+        >
+          &#x2197;
+        </ToolbarBtn>
       </div>
 
       {/* Toolbar Row 2 — Device simulation, console toggle */}
@@ -282,30 +370,40 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
 
         <div className="w-px h-4 bg-white/8 mx-1" />
 
-        {(["responsive", "mobile", "tablet", "desktop"] as DeviceMode[]).map((mode) => (
-          <button
-            key={mode}
-            onClick={() => setDeviceMode(mode)}
-            className={`px-2 py-0.5 text-[10px] rounded border transition-colors ${
-              deviceMode === mode
-                ? "border-amber-700/50 bg-amber-900/30 text-amber-300"
-                : "border-white/10 bg-transparent text-text-tertiary hover:bg-white/5"
-            }`}
-          >
-            {mode === "responsive" ? t.previewResponsive : `${DEVICE_WIDTHS[mode]}px`}
-          </button>
-        ))}
+        {(["responsive", "mobile", "tablet", "desktop"] as DeviceMode[]).map(
+          (mode) => (
+            <button
+              key={mode}
+              onClick={() => setDeviceMode(mode)}
+              className={`px-2 py-0.5 text-[10px] rounded border transition-colors ${
+                deviceMode === mode
+                  ? "border-amber-700/50 bg-amber-900/30 text-amber-300"
+                  : "border-white/10 bg-transparent text-text-tertiary hover:bg-white/5"
+              }`}
+            >
+              {mode === "responsive"
+                ? t.previewResponsive
+                : `${DEVICE_WIDTHS[mode]}px`}
+            </button>
+          ),
+        )}
 
         <div className="w-px h-4 bg-white/8 mx-1" />
 
         <button
           onClick={() => setShowConsole(!showConsole)}
           className={`ml-auto px-2 py-0.5 text-[10px] rounded border transition-colors ${
-            showConsole ? "border-white/20 bg-white/10 text-text-primary" : "border-white/10 bg-transparent text-text-tertiary"
+            showConsole
+              ? "border-white/20 bg-white/10 text-text-primary"
+              : "border-white/10 bg-transparent text-text-tertiary"
           }`}
         >
           {t.previewConsoleHeader}{" "}
-          {consoleEntries.length > 0 && <span className="ml-1 bg-white/10 rounded-full px-1">{consoleEntries.length}</span>}
+          {consoleEntries.length > 0 && (
+            <span className="ml-1 bg-white/10 rounded-full px-1">
+              {consoleEntries.length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -328,9 +426,15 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
         {state === "error" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 bg-[#0a0e17]">
             <span className="text-2xl">&#x26A0;</span>
-            <span className="text-xs text-red-400 text-center max-w-md">{errorMsg}</span>
+            <span className="text-xs text-red-400 text-center max-w-md">
+              {errorMsg}
+            </span>
             <button
-              onClick={() => { setState("idle"); setErrorMsg(""); startPreview(); }}
+              onClick={() => {
+                setState("idle");
+                setErrorMsg("");
+                startPreview();
+              }}
               className="mt-2 px-4 py-1.5 text-xs rounded border border-white/20 bg-white/5 hover:bg-white/10 text-text-primary"
             >
               {t.previewRetry}
@@ -339,18 +443,32 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
         )}
 
         {/* iframe with device simulation */}
-        <div className={`${showConsole ? "flex-[1_1_60%]" : "flex-1"} overflow-auto flex justify-center ${
-          deviceMode === "responsive" ? "items-stretch" : "items-start bg-[#060a12] py-2"
-        } min-h-0`}>
+        <div
+          className={`${showConsole ? "flex-[1_1_60%]" : "flex-1"} overflow-auto flex justify-center ${
+            deviceMode === "responsive"
+              ? "items-stretch"
+              : "items-start bg-[#060a12] py-2"
+          } min-h-0`}
+        >
           {previewUrl && (
             <iframe
-              ref={iframeRef} src={previewUrl} title={t.previewLivePreview}
+              ref={iframeRef}
+              src={previewUrl}
+              title={t.previewLivePreview}
               style={{
-                width: deviceMode === "responsive" ? "100%" : DEVICE_WIDTHS[deviceMode],
-                maxWidth: "100%", height: "100%",
-                border: deviceMode === "responsive" ? "none" : "1px solid rgba(255,255,255,0.08)",
+                width:
+                  deviceMode === "responsive"
+                    ? "100%"
+                    : DEVICE_WIDTHS[deviceMode],
+                maxWidth: "100%",
+                height: "100%",
+                border:
+                  deviceMode === "responsive"
+                    ? "none"
+                    : "1px solid rgba(255,255,255,0.08)",
                 borderRadius: deviceMode === "responsive" ? 0 : 6,
-                background: "#fff", transition: "width 0.2s ease",
+                background: "#fff",
+                transition: "width 0.2s ease",
               }}
               sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"
             />
@@ -360,7 +478,11 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
         {/* Device mode indicator */}
         {deviceMode !== "responsive" && state === "ready" && (
           <div className="absolute top-2 right-2 bg-[#0d1117]/90 border border-white/10 rounded px-2 py-0.5 text-[10px] text-text-tertiary z-5">
-            {deviceMode === "mobile" ? t.previewDeviceMobile : deviceMode === "tablet" ? t.previewDeviceTablet : t.previewDeviceDesktop}
+            {deviceMode === "mobile"
+              ? t.previewDeviceMobile
+              : deviceMode === "tablet"
+                ? t.previewDeviceTablet
+                : t.previewDeviceDesktop}
           </div>
         )}
 
@@ -380,14 +502,31 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
             </div>
             <div className="flex-1 overflow-y-auto px-2 py-1 font-mono text-[11px]">
               {consoleEntries.length === 0 && (
-                <div className="text-text-tertiary text-center py-4">{t.previewConsoleEmpty}</div>
+                <div className="text-text-tertiary text-center py-4">
+                  {t.previewConsoleEmpty}
+                </div>
               )}
               {consoleEntries.map((entry) => (
-                <div key={entry.id} className="py-px border-b border-white/5" style={{
-                  color: entry.type === "error" ? "#f85149" : entry.type === "warn" ? "#d29922" : entry.type === "info" ? "#58a6ff" : "#ccc",
-                }}>
+                <div
+                  key={entry.id}
+                  className="py-px border-b border-white/5"
+                  style={{
+                    color:
+                      entry.type === "error"
+                        ? "#f85149"
+                        : entry.type === "warn"
+                          ? "#d29922"
+                          : entry.type === "info"
+                            ? "#58a6ff"
+                            : "#ccc",
+                  }}
+                >
                   <span className="text-text-tertiary mr-1.5">
-                    {new Date(entry.timestamp).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    {new Date(entry.timestamp).toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}
                   </span>
                   [{entry.type}] {entry.message}
                 </div>
@@ -406,12 +545,22 @@ export default function PreviewPanel({ files, visible }: PreviewPanelProps) {
 // PART 4 — Sub-components & Utilities
 // ============================================================
 
-function ToolbarBtn({ onClick, disabled, title, children }: {
-  onClick: () => void; disabled?: boolean; title: string; children: React.ReactNode;
+function ToolbarBtn({
+  onClick,
+  disabled,
+  title,
+  children,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  title: string;
+  children: React.ReactNode;
 }) {
   return (
     <button
-      onClick={onClick} disabled={disabled} title={title}
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
       className="px-1.5 py-0.5 text-sm rounded border border-white/10 bg-transparent text-text-secondary hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed"
     >
       {children}
@@ -419,7 +568,10 @@ function ToolbarBtn({ onClick, disabled, title, children }: {
   );
 }
 
-function flattenFiles(nodes: FileNode[], prefix = ""): Array<{ path: string; content: string }> {
+function flattenFiles(
+  nodes: FileNode[],
+  prefix = "",
+): Array<{ path: string; content: string }> {
   const result: Array<{ path: string; content: string }> = [];
   for (const node of nodes) {
     const fullPath = prefix ? `${prefix}/${node.name}` : node.name;

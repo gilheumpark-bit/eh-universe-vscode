@@ -10,7 +10,7 @@ export interface MCPServer {
   id: string;
   name: string;
   url: string;
-  status: 'connected' | 'disconnected' | 'error';
+  status: "connected" | "disconnected" | "error";
   tools: MCPTool[];
 }
 
@@ -40,20 +40,20 @@ export interface ToolCallHistoryEntry {
 // ============================================================
 
 interface JsonRpcRequest {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id: number;
   method: string;
   params?: Record<string, unknown>;
 }
 
 interface JsonRpcResponse {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id: number;
   result?: unknown;
   error?: { code: number; message: string; data?: unknown };
 }
 
-const STORAGE_KEY = 'eh_mcp_servers';
+const STORAGE_KEY = "eh_mcp_servers";
 const TOOL_CALL_TIMEOUT_MS = 30_000;
 
 const serverRequestIds = new Map<string, number>();
@@ -70,15 +70,20 @@ async function rpcCall(
   method: string,
   params?: Record<string, unknown>,
 ): Promise<JsonRpcResponse> {
-  const req: JsonRpcRequest = { jsonrpc: '2.0', id: nextId(url), method, params };
+  const req: JsonRpcRequest = {
+    jsonrpc: "2.0",
+    id: nextId(url),
+    method,
+    params,
+  };
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TOOL_CALL_TIMEOUT_MS);
 
   try {
     const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(req),
       signal: controller.signal,
     });
@@ -95,7 +100,7 @@ async function rpcCall(
 // ============================================================
 
 function loadServers(): MCPServer[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? (JSON.parse(raw) as MCPServer[]) : [];
@@ -105,7 +110,7 @@ function loadServers(): MCPServer[] {
 }
 
 function saveServers(servers: MCPServer[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(servers));
 }
 
@@ -118,7 +123,7 @@ export function addServer(name: string, url: string): MCPServer {
     id: `mcp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     name,
     url,
-    status: 'disconnected',
+    status: "disconnected",
     tools: [],
   };
   const servers = loadServers();
@@ -137,40 +142,42 @@ export function removeServer(id: string): void {
 // PART 4 — Connection & Tool Calls
 // ============================================================
 
-export async function connectServer(serverId: string): Promise<MCPServer | null> {
+export async function connectServer(
+  serverId: string,
+): Promise<MCPServer | null> {
   const servers = loadServers();
   const server = servers.find((s) => s.id === serverId);
   if (!server) return null;
 
   try {
-    const initResp = await rpcCall(server.url, 'initialize', {
-      protocolVersion: '2024-11-05',
-      clientInfo: { name: 'eh-code-studio', version: '1.0.0' },
+    const initResp = await rpcCall(server.url, "initialize", {
+      protocolVersion: "2024-11-05",
+      clientInfo: { name: "eh-code-studio", version: "1.0.0" },
       capabilities: {},
     });
 
     if (initResp.error) {
-      server.status = 'error';
+      server.status = "error";
       saveServers(servers);
       return server;
     }
 
-    const toolsResp = await rpcCall(server.url, 'tools/list');
+    const toolsResp = await rpcCall(server.url, "tools/list");
     if (!toolsResp.error && toolsResp.result) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = toolsResp.result as any;
       server.tools = (data.tools ?? []).map((t: Record<string, unknown>) => ({
-        name: t.name ?? '',
-        description: t.description ?? '',
+        name: t.name ?? "",
+        description: t.description ?? "",
         inputSchema: (t.inputSchema ?? {}) as Record<string, unknown>,
       }));
     }
 
-    server.status = 'connected';
+    server.status = "connected";
     saveServers(servers);
     return server;
   } catch {
-    server.status = 'error';
+    server.status = "error";
     saveServers(servers);
     return server;
   }
@@ -182,35 +189,50 @@ export async function callTool(
   args: Record<string, unknown>,
 ): Promise<MCPCallResult> {
   const server = loadServers().find((s) => s.id === serverId);
-  if (!server || server.status !== 'connected') {
-    return buildStructuredError('CONNECTION_ERROR', 'Server not connected', serverId, toolName, 'Check server status and reconnect');
+  if (!server || server.status !== "connected") {
+    return buildStructuredError(
+      "CONNECTION_ERROR",
+      "Server not connected",
+      serverId,
+      toolName,
+      "Check server status and reconnect",
+    );
   }
 
   try {
-    const resp = await rpcCall(server.url, 'tools/call', { name: toolName, arguments: args });
+    const resp = await rpcCall(server.url, "tools/call", {
+      name: toolName,
+      arguments: args,
+    });
     if (resp.error) {
       return buildStructuredError(
-        'RPC_ERROR',
+        "RPC_ERROR",
         resp.error.message,
         serverId,
         toolName,
-        resp.error.code === -32601 ? 'Tool not found — verify tool name' : 'Retry or check server logs',
+        resp.error.code === -32601
+          ? "Tool not found — verify tool name"
+          : "Retry or check server logs",
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = resp.result as any;
     const content = Array.isArray(result?.content)
-      ? result.content.map((c: Record<string, unknown>) => c.text ?? '').join('')
+      ? result.content
+          .map((c: Record<string, unknown>) => c.text ?? "")
+          .join("")
       : JSON.stringify(result);
     return { content, isError: false };
   } catch (err) {
-    const isTimeout = err instanceof DOMException && err.name === 'AbortError';
+    const isTimeout = err instanceof DOMException && err.name === "AbortError";
     return buildStructuredError(
-      isTimeout ? 'TIMEOUT' : 'EXCEPTION',
+      isTimeout ? "TIMEOUT" : "EXCEPTION",
       err instanceof Error ? err.message : String(err),
       serverId,
       toolName,
-      isTimeout ? 'Tool execution exceeded 30s — consider breaking into smaller operations' : 'Check network connectivity or server health',
+      isTimeout
+        ? "Tool execution exceeded 30s — consider breaking into smaller operations"
+        : "Check network connectivity or server health",
     );
   }
 }
@@ -223,7 +245,7 @@ export async function callTool(
 // Returns JSON-formatted error content so Pro mode AI can parse
 // and attempt self-healing (e.g., installing missing packages).
 
-type MCPErrorType = 'CONNECTION_ERROR' | 'RPC_ERROR' | 'TIMEOUT' | 'EXCEPTION';
+type MCPErrorType = "CONNECTION_ERROR" | "RPC_ERROR" | "TIMEOUT" | "EXCEPTION";
 
 function buildStructuredError(
   errorType: MCPErrorType,
@@ -233,7 +255,7 @@ function buildStructuredError(
   fallbackSuggestion: string,
 ): MCPCallResult {
   const payload = {
-    status: 'error' as const,
+    status: "error" as const,
     errorType,
     message,
     serverId,
@@ -247,17 +269,21 @@ function buildStructuredError(
 /** Pattern-match error messages to provide actionable self-healing hints for Pro mode AI */
 function inferSelfHealingSuggestion(msg: string): string | null {
   const lower = msg.toLowerCase();
-  if (lower.includes('command not found') || lower.includes('cannot find module') || lower.includes('not found')) {
-    return 'Missing dependency detected — run npm install <package> or verify the tool/module name';
+  if (
+    lower.includes("command not found") ||
+    lower.includes("cannot find module") ||
+    lower.includes("not found")
+  ) {
+    return "Missing dependency detected — run npm install <package> or verify the tool/module name";
   }
-  if (lower.includes('permission denied') || lower.includes('eacces')) {
-    return 'Permission error — review file permissions or request elevated access';
+  if (lower.includes("permission denied") || lower.includes("eacces")) {
+    return "Permission error — review file permissions or request elevated access";
   }
-  if (lower.includes('econnrefused') || lower.includes('fetch failed')) {
-    return 'Connection refused — verify the MCP server URL and ensure it is running';
+  if (lower.includes("econnrefused") || lower.includes("fetch failed")) {
+    return "Connection refused — verify the MCP server URL and ensure it is running";
   }
-  if (lower.includes('syntax error') || lower.includes('unexpected token')) {
-    return 'Malformed arguments — validate JSON structure and retry with corrected params';
+  if (lower.includes("syntax error") || lower.includes("unexpected token")) {
+    return "Malformed arguments — validate JSON structure and retry with corrected params";
   }
   return null;
 }

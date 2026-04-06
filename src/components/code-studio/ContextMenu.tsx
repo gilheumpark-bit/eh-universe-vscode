@@ -6,9 +6,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  FilePlus, FolderPlus, Pencil, Trash2, Copy, Clipboard,
-  Columns2, ChevronRight, Scissors, ClipboardPaste, Sparkles,
-  TextSelect, Command,
+  FilePlus,
+  FolderPlus,
+  Pencil,
+  Trash2,
+  Copy,
+  Clipboard,
+  Columns2,
+  ChevronRight,
+  Scissors,
+  ClipboardPaste,
+  Sparkles,
+  TextSelect,
+  Command,
 } from "lucide-react";
 import { L4 } from "@/lib/i18n";
 
@@ -26,8 +36,13 @@ export interface ContextMenuItem {
 
 /** Convenience action type for file-explorer context menus */
 export type ContextMenuAction =
-  | "new-file" | "new-folder" | "rename" | "delete"
-  | "copy-path" | "duplicate" | "open-in-split";
+  | "new-file"
+  | "new-folder"
+  | "rename"
+  | "delete"
+  | "copy-path"
+  | "duplicate"
+  | "open-in-split";
 
 interface Props {
   x: number;
@@ -82,12 +97,20 @@ function Submenu({
               {item.icon && <span className="w-3 shrink-0">{item.icon}</span>}
               <span className="flex-1 text-left">{item.label}</span>
               {item.shortcut && (
-                <span className="text-[9px] text-text-tertiary ml-2">{item.shortcut}</span>
+                <span className="text-[9px] text-text-tertiary ml-2">
+                  {item.shortcut}
+                </span>
               )}
-              {item.children && <ChevronRight size={10} className="text-text-tertiary" />}
+              {item.children && (
+                <ChevronRight size={10} className="text-text-tertiary" />
+              )}
             </button>
             {item.children && hoveredId === item.id && (
-              <Submenu items={item.children} onSelect={onSelect} onClose={onClose} />
+              <Submenu
+                items={item.children}
+                onSelect={onSelect}
+                onClose={onClose}
+              />
             )}
           </div>
         ),
@@ -145,15 +168,25 @@ export function ContextMenu({ x, y, items, onSelect, onClose }: Props) {
 
   // Clamp position to viewport
   const style = {
-    left: Math.min(x, (typeof window !== "undefined" ? window.innerWidth : 1920) - 200),
-    top: Math.min(y, (typeof window !== "undefined" ? window.innerHeight : 1080) - 300),
+    left: Math.min(
+      x,
+      (typeof window !== "undefined" ? window.innerWidth : 1920) - 200,
+    ),
+    top: Math.min(
+      y,
+      (typeof window !== "undefined" ? window.innerHeight : 1080) - 300,
+    ),
   };
 
   return (
     <div
       ref={ref}
       role="menu"
-      aria-activedescendant={focusIdx >= 0 && visibleItems[focusIdx] ? `ctx-item-${visibleItems[focusIdx].id}` : undefined}
+      aria-activedescendant={
+        focusIdx >= 0 && visibleItems[focusIdx]
+          ? `ctx-item-${visibleItems[focusIdx].id}`
+          : undefined
+      }
       className="fixed z-100 bg-[#0a0e17] border border-white/8 rounded-lg shadow-2xl py-1 min-w-[180px]"
       style={style}
     >
@@ -185,12 +218,20 @@ export function ContextMenu({ x, y, items, onSelect, onClose }: Props) {
               {item.icon && <span className="w-3 shrink-0">{item.icon}</span>}
               <span className="flex-1 text-left">{item.label}</span>
               {item.shortcut && (
-                <span className="text-[9px] text-text-tertiary ml-2">{item.shortcut}</span>
+                <span className="text-[9px] text-text-tertiary ml-2">
+                  {item.shortcut}
+                </span>
               )}
-              {item.children && <ChevronRight size={10} className="text-text-tertiary" />}
+              {item.children && (
+                <ChevronRight size={10} className="text-text-tertiary" />
+              )}
             </button>
             {item.children && hoveredId === item.id && (
-              <Submenu items={item.children} onSelect={onSelect} onClose={onClose} />
+              <Submenu
+                items={item.children}
+                onSelect={onSelect}
+                onClose={onClose}
+              />
             )}
           </div>
         ),
@@ -206,17 +247,52 @@ export function ContextMenu({ x, y, items, onSelect, onClose }: Props) {
 // ============================================================
 
 /** Build context menu items for the file explorer */
-export function buildFileExplorerMenu(isFolder: boolean, lang: string): ContextMenuItem[] {
+export function buildFileExplorerMenu(
+  isFolder: boolean,
+  lang: string,
+): ContextMenuItem[] {
   return [
-    { id: "new-file", label: L4(lang, { ko: "새 파일", en: "New File" }), icon: <FilePlus size={12} /> },
-    { id: "new-folder", label: L4(lang, { ko: "새 폴더", en: "New Folder" }), icon: <FolderPlus size={12} /> },
+    {
+      id: "new-file",
+      label: L4(lang, { ko: "새 파일", en: "New File" }),
+      icon: <FilePlus size={12} />,
+    },
+    {
+      id: "new-folder",
+      label: L4(lang, { ko: "새 폴더", en: "New Folder" }),
+      icon: <FolderPlus size={12} />,
+    },
     { id: "sep-1", label: "", separator: true },
-    { id: "rename", label: L4(lang, { ko: "이름 바꾸기", en: "Rename" }), icon: <Pencil size={12} />, shortcut: "F2" },
-    { id: "duplicate", label: L4(lang, { ko: "복제", en: "Duplicate" }), icon: <Copy size={12} />, disabled: isFolder },
-    { id: "open-in-split", label: L4(lang, { ko: "분할 화면으로 열기", en: "Open in Split" }), icon: <Columns2 size={12} />, disabled: isFolder },
-    { id: "copy-path", label: L4(lang, { ko: "경로 복사", en: "Copy Path" }), icon: <Clipboard size={12} /> },
+    {
+      id: "rename",
+      label: L4(lang, { ko: "이름 바꾸기", en: "Rename" }),
+      icon: <Pencil size={12} />,
+      shortcut: "F2",
+    },
+    {
+      id: "duplicate",
+      label: L4(lang, { ko: "복제", en: "Duplicate" }),
+      icon: <Copy size={12} />,
+      disabled: isFolder,
+    },
+    {
+      id: "open-in-split",
+      label: L4(lang, { ko: "분할 화면으로 열기", en: "Open in Split" }),
+      icon: <Columns2 size={12} />,
+      disabled: isFolder,
+    },
+    {
+      id: "copy-path",
+      label: L4(lang, { ko: "경로 복사", en: "Copy Path" }),
+      icon: <Clipboard size={12} />,
+    },
     { id: "sep-2", label: "", separator: true },
-    { id: "delete", label: L4(lang, { ko: "삭제", en: "Delete" }), icon: <Trash2 size={12} />, danger: true },
+    {
+      id: "delete",
+      label: L4(lang, { ko: "삭제", en: "Delete" }),
+      icon: <Trash2 size={12} />,
+      danger: true,
+    },
   ];
 }
 
@@ -229,9 +305,24 @@ export function buildFileExplorerMenu(isFolder: boolean, lang: string): ContextM
 /** Right-click menu for the code editor body; actions via {@link runEditorSurfaceMenuAction} */
 export function buildEditorSurfaceMenu(lang: string): ContextMenuItem[] {
   return [
-    { id: "editor-cut", label: L4(lang, { ko: "잘라내기", en: "Cut" }), icon: <Scissors size={12} />, shortcut: "Ctrl+X" },
-    { id: "editor-copy", label: L4(lang, { ko: "복사", en: "Copy" }), icon: <Copy size={12} />, shortcut: "Ctrl+C" },
-    { id: "editor-paste", label: L4(lang, { ko: "붙여넣기", en: "Paste" }), icon: <ClipboardPaste size={12} />, shortcut: "Ctrl+V" },
+    {
+      id: "editor-cut",
+      label: L4(lang, { ko: "잘라내기", en: "Cut" }),
+      icon: <Scissors size={12} />,
+      shortcut: "Ctrl+X",
+    },
+    {
+      id: "editor-copy",
+      label: L4(lang, { ko: "복사", en: "Copy" }),
+      icon: <Copy size={12} />,
+      shortcut: "Ctrl+C",
+    },
+    {
+      id: "editor-paste",
+      label: L4(lang, { ko: "붙여넣기", en: "Paste" }),
+      icon: <ClipboardPaste size={12} />,
+      shortcut: "Ctrl+V",
+    },
     { id: "editor-sep-1", label: "", separator: true },
     {
       id: "editor-format",
@@ -254,7 +345,10 @@ export function buildEditorSurfaceMenu(lang: string): ContextMenuItem[] {
     },
     {
       id: "editor-app-commands",
-      label: L4(lang, { ko: "스튜디오 명령 팔레트", en: "Studio Command Palette" }),
+      label: L4(lang, {
+        ko: "스튜디오 명령 팔레트",
+        en: "Studio Command Palette",
+      }),
       icon: <Command size={12} />,
       shortcut: "Ctrl+Shift+P",
     },

@@ -6,7 +6,7 @@
 // Ported from CSL IDE cross-file-navigation.ts + cross-file-rename.ts.
 // ============================================================
 
-import { logger } from '@/lib/logger';
+import { logger } from "@/lib/logger";
 
 type Monaco = typeof import("monaco-editor");
 type ITextModel = import("monaco-editor").editor.ITextModel;
@@ -15,11 +15,42 @@ type Uri = import("monaco-editor").Uri;
 
 /** Minimal shape for the TS/JS language service worker proxy returned by Monaco */
 interface TsWorkerClient {
-  getDefinitionAtPosition(uri: string, offset: number): Promise<{ fileName: string; textSpan: { start: number; length: number } }[] | undefined>;
-  getReferencesAtPosition(uri: string, offset: number): Promise<{ fileName: string; textSpan: { start: number; length: number } }[] | undefined>;
-  findRenameLocations(uri: string, offset: number, findInStrings: boolean, findInComments: boolean, providePrefix?: boolean): Promise<{ fileName: string; textSpan: { start: number; length: number } }[] | undefined>;
-  getQuickInfoAtPosition(uri: string, offset: number): Promise<{ displayParts?: { text: string }[]; documentation?: { text: string }[] } | undefined>;
-  getRenameInfo(uri: string, offset: number, options?: unknown): Promise<{
+  getDefinitionAtPosition(
+    uri: string,
+    offset: number,
+  ): Promise<
+    | { fileName: string; textSpan: { start: number; length: number } }[]
+    | undefined
+  >;
+  getReferencesAtPosition(
+    uri: string,
+    offset: number,
+  ): Promise<
+    | { fileName: string; textSpan: { start: number; length: number } }[]
+    | undefined
+  >;
+  findRenameLocations(
+    uri: string,
+    offset: number,
+    findInStrings: boolean,
+    findInComments: boolean,
+    providePrefix?: boolean,
+  ): Promise<
+    | { fileName: string; textSpan: { start: number; length: number } }[]
+    | undefined
+  >;
+  getQuickInfoAtPosition(
+    uri: string,
+    offset: number,
+  ): Promise<
+    | { displayParts?: { text: string }[]; documentation?: { text: string }[] }
+    | undefined
+  >;
+  getRenameInfo(
+    uri: string,
+    offset: number,
+    options?: unknown,
+  ): Promise<{
     canRename: boolean;
     displayName?: string;
     localizedErrorMessage?: string;
@@ -29,7 +60,11 @@ interface TsWorkerClient {
 
 // ── Event system for file navigation ──
 
-type OpenFileHandler = (filePath: string, line?: number, column?: number) => void;
+type OpenFileHandler = (
+  filePath: string,
+  line?: number,
+  column?: number,
+) => void;
 
 let openFileHandler: OpenFileHandler | null = null;
 
@@ -37,7 +72,9 @@ let openFileHandler: OpenFileHandler | null = null;
  * Register a callback invoked when cross-file navigation
  * needs to open a file (e.g., go-to-definition lands in another file).
  */
-export function onNavigateToFile(handler: OpenFileHandler): { dispose(): void } {
+export function onNavigateToFile(handler: OpenFileHandler): {
+  dispose(): void;
+} {
   openFileHandler = handler;
   return {
     dispose() {
@@ -56,7 +93,10 @@ function emitOpenFile(filePath: string, line?: number, column?: number): void {
  * Resolve an import path to a project file path.
  * Handles `@/` alias (maps to `src/`), relative paths, and bare specifiers.
  */
-export function resolveFilePath(importPath: string, currentFile: string): string | null {
+export function resolveFilePath(
+  importPath: string,
+  currentFile: string,
+): string | null {
   if (importPath.startsWith("@/")) {
     return "src/" + importPath.slice(2);
   }
@@ -87,12 +127,23 @@ function uriToFilePath(uri: Uri): string {
 function filePathToUri(monaco: Monaco, filePath: string): Uri {
   const normalized = filePath.replace(/\\/g, "/");
   if (normalized.startsWith("file://")) return monaco.Uri.parse(normalized);
-  if (normalized.startsWith("/")) return monaco.Uri.parse(`file://${normalized}`);
+  if (normalized.startsWith("/"))
+    return monaco.Uri.parse(`file://${normalized}`);
   return monaco.Uri.parse(`file:///${normalized}`);
 }
 
 function _findModelByPath(monaco: Monaco, filePath: string): ITextModel | null {
-  const extensions = ["", ".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.tsx", "/index.js", "/index.jsx"];
+  const extensions = [
+    "",
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    "/index.ts",
+    "/index.tsx",
+    "/index.js",
+    "/index.jsx",
+  ];
   for (const ext of extensions) {
     const uri = filePathToUri(monaco, filePath + ext);
     const model = monaco.editor.getModel(uri);
@@ -114,7 +165,8 @@ function isNodeModulesPath(path: string): boolean {
 async function getWorkerForUri(monaco: Monaco, uri: Uri): Promise<unknown> {
   const model = monaco.editor.getModel(uri);
   const isTS = model
-    ? model.getLanguageId() === "typescript" || model.getLanguageId() === "typescriptreact"
+    ? model.getLanguageId() === "typescript" ||
+      model.getLanguageId() === "typescriptreact"
     : true;
 
   // Monaco's TypeScript language service is not fully typed
@@ -138,7 +190,10 @@ async function getDefinitionAtPosition(
   try {
     const client = (await getWorkerForUri(monaco, uri)) as TsWorkerClient;
     const offset = model.getOffsetAt(position);
-    const definitions = await client.getDefinitionAtPosition(uri.toString(), offset);
+    const definitions = await client.getDefinitionAtPosition(
+      uri.toString(),
+      offset,
+    );
     if (!definitions || definitions.length === 0) return [];
 
     const locations: import("monaco-editor").languages.Location[] = [];
@@ -147,10 +202,17 @@ async function getDefinitionAtPosition(
       const defModel = monaco.editor.getModel(defUri);
       if (defModel) {
         const startPos = defModel.getPositionAt(def.textSpan.start);
-        const endPos = defModel.getPositionAt(def.textSpan.start + def.textSpan.length);
+        const endPos = defModel.getPositionAt(
+          def.textSpan.start + def.textSpan.length,
+        );
         locations.push({
           uri: defUri,
-          range: new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column),
+          range: new monaco.Range(
+            startPos.lineNumber,
+            startPos.column,
+            endPos.lineNumber,
+            endPos.column,
+          ),
         });
       } else {
         locations.push({ uri: defUri, range: new monaco.Range(1, 1, 1, 1) });
@@ -173,7 +235,10 @@ async function findReferences(
   try {
     const client = (await getWorkerForUri(monaco, uri)) as TsWorkerClient;
     const offset = model.getOffsetAt(position);
-    const references = await client.getReferencesAtPosition(uri.toString(), offset);
+    const references = await client.getReferencesAtPosition(
+      uri.toString(),
+      offset,
+    );
     if (!references || references.length === 0) return [];
 
     const locations: import("monaco-editor").languages.Location[] = [];
@@ -182,10 +247,17 @@ async function findReferences(
       const refModel = monaco.editor.getModel(refUri);
       if (refModel) {
         const startPos = refModel.getPositionAt(ref.textSpan.start);
-        const endPos = refModel.getPositionAt(ref.textSpan.start + ref.textSpan.length);
+        const endPos = refModel.getPositionAt(
+          ref.textSpan.start + ref.textSpan.length,
+        );
         locations.push({
           uri: refUri,
-          range: new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column),
+          range: new monaco.Range(
+            startPos.lineNumber,
+            startPos.column,
+            endPos.lineNumber,
+            endPos.column,
+          ),
         });
       }
     }
@@ -218,7 +290,10 @@ async function peekDefinition(
   const filePath = uriToFilePath(loc.uri);
   const isReadOnly = isNodeModulesPath(filePath);
   const startLine = Math.max(1, loc.range.startLineNumber - 5);
-  const endLine = Math.min(defModel.getLineCount(), loc.range.endLineNumber + 10);
+  const endLine = Math.min(
+    defModel.getLineCount(),
+    loc.range.endLineNumber + 10,
+  );
   const preview = defModel.getValueInRange(
     new monaco.Range(startLine, 1, endLine, defModel.getLineMaxColumn(endLine)),
   );
@@ -280,7 +355,11 @@ export async function findRenameLocations(
     if (!renameInfo.canRename) return null;
 
     const locations = await client.findRenameLocations(
-      uri.toString(), offset, false, false, false,
+      uri.toString(),
+      offset,
+      false,
+      false,
+      false,
     );
     if (!locations || locations.length === 0) return null;
 
@@ -312,11 +391,14 @@ export async function findRenameLocations(
     }
 
     const fileChanges = Array.from(changesByFile.values());
-    const totalOccurrences = fileChanges.reduce((sum, fc) => sum + fc.changes.length, 0);
+    const totalOccurrences = fileChanges.reduce(
+      (sum, fc) => sum + fc.changes.length,
+      0,
+    );
 
     return { oldName, newName, fileChanges, totalOccurrences };
   } catch (err) {
-    logger.warn('cross-file-rename', 'Failed to find rename locations:', err);
+    logger.warn("cross-file-rename", "Failed to find rename locations:", err);
     return null;
   }
 }
@@ -327,15 +409,18 @@ export async function findRenameLocations(
 export function applyRename(monaco: Monaco, preview: RenamePreview): void {
   for (const fileChange of preview.fileChanges) {
     const model = fileChange.model;
-    const edits: import("monaco-editor").editor.IIdentifiedSingleEditOperation[] = [];
+    const edits: import("monaco-editor").editor.IIdentifiedSingleEditOperation[] =
+      [];
 
     for (const change of fileChange.changes) {
       const startPos = model.getPositionAt(change.start);
       const endPos = model.getPositionAt(change.start + change.length);
       edits.push({
         range: new monaco.Range(
-          startPos.lineNumber, startPos.column,
-          endPos.lineNumber, endPos.column,
+          startPos.lineNumber,
+          startPos.column,
+          endPos.lineNumber,
+          endPos.column,
         ),
         text: change.newText,
       });
@@ -357,7 +442,9 @@ export function formatRenamePreview(preview: RenamePreview): string {
 
   for (const fileChange of preview.fileChanges) {
     const model = fileChange.model;
-    lines.push(`--- ${fileChange.filePath} (${fileChange.changes.length} change${fileChange.changes.length > 1 ? "s" : ""})`);
+    lines.push(
+      `--- ${fileChange.filePath} (${fileChange.changes.length} change${fileChange.changes.length > 1 ? "s" : ""})`,
+    );
     for (const change of fileChange.changes) {
       const pos = model.getPositionAt(change.start);
       const lineContent = model.getLineContent(pos.lineNumber).trim();
@@ -392,7 +479,12 @@ export function registerCrossFileProviders(
   options?: CrossFileOptions,
 ): CrossFileDisposable {
   const disposables: Array<{ dispose(): void }> = [];
-  const languages = ["typescript", "typescriptreact", "javascript", "javascriptreact"];
+  const languages = [
+    "typescript",
+    "typescriptreact",
+    "javascript",
+    "javascriptreact",
+  ];
 
   if (options?.onOpenFile) {
     disposables.push(onNavigateToFile(options.onOpenFile));
@@ -401,13 +493,21 @@ export function registerCrossFileProviders(
   // Definition Provider (F12)
   const defProvider = monaco.languages.registerDefinitionProvider(languages, {
     provideDefinition: async (model, position) => {
-      const locations = await getDefinitionAtPosition(monaco, model.uri, position);
+      const locations = await getDefinitionAtPosition(
+        monaco,
+        model.uri,
+        position,
+      );
       if (locations.length === 0) return null;
 
       for (const loc of locations) {
         if (loc.uri.toString() !== model.uri.toString()) {
           const filePath = uriToFilePath(loc.uri);
-          emitOpenFile(filePath, loc.range.startLineNumber, loc.range.startColumn);
+          emitOpenFile(
+            filePath,
+            loc.range.startLineNumber,
+            loc.range.startColumn,
+          );
         }
       }
 
@@ -417,32 +517,53 @@ export function registerCrossFileProviders(
   disposables.push(defProvider);
 
   // Type Definition Provider
-  const typeDefProvider = monaco.languages.registerTypeDefinitionProvider(languages, {
-    provideTypeDefinition: async (model, position) => {
-      try {
-        const client = (await getWorkerForUri(monaco, model.uri)) as TsWorkerClient;
-        const offset = model.getOffsetAt(position);
-        const definitions = await client.getDefinitionAtPosition(model.uri.toString(), offset);
-        if (!definitions || definitions.length === 0) return null;
+  const typeDefProvider = monaco.languages.registerTypeDefinitionProvider(
+    languages,
+    {
+      provideTypeDefinition: async (model, position) => {
+        try {
+          const client = (await getWorkerForUri(
+            monaco,
+            model.uri,
+          )) as TsWorkerClient;
+          const offset = model.getOffsetAt(position);
+          const definitions = await client.getDefinitionAtPosition(
+            model.uri.toString(),
+            offset,
+          );
+          if (!definitions || definitions.length === 0) return null;
 
-        return definitions.map((def: { fileName: string; textSpan: { start: number; length: number } }) => {
-          const defUri = monaco.Uri.parse(def.fileName);
-          const defModel = monaco.editor.getModel(defUri);
-          if (defModel) {
-            const startPos = defModel.getPositionAt(def.textSpan.start);
-            const endPos = defModel.getPositionAt(def.textSpan.start + def.textSpan.length);
-            return {
-              uri: defUri,
-              range: new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column),
-            };
-          }
-          return { uri: defUri, range: new monaco.Range(1, 1, 1, 1) };
-        });
-      } catch {
-        return null;
-      }
+          return definitions.map(
+            (def: {
+              fileName: string;
+              textSpan: { start: number; length: number };
+            }) => {
+              const defUri = monaco.Uri.parse(def.fileName);
+              const defModel = monaco.editor.getModel(defUri);
+              if (defModel) {
+                const startPos = defModel.getPositionAt(def.textSpan.start);
+                const endPos = defModel.getPositionAt(
+                  def.textSpan.start + def.textSpan.length,
+                );
+                return {
+                  uri: defUri,
+                  range: new monaco.Range(
+                    startPos.lineNumber,
+                    startPos.column,
+                    endPos.lineNumber,
+                    endPos.column,
+                  ),
+                };
+              }
+              return { uri: defUri, range: new monaco.Range(1, 1, 1, 1) };
+            },
+          );
+        } catch {
+          return null;
+        }
+      },
     },
-  });
+  );
   disposables.push(typeDefProvider);
 
   // Reference Provider (Shift+F12)
@@ -454,32 +575,45 @@ export function registerCrossFileProviders(
   disposables.push(refProvider);
 
   // Implementation Provider
-  const implProvider = monaco.languages.registerImplementationProvider(languages, {
-    provideImplementation: async (model, position) => {
-      return await getDefinitionAtPosition(monaco, model.uri, position);
+  const implProvider = monaco.languages.registerImplementationProvider(
+    languages,
+    {
+      provideImplementation: async (model, position) => {
+        return await getDefinitionAtPosition(monaco, model.uri, position);
+      },
     },
-  });
+  );
   disposables.push(implProvider);
 
   // Rename Provider (F2)
   const renameProvider = monaco.languages.registerRenameProvider(languages, {
     provideRenameEdits: async (model, position, newName) => {
-      const preview = await findRenameLocations(monaco, model.uri, position, newName);
+      const preview = await findRenameLocations(
+        monaco,
+        model.uri,
+        position,
+        newName,
+      );
       if (!preview) {
         return { edits: [], rejectReason: "Cannot rename this symbol." };
       }
 
-      const resourceEdits: import("monaco-editor").languages.IWorkspaceTextEdit[] = [];
+      const resourceEdits: import("monaco-editor").languages.IWorkspaceTextEdit[] =
+        [];
       for (const fileChange of preview.fileChanges) {
         for (const change of fileChange.changes) {
           const startPos = fileChange.model.getPositionAt(change.start);
-          const endPos = fileChange.model.getPositionAt(change.start + change.length);
+          const endPos = fileChange.model.getPositionAt(
+            change.start + change.length,
+          );
           resourceEdits.push({
             resource: fileChange.uri,
             textEdit: {
               range: new monaco.Range(
-                startPos.lineNumber, startPos.column,
-                endPos.lineNumber, endPos.column,
+                startPos.lineNumber,
+                startPos.column,
+                endPos.lineNumber,
+                endPos.column,
               ),
               text: change.newText,
             },
@@ -493,30 +627,55 @@ export function registerCrossFileProviders(
 
     resolveRenameLocation: async (model, position, _token) => {
       try {
-        const client = (await getWorkerForUri(monaco, model.uri)) as TsWorkerClient;
+        const client = (await getWorkerForUri(
+          monaco,
+          model.uri,
+        )) as TsWorkerClient;
         const offset = model.getOffsetAt(position);
-        const renameInfo = await client.getRenameInfo(model.uri.toString(), offset, {
-          allowRenameOfImportPath: false,
-        });
+        const renameInfo = await client.getRenameInfo(
+          model.uri.toString(),
+          offset,
+          {
+            allowRenameOfImportPath: false,
+          },
+        );
 
         if (!renameInfo.canRename || !renameInfo.triggerSpan) {
           return {
-            range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+            range: new monaco.Range(
+              position.lineNumber,
+              position.column,
+              position.lineNumber,
+              position.column,
+            ),
             text: "",
-            rejectReason: renameInfo.localizedErrorMessage || "Cannot rename this symbol.",
+            rejectReason:
+              renameInfo.localizedErrorMessage || "Cannot rename this symbol.",
           };
         }
 
         const startPos = model.getPositionAt(renameInfo.triggerSpan.start);
-        const endPos = model.getPositionAt(renameInfo.triggerSpan.start + renameInfo.triggerSpan.length);
+        const endPos = model.getPositionAt(
+          renameInfo.triggerSpan.start + renameInfo.triggerSpan.length,
+        );
 
         return {
-          range: new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column),
+          range: new monaco.Range(
+            startPos.lineNumber,
+            startPos.column,
+            endPos.lineNumber,
+            endPos.column,
+          ),
           text: renameInfo.displayName ?? "",
         };
       } catch {
         return {
-          range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+          range: new monaco.Range(
+            position.lineNumber,
+            position.column,
+            position.lineNumber,
+            position.column,
+          ),
           text: "",
           rejectReason: "Rename service unavailable.",
         };

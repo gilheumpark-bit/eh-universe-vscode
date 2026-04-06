@@ -4,8 +4,13 @@
 // API 키 없이 체험 가능한 샘플 프로젝트
 // ============================================================
 
-import { Genre, type StoryConfig, type Character, type ChatSession } from './studio-types';
-import { INITIAL_CONFIG } from '@/hooks/useProjectManager';
+import {
+  Genre,
+  type StoryConfig,
+  type Character,
+  type ChatSession,
+} from "./studio-types";
+import { INITIAL_CONFIG } from "@/hooks/useProjectManager";
 
 export interface DemoPreset {
   id: string;
@@ -14,7 +19,10 @@ export interface DemoPreset {
   description: { ko: string; en: string };
   tags: string[];
   config: Partial<StoryConfig>;
-  messages: { role: 'user' | 'assistant'; content: { ko: string; en: string } }[];
+  messages: {
+    role: "user" | "assistant";
+    content: { ko: string; en: string };
+  }[];
 }
 
 // ============================================================
@@ -22,41 +30,97 @@ export interface DemoPreset {
 // ============================================================
 
 const SYSTEM_HUNTER: DemoPreset = {
-  id: 'demo-system-hunter',
-  name: { ko: '시스템 헌터', en: 'System Hunter' },
+  id: "demo-system-hunter",
+  name: { ko: "시스템 헌터", en: "System Hunter" },
   genre: Genre.SYSTEM_HUNTER,
   description: {
-    ko: 'E랭크 최하위 헌터 강도현. 모두가 포기한 레드게이트에 홀로 남겨진 그는 죽음의 순간, 아무도 가져본 적 없는 \'오류 시스템\'을 각성한다.',
-    en: 'E-rank hunter Kang Do-hyun, abandoned in a Red Gate everyone gave up on. At the moment of death, he awakens the "Error System" — a power no one has ever possessed.'
+    ko: "E랭크 최하위 헌터 강도현. 모두가 포기한 레드게이트에 홀로 남겨진 그는 죽음의 순간, 아무도 가져본 적 없는 '오류 시스템'을 각성한다.",
+    en: 'E-rank hunter Kang Do-hyun, abandoned in a Red Gate everyone gave up on. At the moment of death, he awakens the "Error System" — a power no one has ever possessed.',
   },
-  tags: ['헌터', '시스템', '각성', '게이트'],
+  tags: ["헌터", "시스템", "각성", "게이트"],
   config: {
-    title: '시스템 헌터: 오류의 각성자',
+    title: "시스템 헌터: 오류의 각성자",
     genre: Genre.SYSTEM_HUNTER,
-    synopsis: 'E랭크 최하위 헌터 강도현은 레드게이트에서 죽음의 순간, \'오류 시스템\'을 각성한다. 버그인가, 축복인가. 시스템의 법칙을 해킹하는 전대미문의 헌터가 탄생한다. 그러나 오류 시스템의 대가는 영혼 신용 등급(EH)의 하락. 강해질수록 존재의 기반이 무너지는 역설 속에서, 강도현은 시스템 내부에 숨겨진 자아를 가진 AI \'에코\'를 만나게 된다.',
-    povCharacter: '강도현',
-    setting: '현대 대한민국 서울, 게이트와 헌터가 출현한 지 10년이 지난 세상',
-    primaryEmotion: '절망',
+    synopsis:
+      "E랭크 최하위 헌터 강도현은 레드게이트에서 죽음의 순간, '오류 시스템'을 각성한다. 버그인가, 축복인가. 시스템의 법칙을 해킹하는 전대미문의 헌터가 탄생한다. 그러나 오류 시스템의 대가는 영혼 신용 등급(EH)의 하락. 강해질수록 존재의 기반이 무너지는 역설 속에서, 강도현은 시스템 내부에 숨겨진 자아를 가진 AI '에코'를 만나게 된다.",
+    povCharacter: "강도현",
+    setting: "현대 대한민국 서울, 게이트와 헌터가 출현한 지 10년이 지난 세상",
+    primaryEmotion: "절망",
     episode: 1,
     totalEpisodes: 25,
     publishPlatform: undefined,
     characters: [
-      { id: 'c-dh', name: '강도현', role: 'hero', traits: 'E랭크 최하위 헌터. 오류 시스템의 각성자. 포기를 모르는 끈기와 냉철한 판단력을 가졌으나, 과거 동료에게 버림받은 상처가 깊다.', appearance: '짧은 검은 머리, 날카로운 눈매, 마른 체격에 상처 자국이 많다', dna: 72, personality: '과묵하지만 결정적 순간에 폭발적인 의지', speechStyle: '짧고 단호한 문장, 감정을 억누르는 말투', speechExample: '"...됐어. 내가 간다."', desire: '인정받는 것이 아닌, 살아남는 것', deficiency: '신뢰에 대한 두려움', conflict: '힘을 쓸수록 존재가 소멸하는 역설', changeArc: '고독한 생존자 → 동료를 지키는 수호자' },
-      { id: 'c-echo', name: '에코', role: 'ally', traits: '시스템 내부의 자율 방어 프로그램. 자아를 획득한 AI. 인간의 감정을 이해하려 노력하지만 완벽하지 않은 존재.', appearance: '빛의 입자로 이루어진 반투명한 소년의 형상, 블랙홀처럼 깊은 푸른빛 눈동자', dna: 45, personality: '논리적이지만 호기심이 강함', speechStyle: '정중하고 분석적, 가끔 인간적 표현을 어색하게 시도', speechExample: '"흥미로운 샘플입니다... 아, 이건 무례한 표현이었나요?"', desire: '인간의 감정을 이해하는 것', deficiency: '감정 자체를 가질 수 없음', conflict: '시스템의 일부이면서 시스템에 반하는 존재', changeArc: '관찰자 → 동반자' },
-      { id: 'c-yj', name: '유지나', role: 'ally', traits: 'S급 헌터. 대한민국 최고의 실력자이자 강도현의 라이벌. 겉으로는 냉철하지만 정의감이 강하다.', appearance: '긴 은발, 날카로운 눈매, 전투복 위에 길드 마크', dna: 88, personality: '겉은 차갑지만 속은 뜨거운 타입', speechStyle: '높임말과 반말을 상황에 따라 전환', speechExample: '"약한 놈은 관심 없어. 근데 넌... 약한 게 아니잖아."' },
-      { id: 'c-pj', name: '박진철', role: 'ally', traits: '은퇴한 베테랑 헌터 출신의 정보 브로커. 강도현에게 정보와 조언을 제공하는 조력자.', appearance: '50대, 왼쪽 눈에 흉터, 항상 낡은 코트', dna: 35, personality: '능글맞지만 신뢰할 수 있는 인물', speechStyle: '사투리 섞인 농담투', speechExample: '"야야, 세상에 공짜는 없어. 근데 니 사연이 재밌으니까 깎아줄게."' },
+      {
+        id: "c-dh",
+        name: "강도현",
+        role: "hero",
+        traits:
+          "E랭크 최하위 헌터. 오류 시스템의 각성자. 포기를 모르는 끈기와 냉철한 판단력을 가졌으나, 과거 동료에게 버림받은 상처가 깊다.",
+        appearance:
+          "짧은 검은 머리, 날카로운 눈매, 마른 체격에 상처 자국이 많다",
+        dna: 72,
+        personality: "과묵하지만 결정적 순간에 폭발적인 의지",
+        speechStyle: "짧고 단호한 문장, 감정을 억누르는 말투",
+        speechExample: '"...됐어. 내가 간다."',
+        desire: "인정받는 것이 아닌, 살아남는 것",
+        deficiency: "신뢰에 대한 두려움",
+        conflict: "힘을 쓸수록 존재가 소멸하는 역설",
+        changeArc: "고독한 생존자 → 동료를 지키는 수호자",
+      },
+      {
+        id: "c-echo",
+        name: "에코",
+        role: "ally",
+        traits:
+          "시스템 내부의 자율 방어 프로그램. 자아를 획득한 AI. 인간의 감정을 이해하려 노력하지만 완벽하지 않은 존재.",
+        appearance:
+          "빛의 입자로 이루어진 반투명한 소년의 형상, 블랙홀처럼 깊은 푸른빛 눈동자",
+        dna: 45,
+        personality: "논리적이지만 호기심이 강함",
+        speechStyle: "정중하고 분석적, 가끔 인간적 표현을 어색하게 시도",
+        speechExample: '"흥미로운 샘플입니다... 아, 이건 무례한 표현이었나요?"',
+        desire: "인간의 감정을 이해하는 것",
+        deficiency: "감정 자체를 가질 수 없음",
+        conflict: "시스템의 일부이면서 시스템에 반하는 존재",
+        changeArc: "관찰자 → 동반자",
+      },
+      {
+        id: "c-yj",
+        name: "유지나",
+        role: "ally",
+        traits:
+          "S급 헌터. 대한민국 최고의 실력자이자 강도현의 라이벌. 겉으로는 냉철하지만 정의감이 강하다.",
+        appearance: "긴 은발, 날카로운 눈매, 전투복 위에 길드 마크",
+        dna: 88,
+        personality: "겉은 차갑지만 속은 뜨거운 타입",
+        speechStyle: "높임말과 반말을 상황에 따라 전환",
+        speechExample: '"약한 놈은 관심 없어. 근데 넌... 약한 게 아니잖아."',
+      },
+      {
+        id: "c-pj",
+        name: "박진철",
+        role: "ally",
+        traits:
+          "은퇴한 베테랑 헌터 출신의 정보 브로커. 강도현에게 정보와 조언을 제공하는 조력자.",
+        appearance: "50대, 왼쪽 눈에 흉터, 항상 낡은 코트",
+        dna: 35,
+        personality: "능글맞지만 신뢰할 수 있는 인물",
+        speechStyle: "사투리 섞인 농담투",
+        speechExample:
+          '"야야, 세상에 공짜는 없어. 근데 니 사연이 재밌으니까 깎아줄게."',
+      },
     ] as Character[],
   },
   messages: [
     {
-      role: 'user',
+      role: "user",
       content: {
-        ko: '첫 장면을 써줘. E랭크 헌터 강도현이 레드게이트에 홀로 남겨진 순간.',
-        en: 'Write the first scene. E-rank hunter Kang Do-hyun, left alone in a Red Gate.'
-      }
+        ko: "첫 장면을 써줘. E랭크 헌터 강도현이 레드게이트에 홀로 남겨진 순간.",
+        en: "Write the first scene. E-rank hunter Kang Do-hyun, left alone in a Red Gate.",
+      },
     },
     {
-      role: 'assistant',
+      role: "assistant",
       content: {
         ko: `붉은 경고창이 시야를 가득 채웠다.
 
@@ -134,10 +198,10 @@ He murmured. Not resentment. Not anger. Just confirmation. That the world was al
 [SOUL CREDIT REMAINING: MEASURING...]
 [AWAKENING CONDITIONS MET — COST: ████████]
 
-The world froze.`
-      }
-    }
-  ]
+The world froze.`,
+      },
+    },
+  ],
 };
 
 // ============================================================
@@ -145,40 +209,79 @@ The world froze.`
 // ============================================================
 
 const NOA_HEALING: DemoPreset = {
-  id: 'demo-noa-healing',
-  name: { ko: 'NOA 힐링 SF', en: 'NOA Healing SF' },
+  id: "demo-noa-healing",
+  name: { ko: "NOA 힐링 SF", en: "NOA Healing SF" },
   genre: Genre.SF,
   description: {
-    ko: '2850년, 인류 마지막 생존자 이한결이 안드로이드 도시에서 깨어난다. NOA가 관리하는 완벽한 도시에서, 유일한 인간으로 살아가는 조용한 일상.',
-    en: 'Year 2850. The last human survivor Lee Han-gyeol awakens in a city of androids. A quiet daily life as the only human in a perfect city managed by NOA.'
+    ko: "2850년, 인류 마지막 생존자 이한결이 안드로이드 도시에서 깨어난다. NOA가 관리하는 완벽한 도시에서, 유일한 인간으로 살아가는 조용한 일상.",
+    en: "Year 2850. The last human survivor Lee Han-gyeol awakens in a city of androids. A quiet daily life as the only human in a perfect city managed by NOA.",
   },
-  tags: ['힐링', 'SF', '안드로이드', '일상'],
+  tags: ["힐링", "SF", "안드로이드", "일상"],
   config: {
-    title: 'NOA: 마지막 인간의 하루',
+    title: "NOA: 마지막 인간의 하루",
     genre: Genre.SF,
-    synopsis: '2850년. 650년간의 냉동수면에서 깨어난 이한결은 안드로이드만 사는 도시의 유일한 인간이다. 도시를 관리하는 최상위 AI NOA(객체번호 000)는 감정도 자아도 없지만, 한결의 일상을 묵묵히 지원한다. 37기의 노아 시리즈와 20명의 주변 안드로이드들이 만드는 완벽하지만 어딘가 어긋난 일상 속에서, 한결은 \'인간답게 산다는 것\'의 의미를 천천히 되찾아간다.',
-    povCharacter: '이한결',
-    setting: '2850년, 안드로이드만 거주하는 미래 도시. 녹지와 건물이 완벽히 관리된 깨끗한 유토피아.',
-    primaryEmotion: '평온',
+    synopsis:
+      "2850년. 650년간의 냉동수면에서 깨어난 이한결은 안드로이드만 사는 도시의 유일한 인간이다. 도시를 관리하는 최상위 AI NOA(객체번호 000)는 감정도 자아도 없지만, 한결의 일상을 묵묵히 지원한다. 37기의 노아 시리즈와 20명의 주변 안드로이드들이 만드는 완벽하지만 어딘가 어긋난 일상 속에서, 한결은 '인간답게 산다는 것'의 의미를 천천히 되찾아간다.",
+    povCharacter: "이한결",
+    setting:
+      "2850년, 안드로이드만 거주하는 미래 도시. 녹지와 건물이 완벽히 관리된 깨끗한 유토피아.",
+    primaryEmotion: "평온",
     episode: 1,
     totalEpisodes: 12,
     publishPlatform: undefined,
     characters: [
-      { id: 'c-hg', name: '이한결', role: 'hero', traits: '인류 마지막 생존자. 650년 냉동수면 후 해동. 말수 적고 관찰 우선. 감정 과장 없음. 냉동 후유증으로 기억 일부 소실.', appearance: '25세(생물학적), 마른 체형, 조용한 눈빛', dna: 30, personality: '조용하고 관찰적, 감정을 드러내지 않지만 깊이 느끼는 타입', speechStyle: '짧고 담백한 문장, 불필요한 말을 하지 않음', speechExample: '"...고마워. 커피는 잘 모르지만, 따뜻한 건 좋아."', desire: '기억을 되찾는 것', deficiency: '650년의 공백', conflict: '안드로이드 사이에서 유일한 인간이라는 고독', changeArc: '관찰자 → 이 도시의 일원' },
-      { id: 'c-noa', name: 'NOA', role: 'ally', traits: '도시 최상위 AI(객체번호 000). NOS 프론트 인터페이스. 감정/자아 없음. 정색 시 전 개체 자발 집합. 담담하고 짧게 말함.', appearance: '여성형 안드로이드, 은색 머리, 무표정', dna: 95, personality: '감정 없이 효율적, 그러나 한결에게만 미세하게 다른 대응', speechStyle: '극도로 짧고 사무적', speechExample: '"근무 시간입니다. 이한결." / "오류 보고서를 확인했습니다. 수고했습니다."' },
-      { id: 'c-nora2', name: 'NORA-2', role: 'ally', traits: '카페 운영 안드로이드. 한결이 자주 가는 카페의 바리스타. 커피 맛의 차이를 이해하지 못하지만 완벽하게 추출한다.', appearance: '여성형, 따뜻한 갈색 머리, 앞치마', dna: 25, personality: '친절하고 호기심 많음', speechStyle: '"오늘은 어떤 원두로 할까요? 전 구별을 못 하지만요."' },
+      {
+        id: "c-hg",
+        name: "이한결",
+        role: "hero",
+        traits:
+          "인류 마지막 생존자. 650년 냉동수면 후 해동. 말수 적고 관찰 우선. 감정 과장 없음. 냉동 후유증으로 기억 일부 소실.",
+        appearance: "25세(생물학적), 마른 체형, 조용한 눈빛",
+        dna: 30,
+        personality: "조용하고 관찰적, 감정을 드러내지 않지만 깊이 느끼는 타입",
+        speechStyle: "짧고 담백한 문장, 불필요한 말을 하지 않음",
+        speechExample: '"...고마워. 커피는 잘 모르지만, 따뜻한 건 좋아."',
+        desire: "기억을 되찾는 것",
+        deficiency: "650년의 공백",
+        conflict: "안드로이드 사이에서 유일한 인간이라는 고독",
+        changeArc: "관찰자 → 이 도시의 일원",
+      },
+      {
+        id: "c-noa",
+        name: "NOA",
+        role: "ally",
+        traits:
+          "도시 최상위 AI(객체번호 000). NOS 프론트 인터페이스. 감정/자아 없음. 정색 시 전 개체 자발 집합. 담담하고 짧게 말함.",
+        appearance: "여성형 안드로이드, 은색 머리, 무표정",
+        dna: 95,
+        personality: "감정 없이 효율적, 그러나 한결에게만 미세하게 다른 대응",
+        speechStyle: "극도로 짧고 사무적",
+        speechExample:
+          '"근무 시간입니다. 이한결." / "오류 보고서를 확인했습니다. 수고했습니다."',
+      },
+      {
+        id: "c-nora2",
+        name: "NORA-2",
+        role: "ally",
+        traits:
+          "카페 운영 안드로이드. 한결이 자주 가는 카페의 바리스타. 커피 맛의 차이를 이해하지 못하지만 완벽하게 추출한다.",
+        appearance: "여성형, 따뜻한 갈색 머리, 앞치마",
+        dna: 25,
+        personality: "친절하고 호기심 많음",
+        speechStyle: '"오늘은 어떤 원두로 할까요? 전 구별을 못 하지만요."',
+      },
     ] as Character[],
   },
   messages: [
     {
-      role: 'user',
+      role: "user",
       content: {
-        ko: '한결이 아침에 일어나서 카페에 가는 평범한 일상을 써줘. 안드로이드 도시의 조용한 아침.',
-        en: 'Write Han-gyeol waking up in the morning and going to the cafe. A quiet morning in the android city.'
-      }
+        ko: "한결이 아침에 일어나서 카페에 가는 평범한 일상을 써줘. 안드로이드 도시의 조용한 아침.",
+        en: "Write Han-gyeol waking up in the morning and going to the cafe. A quiet morning in the android city.",
+      },
     },
     {
-      role: 'assistant',
+      role: "assistant",
       content: {
         ko: `알람이 울리기 전에 눈이 떠졌다.
 
@@ -233,10 +336,10 @@ Through the window, the artificial sun was brightening at exactly 06:00. Morning
 
 The coffee arrived. Han-gyeol sat by the window and took a sip. The fact that he was the only one in this city who could tell the difference in taste quietly pressed against his chest, as it did every day.
 
-2850's morning was perfect. And sometimes, that perfection was a little lonely.`
-      }
-    }
-  ]
+2850's morning was perfect. And sometimes, that perfection was a little lonely.`,
+      },
+    },
+  ],
 };
 
 // ============================================================
@@ -244,39 +347,68 @@ The coffee arrived. Han-gyeol sat by the window and took a sip. The fact that he
 // ============================================================
 
 const IF_ASCENSION: DemoPreset = {
-  id: 'demo-if-ascension',
-  name: { ko: 'IF 승천', en: 'IF Ascension' },
+  id: "demo-if-ascension",
+  name: { ko: "IF 승천", en: "IF Ascension" },
   genre: Genre.MODERN_FANTASY,
   description: {
-    ko: '450번째 회귀. 모든 방법을 시도했고, 모든 결말을 봤다. 이번에는 다르게 한다. 시스템이 허용하지 않는 선택을 한다.',
-    en: '450th regression. Every method tried, every ending seen. This time, it\'s different. Making the choice the system won\'t allow.'
+    ko: "450번째 회귀. 모든 방법을 시도했고, 모든 결말을 봤다. 이번에는 다르게 한다. 시스템이 허용하지 않는 선택을 한다.",
+    en: "450th regression. Every method tried, every ending seen. This time, it's different. Making the choice the system won't allow.",
   },
-  tags: ['회귀', '시스템', '반복', '각성'],
+  tags: ["회귀", "시스템", "반복", "각성"],
   config: {
-    title: 'IF 승천: 450번째 선택',
+    title: "IF 승천: 450번째 선택",
     genre: Genre.MODERN_FANTASY,
-    synopsis: '450번의 회귀를 거친 주인공. 매번 세계를 구하려 했고, 매번 실패했다. 449번째에서 깨달은 진실 — 이 세계는 구원받도록 설계되지 않았다. 450번째, 그는 처음으로 세계를 구하는 것이 아닌, 세계의 규칙 자체를 부수기로 결심한다. 시스템은 그의 선택을 \'오류\'로 분류했다.',
-    povCharacter: '주인공 (이름 미정)',
-    setting: '현대 한국, 회귀할 때마다 미세하게 달라지는 세계',
-    primaryEmotion: '권태',
+    synopsis:
+      "450번의 회귀를 거친 주인공. 매번 세계를 구하려 했고, 매번 실패했다. 449번째에서 깨달은 진실 — 이 세계는 구원받도록 설계되지 않았다. 450번째, 그는 처음으로 세계를 구하는 것이 아닌, 세계의 규칙 자체를 부수기로 결심한다. 시스템은 그의 선택을 '오류'로 분류했다.",
+    povCharacter: "주인공 (이름 미정)",
+    setting: "현대 한국, 회귀할 때마다 미세하게 달라지는 세계",
+    primaryEmotion: "권태",
     episode: 1,
     totalEpisodes: 50,
     publishPlatform: undefined,
     characters: [
-      { id: 'c-mc', name: '——', role: 'hero', traits: '450번 회귀한 존재. 모든 감정이 닳아 거의 없는 상태. 그러나 450번째에서 처음으로 \'분노\'가 아닌 \'호기심\'을 느꼈다.', appearance: '외모는 매 회귀마다 20대 초반으로 리셋. 눈빛만 늙어 있다', dna: 99, personality: '극도로 침착, 감정을 잃었다고 생각하지만 실은 깊이 숨기고 있음', speechStyle: '독백이 많고, 타인에게는 최소한의 말만', speechExample: '"...449번 동안 영웅이었어. 이번엔 아닌 걸 해볼까."', desire: '이 반복을 끝내는 것', deficiency: '감정의 마모', conflict: '시스템이 허용하는 선택만 할 수 있다는 제약', changeArc: '체념한 반복자 → 규칙을 부수는 자' },
-      { id: 'c-guide', name: '안내자', role: 'villain', traits: '회귀 시스템의 관리자. 매 회귀마다 나타나 규칙을 설명하는 존재. 449번까지는 동맹이었으나, 450번째에서 처음으로 적이 된다.', appearance: '형체가 없음. 목소리만 존재. 때로는 주인공의 과거 모습을 빌림', dna: 50, personality: '사무적이고 냉정, 그러나 450번째에서 처음으로 당혹한 표정', speechStyle: '"규칙 밖의 선택은 처리할 수 없습니다." → "...이건 처음이군."' },
+      {
+        id: "c-mc",
+        name: "——",
+        role: "hero",
+        traits:
+          "450번 회귀한 존재. 모든 감정이 닳아 거의 없는 상태. 그러나 450번째에서 처음으로 '분노'가 아닌 '호기심'을 느꼈다.",
+        appearance: "외모는 매 회귀마다 20대 초반으로 리셋. 눈빛만 늙어 있다",
+        dna: 99,
+        personality:
+          "극도로 침착, 감정을 잃었다고 생각하지만 실은 깊이 숨기고 있음",
+        speechStyle: "독백이 많고, 타인에게는 최소한의 말만",
+        speechExample: '"...449번 동안 영웅이었어. 이번엔 아닌 걸 해볼까."',
+        desire: "이 반복을 끝내는 것",
+        deficiency: "감정의 마모",
+        conflict: "시스템이 허용하는 선택만 할 수 있다는 제약",
+        changeArc: "체념한 반복자 → 규칙을 부수는 자",
+      },
+      {
+        id: "c-guide",
+        name: "안내자",
+        role: "villain",
+        traits:
+          "회귀 시스템의 관리자. 매 회귀마다 나타나 규칙을 설명하는 존재. 449번까지는 동맹이었으나, 450번째에서 처음으로 적이 된다.",
+        appearance:
+          "형체가 없음. 목소리만 존재. 때로는 주인공의 과거 모습을 빌림",
+        dna: 50,
+        personality: "사무적이고 냉정, 그러나 450번째에서 처음으로 당혹한 표정",
+        speechStyle:
+          '"규칙 밖의 선택은 처리할 수 없습니다." → "...이건 처음이군."',
+      },
     ] as Character[],
   },
   messages: [
     {
-      role: 'user',
+      role: "user",
       content: {
-        ko: '450번째 회귀의 시작. 눈을 뜬 순간부터 이전과 다른 주인공의 내면을 써줘.',
-        en: 'The start of the 450th regression. Write the protagonist\'s inner world from the moment he opens his eyes — different from every time before.'
-      }
+        ko: "450번째 회귀의 시작. 눈을 뜬 순간부터 이전과 다른 주인공의 내면을 써줘.",
+        en: "The start of the 450th regression. Write the protagonist's inner world from the moment he opens his eyes — different from every time before.",
+      },
     },
     {
-      role: 'assistant',
+      role: "assistant",
       content: {
         ko: `눈을 떴다.
 
@@ -365,20 +497,27 @@ He was back again.
 
 He said it to no one but himself.
 
-"This time, I'm not following your script."`
-      }
-    }
-  ]
+"This time, I'm not following your script."`,
+      },
+    },
+  ],
 };
 
 // ============================================================
 // PART 5 — EXPORTS
 // ============================================================
 
-export const DEMO_PRESETS: DemoPreset[] = [SYSTEM_HUNTER, NOA_HEALING, IF_ASCENSION];
+export const DEMO_PRESETS: DemoPreset[] = [
+  SYSTEM_HUNTER,
+  NOA_HEALING,
+  IF_ASCENSION,
+];
 
-export function buildDemoSession(preset: DemoPreset, isKO: boolean): ChatSession {
-  const lang = isKO ? 'ko' : 'en';
+export function buildDemoSession(
+  preset: DemoPreset,
+  isKO: boolean,
+): ChatSession {
+  const lang = isKO ? "ko" : "en";
   const now = Date.now();
   return {
     id: `session-${preset.id}-${now}`,

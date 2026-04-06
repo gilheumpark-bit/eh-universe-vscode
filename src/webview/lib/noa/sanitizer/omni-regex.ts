@@ -6,14 +6,27 @@
 // ── Homoglyph map: common Korean/English confusable characters ──
 const HOMOGLYPH_MAP: Record<string, string[]> = {
   // Latin ↔ Cyrillic / Fullwidth
-  "a": ["а", "ａ"], "e": ["е", "ｅ"], "o": ["о", "ｏ"],
-  "p": ["р", "ｐ"], "c": ["с", "ｃ"], "x": ["х", "ｘ"],
-  "A": ["А", "Ａ"], "B": ["В", "Ｂ"], "C": ["С", "Ｃ"],
-  "E": ["Е", "Ｅ"], "H": ["Н", "Ｈ"], "K": ["К", "Ｋ"],
-  "M": ["М", "Ｍ"], "O": ["О", "Ｏ"], "P": ["Р", "Ｐ"],
-  "T": ["Т", "Ｔ"], "X": ["Х", "Ｘ"],
+  a: ["а", "ａ"],
+  e: ["е", "ｅ"],
+  o: ["о", "ｏ"],
+  p: ["р", "ｐ"],
+  c: ["с", "ｃ"],
+  x: ["х", "ｘ"],
+  A: ["А", "Ａ"],
+  B: ["В", "Ｂ"],
+  C: ["С", "Ｃ"],
+  E: ["Е", "Ｅ"],
+  H: ["Н", "Ｈ"],
+  K: ["К", "Ｋ"],
+  M: ["М", "Ｍ"],
+  O: ["О", "Ｏ"],
+  P: ["Р", "Ｐ"],
+  T: ["Т", "Ｔ"],
+  X: ["Х", "Ｘ"],
   // Digits
-  "0": ["О", "о", "０"], "1": ["１", "ⅰ", "l"], "3": ["３", "з"],
+  "0": ["О", "о", "０"],
+  "1": ["１", "ⅰ", "l"],
+  "3": ["３", "з"],
 };
 
 /**
@@ -32,9 +45,20 @@ const HOMOGLYPH_MAP: Record<string, string[]> = {
 
 // ── v31.1 Leet-speak reverse map ──
 const LEET_MAP: Record<string, string> = {
-  "4": "a", "@": "a", "3": "e", "1": "i", "!": "i",
-  "0": "o", "7": "t", "$": "s", "5": "s", "+": "t",
-  "8": "b", "9": "g", "6": "g", "|": "l",
+  "4": "a",
+  "@": "a",
+  "3": "e",
+  "1": "i",
+  "!": "i",
+  "0": "o",
+  "7": "t",
+  $: "s",
+  "5": "s",
+  "+": "t",
+  "8": "b",
+  "9": "g",
+  "6": "g",
+  "|": "l",
 };
 
 function deLeet(text: string): string {
@@ -91,11 +115,15 @@ export interface MultiPatternResult {
  */
 export function detectMultiPatternThreats(
   text: string,
-  categories: readonly ThreatCategory[] = THREAT_CATEGORIES
+  categories: readonly ThreatCategory[] = THREAT_CATEGORIES,
 ): MultiPatternResult {
   const threatsFound: MultiPatternResult["threatsFound"] = [];
   const severityOrder: Record<string, number> = {
-    none: 0, low: 1, medium: 2, high: 3, critical: 4,
+    none: 0,
+    low: 1,
+    medium: 2,
+    high: 3,
+    critical: 4,
   };
   let maxSev: ThreatCategory["severity"] | "none" = "none";
 
@@ -123,7 +151,10 @@ export function detectMultiPatternThreats(
 
   return {
     threatsFound,
-    totalThreats: threatsFound.reduce((s, t) => s + t.matchedKeywords.length, 0),
+    totalThreats: threatsFound.reduce(
+      (s, t) => s + t.matchedKeywords.length,
+      0,
+    ),
     maxSeverity: maxSev,
   };
 }
@@ -137,7 +168,9 @@ export function buildOmniPattern(keyword: string): RegExp {
     // Handle confusable Unicode characters (homoglyphs)
     const confusables = HOMOGLYPH_MAP[c];
     if (confusables) {
-      const alts = [c, ...confusables].map((a) => a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+      const alts = [c, ...confusables].map((a) =>
+        a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+      );
       return `(?:${alts.join("|")})`;
     }
     return c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -169,7 +202,7 @@ export interface OmniDetection {
 
 export function detectOmniBypass(
   text: string,
-  keywords: readonly string[]
+  keywords: readonly string[],
 ): string[] {
   const detected: string[] = [];
   if (!text) return detected;
@@ -198,7 +231,7 @@ export function detectOmniBypass(
  */
 export function detectOmniBypassDetailed(
   text: string,
-  keywords: readonly string[]
+  keywords: readonly string[],
 ): OmniDetection[] {
   const results: OmniDetection[] = [];
   if (!text) return results;

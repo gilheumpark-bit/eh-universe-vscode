@@ -6,7 +6,11 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Send, Plus, Brain, Users, Loader2, X } from "lucide-react";
-import { type AgentRole, AGENT_REGISTRY, ALL_AGENT_ROLES } from "@/types/code-studio-agent";
+import {
+  type AgentRole,
+  AGENT_REGISTRY,
+  ALL_AGENT_ROLES,
+} from "@/types/code-studio-agent";
 import { useCodeStudioT } from "@/lib/use-code-studio-translations";
 
 export interface WorkspaceThread {
@@ -75,8 +79,14 @@ function ThreadList({
   return (
     <div className="w-48 shrink-0 border-r border-white/5 bg-[#12121a] flex flex-col">
       <div className="flex items-center justify-between border-b border-white/5 px-2 py-2">
-        <span className="text-xs font-bold text-gray-500 uppercase">{t.aiThreads}</span>
-        <button onClick={onCreate} className="text-gray-500 hover:text-white" title={t.aiNewThread}>
+        <span className="text-xs font-bold text-gray-500 uppercase">
+          {t.aiThreads}
+        </span>
+        <button
+          onClick={onCreate}
+          className="text-gray-500 hover:text-white"
+          title={t.aiNewThread}
+        >
           <Plus size={14} />
         </button>
       </div>
@@ -86,13 +96,21 @@ function ThreadList({
             key={t.id}
             onClick={() => onSelect(t.id)}
             className={`flex items-center gap-2 px-2 py-1.5 cursor-pointer text-xs ${
-              t.id === activeId ? "bg-white/10 text-white" : "text-gray-400 hover:bg-white/5"
+              t.id === activeId
+                ? "bg-white/10 text-white"
+                : "text-gray-400 hover:bg-white/5"
             }`}
           >
-            <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: getPersonaColor(t.persona) }} />
+            <span
+              className="h-2 w-2 rounded-full shrink-0"
+              style={{ backgroundColor: getPersonaColor(t.persona) }}
+            />
             <span className="flex-1 truncate">{t.title}</span>
             <button
-              onClick={(e) => { e.stopPropagation(); onDelete(t.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(t.id);
+              }}
               className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 transition-opacity"
             >
               <X size={10} />
@@ -148,7 +166,10 @@ function ChatArea({
     <div className="flex flex-1 flex-col min-h-0">
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-white/5 px-3 py-2">
-        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getPersonaColor(thread.persona) }} />
+        <span
+          className="h-2 w-2 rounded-full"
+          style={{ backgroundColor: getPersonaColor(thread.persona) }}
+        />
         <span className="text-sm font-medium text-white">{thread.title}</span>
         <span className="text-[10px] text-gray-500">
           {AGENT_REGISTRY[thread.persona]?.name || thread.persona}
@@ -158,7 +179,10 @@ function ChatArea({
       {/* Messages */}
       <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3 scrollbar-thin">
         {thread.messages.map((m) => (
-          <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+          <div
+            key={m.id}
+            className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+          >
             <div
               className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
                 m.role === "user"
@@ -184,7 +208,9 @@ function ChatArea({
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSubmit()}
+            onKeyDown={(e) =>
+              e.key === "Enter" && !e.shiftKey && handleSubmit()
+            }
             placeholder={t.aiMsgPlaceholder}
             className="flex-1 rounded border border-white/10 bg-[#12121a] px-3 py-1.5 text-sm text-white outline-none focus:border-blue-500/50 placeholder:text-white/50"
           />
@@ -220,10 +246,15 @@ function SharedMemoryPanel({ entries }: { entries: SharedMemoryEntry[] }) {
       {entries.map((e) => (
         <div key={e.key} className="border-b border-white/5 px-2 py-1.5">
           <div className="flex items-center gap-1 text-[10px] text-gray-500">
-            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: getPersonaColor(e.source) }} />
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ backgroundColor: getPersonaColor(e.source) }}
+            />
             <span>{e.key}</span>
           </div>
-          <div className="text-xs text-gray-400 mt-0.5 line-clamp-2">{e.value}</div>
+          <div className="text-xs text-gray-400 mt-0.5 line-clamp-2">
+            {e.value}
+          </div>
         </div>
       ))}
     </div>
@@ -244,7 +275,9 @@ export default function AIWorkspace({
   onDeleteThread,
 }: AIWorkspaceProps) {
   const t = useCodeStudioT();
-  const [activeThreadId, setActiveThreadId] = useState<string | null>(threads[0]?.id ?? null);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(
+    threads[0]?.id ?? null,
+  );
   const [sending, setSending] = useState(false);
   const [showNewThread, setShowNewThread] = useState(false);
 
@@ -281,17 +314,31 @@ export default function AIWorkspace({
 
       {/* New thread modal */}
       {showNewThread && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowNewThread(false)}>
-          <div className="w-64 rounded-xl border border-white/10 bg-[#1e1e2e] p-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="mb-3 text-sm font-medium text-white">{t.aiSelectPersona}</h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowNewThread(false)}
+        >
+          <div
+            className="w-64 rounded-xl border border-white/10 bg-[#1e1e2e] p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-3 text-sm font-medium text-white">
+              {t.aiSelectPersona}
+            </h3>
             <div className="space-y-1">
               {roles.map((r) => (
                 <button
                   key={r}
-                  onClick={() => { onCreateThread(r); setShowNewThread(false); }}
+                  onClick={() => {
+                    onCreateThread(r);
+                    setShowNewThread(false);
+                  }}
                   className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10 transition-colors"
                 >
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getPersonaColor(r) }} />
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: getPersonaColor(r) }}
+                  />
                   {personaLabel(r)}
                 </button>
               ))}

@@ -4,9 +4,9 @@
 // 에디터 textarea의 onKeyDown 이벤트를 SVI 엔진에 전달.
 // Zero-Visibility 원칙: UI 피드백 없음, 스텔스 수집만.
 
-import { useEffect, useCallback, useRef } from 'react';
-import { getSVIEngine } from '@/lib/noa/svi-engine';
-import type { SVIResult } from '@/lib/noa/svi-engine';
+import { useEffect, useCallback, useRef } from "react";
+import { getSVIEngine } from "@/lib/noa/svi-engine";
+import type { SVIResult } from "@/lib/noa/svi-engine";
 
 interface UseSVIRecorderOptions {
   /** 자동 틱 활성화 (기본: true) */
@@ -50,10 +50,13 @@ export function useSVIRecorder(options: UseSVIRecorderOptions = {}) {
   }, [autoTick, onSVIUpdate]);
 
   /** onKeyDown에 합성할 핸들러 */
-  const handleSVIKeyDown = useCallback((e: React.KeyboardEvent | KeyboardEvent) => {
-    const isBackspace = e.key === 'Backspace' || e.key === 'Delete';
-    getSVIEngine().recordKeystroke(isBackspace);
-  }, []);
+  const handleSVIKeyDown = useCallback(
+    (e: React.KeyboardEvent | KeyboardEvent) => {
+      const isBackspace = e.key === "Backspace" || e.key === "Delete";
+      getSVIEngine().recordKeystroke(isBackspace);
+    },
+    [],
+  );
 
   return { handleSVIKeyDown };
 }

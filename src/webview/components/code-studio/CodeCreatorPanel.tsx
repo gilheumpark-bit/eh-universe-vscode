@@ -6,9 +6,22 @@
 
 import React, { useState, useCallback, useRef } from "react";
 import {
-  Play, Square, CheckCircle, XCircle, AlertTriangle,
-  Loader2, ChevronDown, ChevronRight, FileCode2,
-  GitMerge, Trash2, RefreshCw, Eye, X, Shield, Box,
+  Play,
+  Square,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Loader2,
+  ChevronDown,
+  ChevronRight,
+  FileCode2,
+  GitMerge,
+  Trash2,
+  RefreshCw,
+  Eye,
+  X,
+  Shield,
+  Box,
   ArrowRight,
 } from "lucide-react";
 import { generateApp } from "@/lib/code-studio/features/app-generator";
@@ -16,9 +29,18 @@ import { logger } from "@/lib/logger";
 
 /** Simplified creation phase type for EH Code Studio */
 export type CreationPhase =
-  | "spec" | "architecture" | "component-spec" | "generation"
-  | "self-review" | "multi-review" | "stress-test" | "patent-check"
-  | "revision" | "user-review" | "approved" | "merged";
+  | "spec"
+  | "architecture"
+  | "component-spec"
+  | "generation"
+  | "self-review"
+  | "multi-review"
+  | "stress-test"
+  | "patent-check"
+  | "revision"
+  | "user-review"
+  | "approved"
+  | "merged";
 
 export interface CreationProgress {
   phase: CreationPhase;
@@ -85,7 +107,10 @@ const PHASE_ICONS: Partial<Record<CreationPhase, React.ReactNode>> = {
 // PART 3 — CodeCreatorPanel Component
 // ============================================================
 
-export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelProps) {
+export default function CodeCreatorPanel({
+  onMerge,
+  onClose,
+}: CodeCreatorPanelProps) {
   const [prompt, setPrompt] = useState("");
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState<CreationProgress | null>(null);
@@ -93,20 +118,43 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
   const [expandedFile, setExpandedFile] = useState<string | null>(null);
   const [feedback, setFeedback] = useState("");
   const [showMergeWarning, setShowMergeWarning] = useState(false);
-  const [fileDecisions, setFileDecisions] = useState<Map<string, "approved" | "rejected">>(new Map());
+  const [fileDecisions, setFileDecisions] = useState<
+    Map<string, "approved" | "rejected">
+  >(new Map());
   const abortRef = useRef<AbortController | null>(null);
 
   const computeScores = useCallback((fileList: CreationFileResult[]) => {
     const n = fileList.length;
     const totalChars = fileList.reduce((a, f) => a + f.content.length, 0);
-    const hasPkg = fileList.some((f) => f.path.endsWith("package.json") || f.path === "package.json");
-    const pipelineScore = Math.min(100, Math.round(22 + n * 11 + (hasPkg ? 18 : 0)));
-    const reviewScore = Math.min(100, Math.round(32 + Math.min(totalChars / 250, 45)));
-    const stressScore = Math.min(100, Math.round(38 + n * 9 + (totalChars > 500 ? 12 : 0)));
+    const hasPkg = fileList.some(
+      (f) => f.path.endsWith("package.json") || f.path === "package.json",
+    );
+    const pipelineScore = Math.min(
+      100,
+      Math.round(22 + n * 11 + (hasPkg ? 18 : 0)),
+    );
+    const reviewScore = Math.min(
+      100,
+      Math.round(32 + Math.min(totalChars / 250, 45)),
+    );
+    const stressScore = Math.min(
+      100,
+      Math.round(38 + n * 9 + (totalChars > 500 ? 12 : 0)),
+    );
     const patentScore = 94;
-    const overallScore = Math.round((pipelineScore + reviewScore + stressScore + patentScore) / 4);
-    const passedAllChecks = n > 0 && fileList.every((f) => f.content.trim().length > 10);
-    return { pipelineScore, reviewScore, stressScore, patentScore, overallScore, passedAllChecks };
+    const overallScore = Math.round(
+      (pipelineScore + reviewScore + stressScore + patentScore) / 4,
+    );
+    const passedAllChecks =
+      n > 0 && fileList.every((f) => f.content.trim().length > 10);
+    return {
+      pipelineScore,
+      reviewScore,
+      stressScore,
+      patentScore,
+      overallScore,
+      passedAllChecks,
+    };
   }, []);
 
   const handleStart = useCallback(async () => {
@@ -166,7 +214,8 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
           phaseLabel: "AI Generate",
           phaseIndex: 2,
           totalPhases: PHASES.length,
-          detail: "No file blocks parsed — check API key / model output and try again.",
+          detail:
+            "No file blocks parsed — check API key / model output and try again.",
         });
         logger.warn("CodeCreatorPanel", "generateApp returned zero files");
         return;
@@ -185,7 +234,9 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
       setResult({
         files,
         ...scores,
-        summary: gen.summary || `Generated ${files.length} file(s). ${gen.installCommand ? `Run \`${gen.installCommand}\` then \`${gen.startCommand ?? "npm run dev"}\` in the sandbox when ready.` : ""}`,
+        summary:
+          gen.summary ||
+          `Generated ${files.length} file(s). ${gen.installCommand ? `Run \`${gen.installCommand}\` then \`${gen.startCommand ?? "npm run dev"}\` in the sandbox when ready.` : ""}`,
       });
 
       setProgress({
@@ -205,7 +256,8 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
         phaseLabel: "AI Generate",
         phaseIndex: 2,
         totalPhases: PHASES.length,
-        detail: e instanceof Error ? e.message.slice(0, 200) : "Generation failed.",
+        detail:
+          e instanceof Error ? e.message.slice(0, 200) : "Generation failed.",
       });
     } finally {
       setRunning(false);
@@ -213,7 +265,9 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
     }
   }, [prompt, running, computeScores]);
 
-  const handleStop = useCallback(() => { abortRef.current?.abort(); }, []);
+  const handleStop = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
 
   const handleFileApprove = useCallback((path: string) => {
     setFileDecisions((prev) => new Map(prev).set(path, "approved"));
@@ -225,20 +279,30 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
 
   const handleMerge = useCallback(() => {
     if (!result) return;
-    if (!result.passedAllChecks) { setShowMergeWarning(true); return; }
-    onMerge?.(result.files.filter((f) => fileDecisions.get(f.path) !== "rejected"));
+    if (!result.passedAllChecks) {
+      setShowMergeWarning(true);
+      return;
+    }
+    onMerge?.(
+      result.files.filter((f) => fileDecisions.get(f.path) !== "rejected"),
+    );
     onClose();
   }, [result, onMerge, onClose, fileDecisions]);
 
   const handleForceMerge = useCallback(() => {
     if (!result) return;
-    onMerge?.(result.files.filter((f) => fileDecisions.get(f.path) !== "rejected"));
+    onMerge?.(
+      result.files.filter((f) => fileDecisions.get(f.path) !== "rejected"),
+    );
     setShowMergeWarning(false);
     onClose();
   }, [result, onMerge, onClose, fileDecisions]);
 
   const handleDiscard = useCallback(() => {
-    setResult(null); setProgress(null); setPrompt(""); setFileDecisions(new Map());
+    setResult(null);
+    setProgress(null);
+    setPrompt("");
+    setFileDecisions(new Map());
   }, []);
 
   const handleRevise = useCallback(async () => {
@@ -296,7 +360,13 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
           <FileCode2 size={14} className="text-amber-400" />
           Code Creator
         </span>
-        <button onClick={onClose} aria-label="닫기" className="p-1 rounded hover:bg-white/5 text-text-secondary"><X size={14} /></button>
+        <button
+          onClick={onClose}
+          aria-label="닫기"
+          className="p-1 rounded hover:bg-white/5 text-text-secondary"
+        >
+          <X size={14} />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
@@ -304,20 +374,26 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
         {!result && (
           <div className="flex flex-col gap-2">
             <textarea
-              value={prompt} onChange={(e) => setPrompt(e.target.value)}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
               placeholder="Describe what you want to create..."
               className="w-full h-24 px-3 py-2 text-sm bg-[#0d1117] border border-white/10 rounded resize-none focus:outline-none focus:border-amber-700/45"
               disabled={running}
             />
             <div className="flex gap-2">
               {!running ? (
-                <button onClick={handleStart} disabled={!prompt.trim()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-amber-800 text-stone-100 hover:bg-amber-800 disabled:opacity-40">
+                <button
+                  onClick={handleStart}
+                  disabled={!prompt.trim()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-amber-800 text-stone-100 hover:bg-amber-800 disabled:opacity-40"
+                >
                   <Play size={12} /> Start Creation
                 </button>
               ) : (
-                <button onClick={handleStop}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-red-600 text-white hover:bg-red-500">
+                <button
+                  onClick={handleStop}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-red-600 text-white hover:bg-red-500"
+                >
                   <Square size={12} /> Stop
                 </button>
               )}
@@ -328,18 +404,37 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
         {/* Phase progress */}
         {(running || result) && (
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">Phases</span>
+            <span className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">
+              Phases
+            </span>
             <div className="flex flex-wrap gap-1">
               {PHASES.map((p, i) => {
                 const isCurrent = progress?.phase === p.phase;
-                const isDone = progress ? (progress.phaseIndex > i || (!!result && !running)) : false;
+                const isDone = progress
+                  ? progress.phaseIndex > i || (!!result && !running)
+                  : false;
                 const isActive = isCurrent && running;
                 return (
-                  <div key={p.phase} className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px]" style={{
-                    background: isCurrent ? "rgba(139,92,246,0.3)" : isDone ? "rgba(63,185,80,0.2)" : "rgba(255,255,255,0.04)",
-                    color: isCurrent || isDone ? "#fff" : "rgba(255,255,255,0.35)",
-                  }}>
-                    {isActive ? <Loader2 size={9} className="animate-spin" /> : isDone ? <CheckCircle size={9} /> : PHASE_ICONS[p.phase] ?? <ArrowRight size={9} />}
+                  <div
+                    key={p.phase}
+                    className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px]"
+                    style={{
+                      background: isCurrent
+                        ? "rgba(139,92,246,0.3)"
+                        : isDone
+                          ? "rgba(63,185,80,0.2)"
+                          : "rgba(255,255,255,0.04)",
+                      color:
+                        isCurrent || isDone ? "#fff" : "rgba(255,255,255,0.35)",
+                    }}
+                  >
+                    {isActive ? (
+                      <Loader2 size={9} className="animate-spin" />
+                    ) : isDone ? (
+                      <CheckCircle size={9} />
+                    ) : (
+                      (PHASE_ICONS[p.phase] ?? <ArrowRight size={9} />)
+                    )}
                     {p.label}
                   </div>
                 );
@@ -356,7 +451,9 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
         {/* Score badges */}
         {result && (
           <div className="flex flex-col gap-1.5 p-2 rounded border border-white/8 bg-[#0d1117]">
-            <span className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">Verification</span>
+            <span className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">
+              Verification
+            </span>
             <div className="flex items-center justify-around">
               <ScoreBadge score={result.pipelineScore} label="Pipeline" />
               <ScoreBadge score={result.reviewScore} label="AI Review" />
@@ -364,13 +461,22 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
               <ScoreBadge score={result.patentScore} label="Patent" />
               <div className="flex flex-col items-center gap-0.5">
                 <span className="text-[10px] text-text-tertiary">Overall</span>
-                <span className="text-base font-bold font-mono px-2 py-0.5 rounded" style={{
-                  color: result.passedAllChecks ? "#3fb950" : "#f85149",
-                  background: result.passedAllChecks ? "rgba(63,185,80,0.1)" : "rgba(248,81,73,0.1)",
-                }}>{result.overallScore}</span>
+                <span
+                  className="text-base font-bold font-mono px-2 py-0.5 rounded"
+                  style={{
+                    color: result.passedAllChecks ? "#3fb950" : "#f85149",
+                    background: result.passedAllChecks
+                      ? "rgba(63,185,80,0.1)"
+                      : "rgba(248,81,73,0.1)",
+                  }}
+                >
+                  {result.overallScore}
+                </span>
               </div>
             </div>
-            <p className="text-[11px] text-center text-text-secondary">{result.summary}</p>
+            <p className="text-[11px] text-center text-text-secondary">
+              {result.summary}
+            </p>
           </div>
         )}
 
@@ -384,23 +490,71 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
               const isExpanded = expandedFile === file.path;
               const decision = fileDecisions.get(file.path) ?? file.status;
               return (
-                <div key={file.path} className="rounded border border-white/8 bg-[#0d1117] overflow-hidden">
-                  <div className="flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-white/5"
-                    onClick={() => setExpandedFile(isExpanded ? null : file.path)}>
-                    {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                <div
+                  key={file.path}
+                  className="rounded border border-white/8 bg-[#0d1117] overflow-hidden"
+                >
+                  <div
+                    className="flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-white/5"
+                    onClick={() =>
+                      setExpandedFile(isExpanded ? null : file.path)
+                    }
+                  >
+                    {isExpanded ? (
+                      <ChevronDown size={12} />
+                    ) : (
+                      <ChevronRight size={12} />
+                    )}
                     <FileCode2 size={12} className="text-amber-400" />
-                    <span className="text-[11px] font-mono flex-1 truncate">{file.path}</span>
-                    {file.isNew && <span className="text-[9px] px-1 py-0.5 rounded bg-green-600 text-white">NEW</span>}
-                    <span className="text-[9px] px-1 py-0.5 rounded" style={{
-                      background: decision === "approved" ? "rgba(63,185,80,0.15)" : decision === "rejected" ? "rgba(248,81,73,0.15)" : "rgba(255,255,255,0.05)",
-                      color: decision === "approved" ? "#3fb950" : decision === "rejected" ? "#f85149" : "#888",
-                    }}>
-                      {decision === "approved" ? "Approved" : decision === "rejected" ? "Rejected" : "Pending"}
+                    <span className="text-[11px] font-mono flex-1 truncate">
+                      {file.path}
                     </span>
-                    <button onClick={(e) => { e.stopPropagation(); handleFileApprove(file.path); }}
-                      className="p-0.5 rounded hover:bg-green-500/20"><CheckCircle size={12} className="text-green-500" /></button>
-                    <button onClick={(e) => { e.stopPropagation(); handleFileReject(file.path); }}
-                      className="p-0.5 rounded hover:bg-red-500/20"><XCircle size={12} className="text-red-500" /></button>
+                    {file.isNew && (
+                      <span className="text-[9px] px-1 py-0.5 rounded bg-green-600 text-white">
+                        NEW
+                      </span>
+                    )}
+                    <span
+                      className="text-[9px] px-1 py-0.5 rounded"
+                      style={{
+                        background:
+                          decision === "approved"
+                            ? "rgba(63,185,80,0.15)"
+                            : decision === "rejected"
+                              ? "rgba(248,81,73,0.15)"
+                              : "rgba(255,255,255,0.05)",
+                        color:
+                          decision === "approved"
+                            ? "#3fb950"
+                            : decision === "rejected"
+                              ? "#f85149"
+                              : "#888",
+                      }}
+                    >
+                      {decision === "approved"
+                        ? "Approved"
+                        : decision === "rejected"
+                          ? "Rejected"
+                          : "Pending"}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFileApprove(file.path);
+                      }}
+                      className="p-0.5 rounded hover:bg-green-500/20"
+                    >
+                      <CheckCircle size={12} className="text-green-500" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFileReject(file.path);
+                      }}
+                      className="p-0.5 rounded hover:bg-red-500/20"
+                    >
+                      <XCircle size={12} className="text-red-500" />
+                    </button>
                   </div>
                   {isExpanded && (
                     <div className="border-t border-white/8 p-2">
@@ -420,14 +574,25 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
           <div className="p-3 rounded border-2 border-red-500 bg-red-500/10">
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle size={16} className="text-red-500" />
-              <span className="text-sm font-bold text-red-500">Warning: Not all checks passed</span>
+              <span className="text-sm font-bold text-red-500">
+                Warning: Not all checks passed
+              </span>
             </div>
-            <p className="text-xs text-text-secondary mb-2">Some verification steps did not pass. Merging may introduce issues.</p>
+            <p className="text-xs text-text-secondary mb-2">
+              Some verification steps did not pass. Merging may introduce
+              issues.
+            </p>
             <div className="flex gap-2">
-              <button onClick={handleForceMerge} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded bg-red-600 text-white hover:bg-red-500">
+              <button
+                onClick={handleForceMerge}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded bg-red-600 text-white hover:bg-red-500"
+              >
                 <AlertTriangle size={12} /> Force Merge
               </button>
-              <button onClick={() => setShowMergeWarning(false)} className="px-3 py-1.5 text-xs rounded bg-white/5 text-text-primary hover:bg-white/10">
+              <button
+                onClick={() => setShowMergeWarning(false)}
+                className="px-3 py-1.5 text-xs rounded bg-white/5 text-text-primary hover:bg-white/10"
+              >
                 Cancel
               </button>
             </div>
@@ -437,23 +602,36 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
         {/* Approval section */}
         {result && !running && (
           <div className="flex flex-col gap-2 p-2 rounded border border-white/8 bg-[#0d1117]">
-            <span className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">Approval</span>
+            <span className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">
+              Approval
+            </span>
             <div className="flex gap-2">
-              <input value={feedback} onChange={(e) => setFeedback(e.target.value)}
+              <input
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
                 placeholder="Revision feedback..."
-                className="flex-1 px-2 py-1 text-xs bg-[#0a0e17] border border-white/10 rounded focus:outline-none focus:border-amber-700/45" />
-              <button type="button" disabled={!feedback.trim() || running} onClick={() => void handleRevise()}
-                className="flex items-center gap-1 px-2 py-1 text-[11px] rounded bg-amber-500 text-black hover:bg-amber-400 disabled:opacity-40">
+                className="flex-1 px-2 py-1 text-xs bg-[#0a0e17] border border-white/10 rounded focus:outline-none focus:border-amber-700/45"
+              />
+              <button
+                type="button"
+                disabled={!feedback.trim() || running}
+                onClick={() => void handleRevise()}
+                className="flex items-center gap-1 px-2 py-1 text-[11px] rounded bg-amber-500 text-black hover:bg-amber-400 disabled:opacity-40"
+              >
                 <RefreshCw size={10} /> Revise
               </button>
             </div>
             <div className="flex gap-2">
-              <button onClick={handleMerge}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded bg-green-600 text-white hover:bg-green-500">
+              <button
+                onClick={handleMerge}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded bg-green-600 text-white hover:bg-green-500"
+              >
                 <GitMerge size={14} /> Merge to Main
               </button>
-              <button onClick={handleDiscard}
-                className="flex items-center gap-1 px-3 py-2 text-xs rounded bg-white/5 text-red-400 hover:bg-red-500/10">
+              <button
+                onClick={handleDiscard}
+                className="flex items-center gap-1 px-3 py-2 text-xs rounded bg-white/5 text-red-400 hover:bg-red-500/10"
+              >
                 <Trash2 size={12} /> Discard
               </button>
             </div>
@@ -470,12 +648,21 @@ export default function CodeCreatorPanel({ onMerge, onClose }: CodeCreatorPanelP
 // PART 4 — Sub-components
 // ============================================================
 
-const ScoreBadge = React.memo(function ScoreBadge({ score, label }: { score: number; label: string }) {
+const ScoreBadge = React.memo(function ScoreBadge({
+  score,
+  label,
+}: {
+  score: number;
+  label: string;
+}) {
   const color = score >= 77 ? "#3fb950" : score >= 50 ? "#d29922" : "#f85149";
   return (
     <div className="flex flex-col items-center gap-0.5">
       <span className="text-[10px] text-text-tertiary">{label}</span>
-      <span className="text-sm font-bold font-mono px-2 py-0.5 rounded" style={{ color, background: `${color}15` }}>
+      <span
+        className="text-sm font-bold font-mono px-2 py-0.5 rounded"
+        style={{ color, background: `${color}15` }}
+      >
         {score}
       </span>
     </div>

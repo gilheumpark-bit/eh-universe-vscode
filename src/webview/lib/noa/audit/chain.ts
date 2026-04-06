@@ -11,7 +11,10 @@
  * @returns 정규화된 JSON 문자열
  */
 export function canonicalJson(obj: unknown): string {
-  return JSON.stringify(obj, Object.keys(obj as Record<string, unknown>).sort());
+  return JSON.stringify(
+    obj,
+    Object.keys(obj as Record<string, unknown>).sort(),
+  );
 }
 
 /**

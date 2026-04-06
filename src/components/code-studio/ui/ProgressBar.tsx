@@ -92,14 +92,23 @@ interface ScoreBarProps {
   className?: string;
 }
 
-export function ScoreBar({ score, grade, label, className = "" }: ScoreBarProps) {
+export function ScoreBar({
+  score,
+  grade,
+  label,
+  className = "",
+}: ScoreBarProps) {
   return (
     <div className={`flex items-center gap-2 py-1 ${className}`}>
-      <span className="text-[11px] text-text-secondary w-[100px] truncate">{label}</span>
+      <span className="text-[11px] text-text-secondary w-[100px] truncate">
+        {label}
+      </span>
       <ProgressBar value={score} size="xs" showLabel className="flex-1" />
       {grade && (
-        <span className={`text-[10px] font-bold font-mono min-w-[1.5rem] text-center
-          ${score >= 85 ? "text-accent-green" : score >= 70 ? "text-accent-blue" : score >= 55 ? "text-accent-amber" : "text-accent-red"}`}>
+        <span
+          className={`text-[10px] font-bold font-mono min-w-[1.5rem] text-center
+          ${score >= 85 ? "text-accent-green" : score >= 70 ? "text-accent-blue" : score >= 55 ? "text-accent-amber" : "text-accent-red"}`}
+        >
           {grade}
         </span>
       )}
