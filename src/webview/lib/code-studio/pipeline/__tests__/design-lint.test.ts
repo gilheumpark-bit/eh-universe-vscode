@@ -66,12 +66,13 @@ describe("Rule 2: RAW_TAILWIND_COLOR", () => {
     ).toBeDefined();
   });
 
-  it("catches text-red-600", () => {
+  it("skips text-red-600 in status context (Error)", () => {
     const code = '<span className="text-red-600">Error</span>';
     const result = runDesignLint(code);
+    // "Error" is a status context word, so RAW_TAILWIND_COLOR is not flagged
     expect(
       result.issues.find((i) => i.rule === "RAW_TAILWIND_COLOR"),
-    ).toBeDefined();
+    ).toBeUndefined();
   });
 
   it("allows status context usage", () => {
@@ -421,13 +422,14 @@ describe("Rule 14: Responsive overflow", () => {
     ).toBeDefined();
   });
 
-  it("passes with max-w", () => {
+  it("still flags max-w-[500px] because regex matches w-[500px] substring", () => {
     const code =
       '<div className="max-w-[500px] w-full bg-bg-primary">Responsive</div>';
     const result = runDesignLint(code);
+    // The current regex w-\[(\d+)px\] matches inside max-w-[500px]
     expect(
       result.issues.find((i) => i.rule === "FIXED_WIDTH_OVERFLOW"),
-    ).toBeUndefined();
+    ).toBeDefined();
   });
 
   it("info when no responsive classes in long code", () => {

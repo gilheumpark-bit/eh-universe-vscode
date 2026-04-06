@@ -76,7 +76,7 @@ export class QuillClient {
       this.statusBarItem.backgroundColor = undefined;
     } else {
       this.statusBarItem.text = "$(shield) CS Quill: 🔴 Disconnected";
-      this.statusBarItem.tooltip = `데몬 미연결. cs daemon --port ${this.port} 실행 필요`;
+      this.statusBarItem.tooltip = `데몬 미연결. 클릭 시 자동 시작/재연결을 시도합니다 (port ${this.port})`;
       this.statusBarItem.backgroundColor = new vscode.ThemeColor(
         "statusBarItem.errorBackground",
       );
