@@ -79,75 +79,55 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     );
     const nonce = getNonce();
 
-    // Step 46~48: 인라인 사이드바 UI (React 빌드 전 fallback)
-    return `<!DOCTYPE html>
+    // 인라인 사이드바 UI — CSP 최소화, 외부 리소스 없음
+    return /* html */`<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}'; style-src ${webview.cspSource} 'unsafe-inline';">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CS Quill</title>
-  <style>
-    body { font-family: var(--vscode-font-family); color: var(--vscode-foreground); padding: 12px; margin: 0; }
-    .health { text-align: center; padding: 16px; border-radius: 8px; background: var(--vscode-editor-background); margin-bottom: 12px; }
-    .health-score { font-size: 32px; font-weight: bold; }
-    .health-label { font-size: 11px; opacity: 0.7; margin-top: 4px; }
-    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
-    .status-dot.connected { background: #4ade80; }
-    .status-dot.disconnected { background: #f87171; }
-    button { width: 100%; padding: 8px; margin: 4px 0; border: 1px solid var(--vscode-button-border, transparent); border-radius: 4px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); cursor: pointer; font-size: 12px; }
-    button:hover { background: var(--vscode-button-hoverBackground); }
-    .btn-secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
-    .divider { border-top: 1px solid var(--vscode-panel-border); margin: 12px 0; }
-    .error-count { color: var(--vscode-errorForeground); font-weight: bold; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{font-family:var(--vscode-font-family);color:var(--vscode-foreground);padding:12px;margin:0}
+.health{text-align:center;padding:16px;border-radius:8px;background:var(--vscode-editor-background);margin-bottom:12px}
+.score{font-size:32px;font-weight:bold}
+.label{font-size:11px;opacity:.7;margin-top:4px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:#f87171}
+.dot.on{background:#4ade80}
+button{width:100%;padding:8px;margin:4px 0;border:1px solid var(--vscode-button-border,transparent);border-radius:4px;background:var(--vscode-button-background);color:var(--vscode-button-foreground);cursor:pointer;font-size:12px}
+button:hover{background:var(--vscode-button-hoverBackground)}
+.sec{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)}
+.div{border-top:1px solid var(--vscode-panel-border);margin:12px 0}
+</style>
 </head>
 <body>
-  <div class="health" id="health-panel">
-    <div class="health-score" id="score">--</div>
-    <div class="health-label">Health Score</div>
-    <div style="margin-top: 8px;">
-      <span class="status-dot disconnected" id="status-dot"></span>
-      <span id="status-text">데몬 미연결</span>
-    </div>
-    <div class="health-label" id="error-count"></div>
-  </div>
-
-  <button id="btn-analyze">🔍 현재 파일 분석</button>
-  <button id="btn-fix-all">✨ 전체 수리 일괄 승인</button>
-  <div class="divider"></div>
-  <button class="btn-secondary" id="btn-reconnect">🔌 데몬 재연결</button>
-
-  <script nonce="${nonce}">
-    const vscode = acquireVsCodeApi();
-    function send(type) { vscode.postMessage({ type }); }
-
-    document.getElementById('btn-analyze').addEventListener('click', () => send('analyze-current'));
-    document.getElementById('btn-fix-all').addEventListener('click', () => send('fix-all'));
-    document.getElementById('btn-reconnect').addEventListener('click', () => send('reconnect'));
-
-    window.addEventListener('message', (event) => {
-      const { type, payload } = event.data;
-      if (type === 'health-update') {
-        document.getElementById('score').textContent = payload.score ?? '--';
-        document.getElementById('error-count').textContent = payload.errorCount > 0 ? payload.errorCount + '건 에러' : '에러 없음';
-        const dot = document.getElementById('status-dot');
-        const text = document.getElementById('status-text');
-        if (payload.connected) {
-          dot.className = 'status-dot connected';
-          text.textContent = '데몬 연결됨';
-        } else {
-          dot.className = 'status-dot disconnected';
-          text.textContent = '데몬 미연결';
-        }
-      }
-    });
-
-    // Notify extension that webview is ready to receive the current state
-    send('request-status');
-  </script>
-  <!-- webview.js는 React 사이드바 UI 전환 시 활성화 (현재 인라인 UI 사용) -->
-  <!-- <script nonce="${nonce}" src="${scriptUri}"></script> -->
+<div class="health">
+<div class="score" id="s">--</div>
+<div class="label">Health Score</div>
+<div style="margin-top:8px"><span class="dot" id="d"></span><span id="t">데몬 미연결</span></div>
+<div class="label" id="e"></div>
+</div>
+<button id="a">🔍 현재 파일 분석</button>
+<button id="f">✨ 전체 수리 일괄 승인</button>
+<div class="div"></div>
+<button class="sec" id="r">🔌 데몬 재연결</button>
+<script nonce="${nonce}">
+(function(){
+var v=acquireVsCodeApi();
+function p(t){v.postMessage({type:t})}
+document.getElementById('a').onclick=function(){p('analyze-current')};
+document.getElementById('f').onclick=function(){p('fix-all')};
+document.getElementById('r').onclick=function(){p('reconnect')};
+window.addEventListener('message',function(e){
+var m=e.data;if(m.type==='health-update'){
+var p=m.payload;
+document.getElementById('s').textContent=p.score!=null?p.score:'--';
+document.getElementById('e').textContent=p.errorCount>0?p.errorCount+'건 에러':'';
+var d=document.getElementById('d'),t=document.getElementById('t');
+d.className=p.connected?'dot on':'dot';
+t.textContent=p.connected?'데몬 연결됨':'데몬 미연결';
+}});
+p('request-status');
+})();
+</script>
 </body>
 </html>`;
   }
