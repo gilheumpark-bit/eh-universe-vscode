@@ -13,6 +13,9 @@ import { SidebarProvider } from "./SidebarProvider";
 import { QuillClient } from "./QuillClient";
 import { DiagnosticProvider } from "./providers/DiagnosticProvider";
 import { QuillCodeActionProvider } from "./providers/CodeActionProvider";
+import { QuillDocumentSymbolProvider } from "./providers/DocumentSymbolProvider";
+import { QuillCodeLensProvider } from "./providers/CodeLensProvider";
+import { QuillHoverProvider } from "./providers/HoverProvider";
 
 let quillClient: QuillClient | null = null;
 let diagnosticProvider: DiagnosticProvider;
@@ -437,6 +440,47 @@ export function activate(context: vscode.ExtensionContext) {
         providedCodeActionKinds:
           QuillCodeActionProvider.providedCodeActionKinds,
       },
+    ),
+  );
+
+  // ── DocumentSymbolProvider: Outline / Breadcrumb / Go-to-Symbol ──
+  const SUPPORTED_LANGUAGES = [
+    "typescript",
+    "typescriptreact",
+    "javascript",
+    "javascriptreact",
+  ];
+
+  context.subscriptions.push(
+    vscode.languages.registerDocumentSymbolProvider(
+      SUPPORTED_LANGUAGES,
+      new QuillDocumentSymbolProvider(),
+    ),
+  );
+
+  // ── CodeLensProvider: 함수 위 인라인 메트릭 ──
+  const codeLensProvider = new QuillCodeLensProvider(client);
+
+  context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider(
+      SUPPORTED_LANGUAGES,
+      codeLensProvider,
+    ),
+  );
+
+  // CodeLens 갱신: 문서 변경 시 캐시 무효화 + 새로고침
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeTextDocument((e) => {
+      codeLensProvider.invalidate(e.document.uri);
+      codeLensProvider.refresh();
+    }),
+  );
+
+  // ── HoverProvider: 심볼 위 마우스 호버 정보 ──
+  context.subscriptions.push(
+    vscode.languages.registerHoverProvider(
+      SUPPORTED_LANGUAGES,
+      new QuillHoverProvider(client),
     ),
   );
 

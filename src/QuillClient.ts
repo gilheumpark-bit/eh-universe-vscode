@@ -33,6 +33,34 @@ export interface AnalysisResult {
   duration: number;
 }
 
+export interface SymbolInfo {
+  name: string;
+  kind: string;
+  line: number;
+  endLine: number;
+  children?: SymbolInfo[];
+  detail?: string;
+}
+
+export interface CoverageInfo {
+  lines: Map<number, boolean>;
+  percent: number;
+}
+
+export interface RenameEdit {
+  filePath: string;
+  startLine: number;
+  startColumn: number;
+  endLine: number;
+  endColumn: number;
+  newText: string;
+}
+
+export interface RenameResult {
+  edits: RenameEdit[];
+  filesAffected: number;
+}
+
 type MessageHandler = (data: any) => void;
 
 // ============================================================
@@ -303,6 +331,52 @@ export class QuillClient {
         content,
         language,
       });
+    } catch {
+      return null;
+    }
+  }
+
+  // ── Advanced IDE Protocol ──
+
+  // Task 1: Symbol table request
+  public async getSymbols(filePath: string, content: string): Promise<SymbolInfo[]> {
+    if (!this.connected) return [];
+    try {
+      return await this.request('get_symbols', { filePath, content });
+    } catch {
+      return [];
+    }
+  }
+
+  // Task 2: Per-function findings request
+  public async getFunctionFindings(filePath: string, functionName: string): Promise<QuillFinding[]> {
+    if (!this.connected) return [];
+    try {
+      return await this.request('get_function_findings', { filePath, functionName });
+    } catch {
+      return [];
+    }
+  }
+
+  // Task 3: Coverage data request
+  public async getCoverage(filePath: string): Promise<CoverageInfo | null> {
+    if (!this.connected) return null;
+    try {
+      return await this.request('get_coverage', { filePath });
+    } catch {
+      return null;
+    }
+  }
+
+  // Task 4: Rename refactoring request
+  public async rename(
+    filePath: string,
+    position: { line: number; character: number },
+    newName: string,
+  ): Promise<RenameResult | null> {
+    if (!this.connected) return null;
+    try {
+      return await this.request('rename_symbol', { filePath, position, newName });
     } catch {
       return null;
     }
